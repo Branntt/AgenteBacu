@@ -10,7 +10,9 @@ export const state = {
   snaps: load('sistemaEditorial.snaps.v1', seedSnaps()),
   clientes: load('sistemaEditorial.clientes.v1', seedClientes()),
   selId: null,
+  guionId: null,
   filtro: 'todas',
+  filtroDesarrollo: 'todas',
   snapDraft: null,
   tema: loadValue('sistemaEditorial.tema', 'Cine oscuro'),
   modoCalma: loadValue('sistemaEditorial.modoCalma', false)
@@ -68,6 +70,34 @@ export const actions = {
     const idea = state.ideas.find(i => i.id === id);
     if (!idea) return;
     saveIdeas(state.ideas.map(i => i.id === id ? { ...i, metricas: { ...(i.metricas || {}), [campo]: val } } : i));
+  },
+
+  setFiltroDesarrollo: v => setState({ filtroDesarrollo: v }),
+  abrirGuion: id => setState({ guionId: id }),
+  cerrarGuion: () => setState({ guionId: null }),
+  setGuionCampo: (id, campo, val) => {
+    const idea = state.ideas.find(i => i.id === id);
+    if (!idea) return;
+    saveIdeas(state.ideas.map(i => i.id === id ? { ...i, guion: { ...(i.guion || {}), [campo]: val } } : i));
+  },
+  addGuionItem: id => {
+    const idea = state.ideas.find(i => i.id === id);
+    if (!idea) return;
+    const items = ((idea.guion || {}).items || []).concat([{ principal: '', secundario: '' }]);
+    saveIdeas(state.ideas.map(i => i.id === id ? { ...i, guion: { ...(i.guion || {}), items } } : i));
+  },
+  updGuionItem: (id, idx, campo, val) => {
+    const idea = state.ideas.find(i => i.id === id);
+    if (!idea) return;
+    const items = ((idea.guion || {}).items || []).slice();
+    items[idx] = { ...items[idx], [campo]: val };
+    saveIdeas(state.ideas.map(i => i.id === id ? { ...i, guion: { ...(i.guion || {}), items } } : i));
+  },
+  removeGuionItem: (id, idx) => {
+    const idea = state.ideas.find(i => i.id === id);
+    if (!idea) return;
+    const items = ((idea.guion || {}).items || []).filter((_, i2) => i2 !== idx);
+    saveIdeas(state.ideas.map(i => i.id === id ? { ...i, guion: { ...(i.guion || {}), items } } : i));
   },
 
   cambiaMes: delta => {

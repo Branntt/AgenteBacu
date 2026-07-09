@@ -58,3 +58,64 @@ export const ENFOQUE = [
 
 export const TEMA_MAP = { 'Cine oscuro': 'cine', 'Galería clara': 'galeria', 'Zine crudo': 'zine' };
 export const TEMA_OPTIONS = ['Cine oscuro', 'Galería clara', 'Zine crudo'];
+
+// Cada formato de idea se agrupa en una familia de guion: mismos campos de escritura,
+// porque un Reel y un Voice Over se escriben igual (gancho/cuerpo/cierre) aunque
+// se produzcan distinto, mientras que una Entrevista necesita preguntas, no párrafos.
+export const FAMILIAS_GUION = {
+  corto: {
+    label: 'Guion corto',
+    descripcion: 'Gancho, cuerpo y cierre — para piezas que se ven o escuchan de un tirón.',
+    formatos: ['Reel', 'Voice Over', 'Historia'],
+    campos: [
+      { key: 'gancho', label: 'Gancho — primeros 2 segundos', placeholder: '¿Por qué alguien deja de hacer scroll?' },
+      { key: 'cuerpo', label: 'Cuerpo — el desarrollo', placeholder: 'Qué se dice, en qué orden.' },
+      { key: 'cierre', label: 'Cierre — llamada a la acción', placeholder: '¿Qué queremos que haga quien lo vio?' }
+    ]
+  },
+  slides: {
+    label: 'Guion de slides',
+    descripcion: 'Una idea por tarjeta, en el orden en que se deslizan.',
+    formatos: ['Carrusel', 'Moodboard'],
+    itemLabel: 'Slide',
+    campoPrincipal: { key: 'principal', label: 'Texto de la slide', placeholder: 'Lo que dice esta tarjeta' },
+    campoSecundario: { key: 'secundario', label: 'Nota visual (opcional)', placeholder: 'Referencia, imagen, color' }
+  },
+  preguntas: {
+    label: 'Preguntas y temas',
+    descripcion: 'Lista de preguntas o temas a cubrir, no un libreto cerrado.',
+    formatos: ['Entrevista', 'Live'],
+    itemLabel: 'Pregunta',
+    campoPrincipal: { key: 'principal', label: 'Pregunta o tema', placeholder: '¿Qué le preguntamos?' },
+    campoSecundario: { key: 'secundario', label: 'Contexto (opcional)', placeholder: 'Por qué importa esta pregunta' }
+  },
+  escaleta: {
+    label: 'Escaleta narrativa',
+    descripcion: 'Escena por escena, como se va a contar la historia.',
+    formatos: ['Mini documental', 'Making Of'],
+    itemLabel: 'Escena',
+    campoPrincipal: { key: 'principal', label: 'Título de la escena', placeholder: 'Qué pasa en esta escena' },
+    campoSecundario: { key: 'secundario', label: 'Qué se ve / se graba', placeholder: 'Plano, locación, sonido' }
+  },
+  largo: {
+    label: 'Texto largo',
+    descripcion: 'Título y cuerpo, como un ensayo.',
+    formatos: ['Documento', 'Artículo'],
+    campos: [
+      { key: 'titulo', label: 'Título', placeholder: 'Título del texto' },
+      { key: 'cuerpo', label: 'Cuerpo del texto', placeholder: 'El texto completo, de principio a fin.' }
+    ]
+  },
+  shotlist: {
+    label: 'Shot list',
+    descripcion: 'Lista de tomas necesarias antes de grabar.',
+    formatos: ['Fotografía'],
+    itemLabel: 'Toma',
+    campoPrincipal: { key: 'principal', label: 'Descripción de la toma', placeholder: 'Qué se fotografía' },
+    campoSecundario: { key: 'secundario', label: 'Locación / referencia', placeholder: 'Dónde, con qué luz' }
+  }
+};
+
+export function familiaDeFormato(formato) {
+  return Object.keys(FAMILIAS_GUION).find(k => FAMILIAS_GUION[k].formatos.includes(formato)) || 'corto';
+}

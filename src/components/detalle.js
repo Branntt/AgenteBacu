@@ -108,6 +108,8 @@ export function renderDetalle(state) {
           <textarea class="nota-field" data-change="idea-nota" data-id="${id}" rows="3">${escapeHtml(selIdea.nota)}</textarea>
         </div>
 
+        <button class="btn-ghost" data-act="ir-a-guion" data-id="${id}" style="align-self:flex-start;">Escribir guion →</button>
+
         <div class="field">
           <label class="field-label">Objetivo estratégico — mínimo uno</label>
           <div class="chips-wrap">${objChipsHtml}</div>

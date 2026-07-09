@@ -1,7 +1,7 @@
 import { TEMA_OPTIONS } from '../data/constants.js';
 import { escapeHtml } from '../lib/format.js';
 
-const NAV = [['panorama', 'Panorama'], ['banco', 'Banco'], ['calendario', 'Calendario'], ['clientes', 'Clientes'], ['seguimiento', 'Seguimiento']];
+const NAV = [['panorama', 'Panorama'], ['banco', 'Banco'], ['desarrollo', 'Desarrollo'], ['calendario', 'Calendario'], ['clientes', 'Clientes'], ['seguimiento', 'Seguimiento']];
 
 export function renderHeader(state) {
   const navHtml = NAV.map(([v, label]) => `

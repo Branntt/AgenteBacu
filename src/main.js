@@ -2,8 +2,10 @@ import { state, actions, subscribe } from './state/store.js';
 import { TEMA_MAP } from './data/constants.js';
 import { renderHeader } from './components/header.js';
 import { renderDetalle } from './components/detalle.js';
+import { renderGuion } from './components/guion.js';
 import { renderPanorama } from './views/panorama.js';
 import { renderBanco } from './views/banco.js';
+import { renderDesarrollo } from './views/desarrollo.js';
 import { renderCalendario } from './views/calendario.js';
 import { renderClientes } from './views/clientes.js';
 import { renderSeguimiento } from './views/seguimiento.js';
@@ -11,6 +13,7 @@ import { renderSeguimiento } from './views/seguimiento.js';
 const VIEWS = {
   panorama: renderPanorama,
   banco: renderBanco,
+  desarrollo: renderDesarrollo,
   calendario: renderCalendario,
   clientes: renderClientes,
   seguimiento: renderSeguimiento
@@ -27,6 +30,7 @@ function render() {
       ${renderHeader(state)}
       ${view(state)}
       ${renderDetalle(state)}
+      ${renderGuion(state)}
     </div>
   `;
   root.scrollTop = scroll;
@@ -71,13 +75,20 @@ root.addEventListener('click', e => {
       break;
     }
     case 'drawer-cerrar': actions.cerrarDrawer(); break;
+    case 'ir-a-guion': actions.cerrarDrawer(); actions.abrirGuion(id); break;
+    case 'filtro-desarrollo-set': actions.setFiltroDesarrollo(filtro); break;
+    case 'guion-abrir': actions.abrirGuion(id); break;
+    case 'guion-cerrar': actions.cerrarGuion(); break;
+    case 'guion-item-agregar': actions.addGuionItem(id); break;
+    case 'guion-item-quitar': actions.removeGuionItem(id, Number(idx)); break;
+    case 'guion-marcar-lista': actions.updIdea(id, { estado: 'lista' }); actions.cerrarGuion(); break;
   }
 });
 
 root.addEventListener('change', e => {
   const el = e.target.closest('[data-change]');
   if (el) {
-    const { change, id, campo, key } = el.dataset;
+    const { change, id, campo, key, idx } = el.dataset;
     const value = el.type === 'checkbox' ? el.checked : el.value;
 
     switch (change) {
@@ -105,6 +116,8 @@ root.addEventListener('change', e => {
       case 'snap-campo': actions.snapSetCampo(key, value); break;
       case 'tema': actions.setTema(value); break;
       case 'calma': actions.setModoCalma(value); break;
+      case 'guion-campo': actions.setGuionCampo(id, campo, value); break;
+      case 'guion-item-campo': actions.updGuionItem(id, Number(idx), campo, value); break;
     }
     return;
   }
