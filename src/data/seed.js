@@ -1,0 +1,27 @@
+export function seedIdeas() {
+  return [
+    { id: 'i1', marca: 'bacu', colab: '', titulo: "Caso de estudio: campaña 'Raíces' para Café Momoto", nota: 'Qué pidió el cliente, qué propusimos y qué cambió el resultado. Cifras reales si el cliente autoriza.', gancho: '', objetivos: [8, 0], formato: 'Carrusel', estado: 'lista', fecha: '2026-07-07', preguntas: [true, true, true, true], tiempo: '6 h', grabacion: false, edicion: true, prioridad: 'Alta', etapa: 6 },
+    { id: 'i2', marca: 'brant', colab: 'bacu', titulo: 'Por qué corté la mejor toma del comercial', nota: 'La toma más bella no contaba la historia. Voz sobre el timeline real del proyecto.', gancho: 'Esta toma costó una tarde entera. La borré.', objetivos: [3, 0], formato: 'Voice Over', estado: 'lista', fecha: '2026-07-10', preguntas: [true, true, true, true], tiempo: '3 h', grabacion: false, edicion: true, prioridad: 'Media', etapa: 4 },
+    { id: 'i3', marca: 'novena', colab: 'bacu', titulo: 'Sesión 001 — Valentina Ruiz, en vivo en la Novena', nota: 'Primera sesión de la serie. Un plano secuencia, sonido directo, sin cortes.', gancho: '', objetivos: [9, 7], formato: 'Mini documental', estado: 'lista', fecha: '2026-07-17', preguntas: [true, true, true, true], tiempo: '2 días', grabacion: true, edicion: true, prioridad: 'Alta', etapa: 4 },
+    { id: 'i4', marca: 'brant', colab: '', titulo: 'La cámara no piensa: notas sobre mirar', nota: 'Ensayo corto. Tres ideas sobre por qué encuadrar es decidir.', gancho: '', objetivos: [6, 4], formato: 'Artículo', estado: 'lista', fecha: null, preguntas: [true, true, true, true], tiempo: '4 h', grabacion: false, edicion: false, prioridad: 'Media', etapa: 2 },
+    { id: 'i5', marca: 'bacu', colab: '', titulo: "Antes / después: el grade de 'Raíces'", nota: 'Split screen del máster log contra el final. Sin música épica: el corte habla.', gancho: 'Así se ve un comercial antes del color.', objetivos: [1, 8], formato: 'Reel', estado: 'lista', fecha: '2026-07-22', preguntas: [true, true, true, true], tiempo: '2 h', grabacion: false, edicion: true, prioridad: 'Media', etapa: 3 },
+    { id: 'i6', marca: 'novena', colab: '', titulo: 'Convocatoria: noche de cortos en la Novena', nota: 'Abrir la sala. Los asistentes traen su corto en USB. Cupo limitado.', gancho: '', objetivos: [7, 10], formato: 'Fotografía', estado: 'lista', fecha: '2026-07-27', preguntas: [true, true, true, true], tiempo: '2 h', grabacion: false, edicion: false, prioridad: 'Alta', etapa: 2 },
+    { id: 'i7', marca: 'brant', colab: '', titulo: 'Lo que aprendí produciendo sin presupuesto', nota: 'Aún sin ángulo claro. ¿Historia concreta o lista? Buscar la anécdota primero.', gancho: '', objetivos: [3], formato: 'Reel', estado: 'desarrollo', fecha: null, preguntas: [null, null, null, null], tiempo: '', grabacion: true, edicion: true, prioridad: 'Baja', etapa: 0 },
+    { id: 'i8', marca: 'bacu', colab: '', titulo: "Anatomía de un plano: la apertura de 'Raíces'", nota: 'Desglose de un solo plano: luz, movimiento, sonido. Formato documento.', gancho: '', objetivos: [1, 0], formato: 'Documento', estado: 'desarrollo', fecha: null, preguntas: [true, true, null, null], tiempo: '', grabacion: false, edicion: false, prioridad: 'Media', etapa: 1 },
+    { id: 'i9', marca: 'novena', colab: '', titulo: 'Entrevista: el proceso de La Doncella', nota: 'La banda ensaya en la Novena. Grabar una conversación, no un cuestionario.', gancho: '', objetivos: [9, 2], formato: 'Entrevista', estado: 'desarrollo', fecha: null, preguntas: [null, null, null, null], tiempo: '', grabacion: true, edicion: true, prioridad: 'Media', etapa: 0 },
+    { id: 'i10', marca: 'brant', colab: 'novena', titulo: 'Manifiesto: por qué existe la Novena', nota: 'Texto en primera persona + material de archivo de las primeras sesiones.', gancho: '', objetivos: [6, 2, 10], formato: 'Making Of', estado: 'lista', fecha: null, preguntas: [true, true, true, true], tiempo: '1 día', grabacion: false, edicion: true, prioridad: 'Alta', etapa: 2 },
+    { id: 'i11', marca: 'bacu', colab: '', titulo: 'Reel de transiciones trending', nota: 'Descartada: no pasa la pregunta 1. No existiría en cinco años.', gancho: '', objetivos: [], formato: 'Reel', estado: 'descartada', fecha: null, preguntas: [false, null, null, null], tiempo: '', grabacion: true, edicion: true, prioridad: 'Baja', etapa: 0 },
+    { id: 'i12', marca: 'brant', colab: '', titulo: 'Primer corte vs. corte final — junio', nota: 'La gente quiere ver decisiones, no resultados.', gancho: 'El corte final miente. Este es el primero.', objetivos: [3, 0], formato: 'Carrusel', estado: 'publicada', fecha: '2026-06-18', preguntas: [true, true, true, true], tiempo: '5 h', grabacion: false, edicion: true, prioridad: 'Media', etapa: 9, metricas: { alcance: '12.4k', guardados: '318', seguidores: '62' }, aprendizaje: 'Los guardados triplicaron el promedio. Repetir el formato comparativa.' }
+  ];
+}
+
+export function seedSnaps() {
+  return [{ id: 's1', fecha: '2026-07-04', brant: { seg: 4095, vis: 9700 }, bacu: { seg: 795, vis: 692500 }, novena: { seg: 28, vis: 0 } }];
+}
+
+export function seedClientes() {
+  return [
+    { id: 'c1', nombre: 'Café Momoto', estado: 'activo', proyecto: "Campaña 'Raíces'", nota: 'Entrega en julio. Pedir autorización para publicar el caso de estudio.' },
+    { id: 'c2', nombre: 'Vezga', estado: 'prospecto', proyecto: 'Visuales para show', nota: 'Vio el aftermovie. Enviar propuesta corta con 2 referencias.' }
+  ];
+}
