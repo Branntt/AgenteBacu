@@ -1,7 +1,7 @@
 import { seedIdeas, seedSnaps, seedClientes } from '../data/seed.js';
 import { load, persist, loadValue, persistValue } from '../lib/storage.js';
 import { parseN } from '../lib/format.js';
-import { mesActual, hoyStr } from '../lib/idea.js';
+import { mesActual, hoyStr, lunesDe, sumarDias } from '../lib/idea.js';
 
 export const state = {
   view: 'panorama',
@@ -13,6 +13,9 @@ export const state = {
   guionId: null,
   filtro: 'todas',
   filtroDesarrollo: 'todas',
+  filtroCalendario: 'todas',
+  calVista: 'mes',
+  semanaInicio: lunesDe(hoyStr()),
   snapDraft: null,
   tema: loadValue('sistemaEditorial.tema', 'Cine crudo'),
   modoCalma: loadValue('sistemaEditorial.modoCalma', false)
@@ -107,7 +110,11 @@ export const actions = {
     if (m === 13) { m = 1; y++; }
     setState({ month: y + '-' + String(m).padStart(2, '0') });
   },
-  irAHoy: () => setState({ month: mesActual() }),
+  irAHoy: () => setState({ month: mesActual(), semanaInicio: lunesDe(hoyStr()) }),
+
+  setCalVista: v => setState({ calVista: v }),
+  setFiltroCalendario: v => setState({ filtroCalendario: v }),
+  cambiaSemana: delta => setState({ semanaInicio: sumarDias(state.semanaInicio, delta * 7) }),
 
   nuevoCliente: () => {
     const c = { id: 'c' + Date.now(), nombre: '', estado: 'prospecto', proyecto: '', nota: '' };

@@ -442,7 +442,7 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
 .guion-item input { width: 100%; }
 
 /* ---------- calendario ---------- */
-.cal-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
+.cal-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 12px; }
 .cal-nav { display: flex; gap: 6px; }
 .cal-nav button {
   background: none;
@@ -456,10 +456,30 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
 }
 .cal-nav .hoy-btn { font-size: 10.5px; letter-spacing: 1.5px; text-transform: uppercase; }
 
-/* Mobile + tablet-portrait: agenda list (days with entries only) replaces the 7-col grid,
-   which does not fit narrow screens without horizontal scroll or illegible cells. */
+.cal-stats { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: var(--muted); line-height: 1.6; margin-bottom: 20px; }
+
+.cal-controls { display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between; margin-bottom: 20px; }
+.segmented { display: inline-flex; border: 1px solid var(--line); align-self: flex-start; }
+.segmented-btn {
+  background: none;
+  border: none;
+  border-right: 1px solid var(--line);
+  cursor: pointer;
+  padding: 10px 16px;
+  min-height: 40px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10.5px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.segmented-btn:last-child { border-right: none; }
+.segmented-btn.active { background: var(--verde); color: #0C0E0D; }
+
+/* Agenda: chronological list of days that have entries — works at any width, no grid needed. */
 .cal-agenda { display: flex; flex-direction: column; gap: 10px; }
-.cal-agenda-empty { padding: 32px 16px; text-align: center; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--muted); line-height: 1.6; border: 1px dashed var(--line2); }
+.cal-agenda-empty, .col-empty { padding: 24px 12px; text-align: center; font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: var(--muted); line-height: 1.6; }
+.cal-agenda-empty { padding: 32px 16px; font-size: 11px; border: 1px dashed var(--line2); }
 .cal-agenda-day { background: var(--panel); border: 1px solid var(--line); padding: 14px 16px; }
 .cal-agenda-day.today { border-color: var(--verde); }
 .cal-agenda-date { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
@@ -467,7 +487,15 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
 .cal-agenda-day .cal-entry { margin-bottom: 8px; }
 .cal-agenda-day .cal-entry:last-child { margin-bottom: 0; }
 
-.cal-grid { display: none; }
+/* Mes: 7-column grid. Narrow screens scroll horizontally instead of collapsing —
+   an explicit Agenda view exists for anyone who'd rather not scroll a month grid. */
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(132px, 1fr));
+  border-left: 1px solid var(--line);
+  border-top: 1px solid var(--line);
+  overflow-x: auto;
+}
 .cal-dow {
   padding: 10px 12px;
   border-right: 1px solid var(--line);
@@ -489,27 +517,32 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
   display: inline-flex; align-items: center; justify-content: center;
   border-radius: 50%;
 }
+
+/* Semana: 7 vertical columns, one card per day, more room per entry than the month grid. */
+.cal-week { display: grid; grid-template-columns: repeat(7, minmax(150px, 1fr)); gap: 10px; overflow-x: auto; }
+.cal-week-col { background: var(--panel); border: 1px solid var(--line); min-height: 200px; }
+.cal-week-head { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; border-bottom: 1px solid var(--line); }
+.cal-week-head.today { border-bottom-color: var(--verde); }
+.cal-week-body { display: flex; flex-direction: column; gap: 8px; padding: 10px; }
+
+/* shared entry card — used by mes, semana and agenda alike */
 .cal-entry { background: var(--panel2); padding: 8px 10px; cursor: pointer; display: flex; flex-direction: column; gap: 3px; min-height: 44px; justify-content: center; }
 .cal-entry:hover { background: var(--panel); }
 .cal-entry-bar { display: block; width: 22px; height: 2px; }
 .cal-entry-title { font-size: 12px; font-weight: 600; line-height: 1.3; }
-.cal-entry-meta { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); }
-.cal-footer { margin-top: 20px; display: flex; flex-direction: column; gap: 16px; }
-.cal-note { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--muted); line-height: 1.7; max-width: 640px; }
-.cal-quote { font-family: 'Instrument Serif', serif; font-size: 15px; font-style: italic; color: var(--text); }
-.cal-legend { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; }
-.legend-item { display: flex; align-items: center; gap: 7px; }
-.legend-label { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); }
+.cal-entry-meta { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+.cal-entry-flags { display: inline-flex; gap: 4px; }
+.cal-flag { font-size: 10px; line-height: 1; }
+.cal-flag.ok { color: var(--verde); }
+.cal-flag.alta { color: var(--rojo); }
 
 @media (min-width: 900px) {
-  .cal-agenda { display: none; }
-  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); border-left: 1px solid var(--line); border-top: 1px solid var(--line); }
   .cal-entry { min-height: 0; padding: 7px 9px; }
   .cal-entry-title { font-size: 11.5px; }
-  .cal-footer { flex-direction: row; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
 }
 @media (min-width: 1200px) {
   .cal-nav button { min-height: 0; padding: 8px 16px; }
+  .segmented-btn, .filtro-btn { min-height: 0; padding: 8px 14px; }
 }
 
 /* ---------- clientes ---------- */

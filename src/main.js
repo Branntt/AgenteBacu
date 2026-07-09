@@ -42,7 +42,7 @@ render();
 root.addEventListener('click', e => {
   const el = e.target.closest('[data-act]');
   if (!el) return;
-  const { act, id, view, marca, filtro, idx, value } = el.dataset;
+  const { act, id, view, marca, filtro, idx, value, vista } = el.dataset;
 
   switch (act) {
     case 'nav-go': actions.setView(view); break;
@@ -51,9 +51,11 @@ root.addEventListener('click', e => {
     case 'filtro-set': actions.setFiltro(filtro); break;
     case 'idea-abrir': actions.abrirIdea(id); break;
     case 'idea-eliminar': actions.eliminarIdea(id); break;
-    case 'cal-prev': actions.cambiaMes(-1); break;
-    case 'cal-next': actions.cambiaMes(1); break;
+    case 'cal-prev': state.calVista === 'semana' ? actions.cambiaSemana(-1) : actions.cambiaMes(-1); break;
+    case 'cal-next': state.calVista === 'semana' ? actions.cambiaSemana(1) : actions.cambiaMes(1); break;
     case 'cal-hoy': actions.irAHoy(); break;
+    case 'cal-vista-set': actions.setCalVista(vista); break;
+    case 'filtro-calendario-set': actions.setFiltroCalendario(filtro); break;
     case 'cliente-nuevo': actions.nuevoCliente(); break;
     case 'cliente-eliminar': actions.eliminarCliente(id); break;
     case 'snap-abre': actions.snapAbre(); break;
