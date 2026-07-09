@@ -81,6 +81,7 @@ export function renderPanorama(state) {
         </div>
       </div>
 
+      <div class="section-title">Las marcas</div>
       <div class="marcas-grid">${marcasHtml}</div>
 
       <div class="rules-grid">

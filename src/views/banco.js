@@ -56,6 +56,7 @@ export function renderBanco(state) {
         <h2 class="serif" style="margin:0;font-size:32px;">Banco de ideas</h2>
         <div class="filtros">${filtrosHtml}</div>
       </div>
+      <div class="vista-sub">Todas las ideas, ordenadas por qué tan listas están para producirse.</div>
       <div class="banco-grid">${colsHtml}</div>
     </main>
   `;

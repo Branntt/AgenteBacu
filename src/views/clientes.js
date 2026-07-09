@@ -3,7 +3,8 @@ import { escapeHtml } from '../lib/format.js';
 const ESTADO_COLORS = { prospecto: 'var(--muted)', conversacion: 'var(--novena)', activo: 'var(--verde)', entregado: 'var(--brant)' };
 
 export function renderClientes(state) {
-  const cards = (state.clientes || []).map(c => `
+  const clientes = state.clientes || [];
+  const cards = clientes.map(c => `
     <div class="cliente-card">
       <div class="cliente-top">
         <select data-change="cliente-estado" data-id="${c.id}">
@@ -27,10 +28,10 @@ export function renderClientes(state) {
     <main class="clientes">
       <div class="clientes-head">
         <h2 class="serif" style="margin:0;font-size:32px;">Clientes</h2>
-        <button class="btn-ghost" data-act="cliente-nuevo">+ Nuevo cliente</button>
+        <button class="btn-primary" data-act="cliente-nuevo">+ Nuevo cliente</button>
       </div>
-      <div class="clientes-sub">Cada caso de estudio publicado en Bacu debería producir el siguiente nombre en esta lista.</div>
-      <div class="clientes-grid">${cards}</div>
+      <div class="vista-sub">Cada caso de estudio publicado en Bacu debería producir el siguiente nombre en esta lista.</div>
+      ${clientes.length ? `<div class="clientes-grid">${cards}</div>` : `<div class="empty-state">Todavía no hay clientes.<br>El primero llega con el primer caso de estudio publicado.</div>`}
     </main>
   `;
 }

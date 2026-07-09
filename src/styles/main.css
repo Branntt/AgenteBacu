@@ -69,6 +69,13 @@ main.panorama { padding-top: 28px; }
   color: var(--verde);
   margin-bottom: 18px;
 }
+/* one-line description under a tab's <h2> heading — shared shape across every tab */
+.vista-sub {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  color: var(--muted);
+  margin: 6px 0 24px;
+}
 .panel {
   background: var(--panel);
   border: 1px solid var(--line);
@@ -385,7 +392,8 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
 .idea-val.ok { color: var(--verde); }
 .idea-val.pend { color: var(--muted); }
 .idea-val.no { color: var(--rojo); }
-.col-empty { padding: 24px 12px; text-align: center; font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: var(--muted); line-height: 1.6; }
+.col-empty, .empty-state { padding: 24px 12px; text-align: center; font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: var(--muted); line-height: 1.6; }
+.empty-state { border: 1px dashed var(--line2); }
 
 @media (min-width: 480px) {
   .banco-col { flex: 0 0 70%; }
@@ -506,7 +514,6 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
 
 /* ---------- clientes ---------- */
 .clientes-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 10px; gap: 12px; flex-wrap: wrap; }
-.clientes-sub { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--muted); margin-bottom: 24px; }
 .clientes-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
 .cliente-card { background: var(--panel); border: 1px solid var(--line); padding: 20px; display: flex; flex-direction: column; gap: 12px; }
 .cliente-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; }

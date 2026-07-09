@@ -95,6 +95,7 @@ export function renderSeguimiento(state) {
         <h2 class="serif" style="margin:0;font-size:32px;">Seguimiento</h2>
         <button class="btn-primary" data-act="snap-abre">+ Registro</button>
       </div>
+      <div class="vista-sub">Seguidores y alcance por marca, mes a mes.</div>
       ${formHtml}
       <div class="cuentas-grid">${cuentasHtml}</div>
       <div class="seg-bottom">

@@ -76,6 +76,7 @@ export function renderCalendario(state) {
           <button data-act="cal-next">→</button>
         </div>
       </div>
+      <div class="vista-sub">Qué se publica y cuándo, mes a mes.</div>
       <div class="cal-agenda">${agendaHtml}</div>
       <div class="cal-grid">${dowHtml}${celdasHtml}</div>
       <div class="cal-footer">

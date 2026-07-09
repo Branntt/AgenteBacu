@@ -39,7 +39,7 @@ export function renderDesarrollo(state) {
     const items = ideas.filter(i => familiaDeFormato(i.formato) === key);
     const itemsHtml = items.length
       ? items.map(cardHtml).join('')
-      : `<div class="col-empty">Nada en desarrollo<br>con este tipo de guion.</div>`;
+      : `<div class="col-empty">Vacío.<br>Nada de este tipo, todavía.</div>`;
     return `
       <div class="banco-col">
         <div class="banco-col-head">
@@ -58,7 +58,7 @@ export function renderDesarrollo(state) {
         <h2 class="serif" style="margin:0;font-size:32px;">Desarrollo</h2>
         <div class="filtros">${filtrosHtml}</div>
       </div>
-      <div class="clientes-sub">Ideas en desarrollo, clasificadas por el tipo de guion que necesitan. Abre una para escribirlo.</div>
+      <div class="vista-sub">Ideas en desarrollo, clasificadas por el tipo de guion que necesitan. Abre una para escribirlo.</div>
       <div class="desarrollo-grid">${columnasHtml}</div>
     </main>
   `;
