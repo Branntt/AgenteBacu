@@ -4,6 +4,18 @@ import { hoyStr } from '../lib/idea.js';
 
 const DIAS_SEMANA = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 
+function entryHtml(i) {
+  const M = MARCAS[i.marca];
+  const meta = M.nombre + (i.colab ? ' + ' + MARCAS[i.colab].nombre : '') + ' · ' + i.formato + (i.estado === 'publicada' ? ' · publicada' : '');
+  return `
+    <div class="cal-entry" data-act="idea-abrir" data-id="${i.id}">
+      <span class="cal-entry-bar" style="background:${M.color}"></span>
+      <span class="cal-entry-title">${escapeHtml(i.titulo)}</span>
+      <span class="cal-entry-meta">${escapeHtml(meta)}</span>
+    </div>
+  `;
+}
+
 export function renderCalendario(state) {
   const ideas = state.ideas;
   const [anio, mesNum] = state.month.split('-').map(Number);
@@ -18,32 +30,30 @@ export function renderCalendario(state) {
 
   const dowHtml = DIAS_SEMANA.map(ds => `<div class="cal-dow">${ds}</div>`).join('');
 
-  let celdasHtml = '';
+  const dias = [];
   for (let c = 0; c < totalCeldas; c++) {
     const dnum = c - lead + 1;
     const esMes = dnum >= 1 && dnum <= diasMes;
     const fstr = esMes ? state.month + '-' + String(dnum).padStart(2, '0') : null;
     const esHoy = fstr === hoy;
     const entries = esMes ? ideas.filter(i => i.fecha === fstr && i.estado !== 'descartada') : [];
-    const entriesHtml = entries.map(i => {
-      const M = MARCAS[i.marca];
-      const meta = M.nombre + (i.colab ? ' + ' + MARCAS[i.colab].nombre : '') + ' · ' + i.formato + (i.estado === 'publicada' ? ' · publicada' : '');
-      return `
-        <div class="cal-entry" data-act="idea-abrir" data-id="${i.id}">
-          <span class="cal-entry-bar" style="background:${M.color}"></span>
-          <span class="cal-entry-title">${escapeHtml(i.titulo)}</span>
-          <span class="cal-entry-meta">${escapeHtml(meta)}</span>
-        </div>
-      `;
-    }).join('');
-
-    celdasHtml += `
-      <div class="cal-cell">
-        <span class="cal-daynum ${esHoy ? 'today' : (!esMes ? 'out' : '')}">${esMes ? dnum : ''}</span>
-        ${entriesHtml}
-      </div>
-    `;
+    dias.push({ dnum, esMes, fstr, esHoy, entries });
   }
+
+  const celdasHtml = dias.map(d => `
+    <div class="cal-cell">
+      <span class="cal-daynum ${d.esHoy ? 'today' : (!d.esMes ? 'out' : '')}">${d.esMes ? d.dnum : ''}</span>
+      ${d.entries.map(entryHtml).join('')}
+    </div>
+  `).join('');
+
+  const diasConEntradas = dias.filter(d => d.esMes && d.entries.length > 0);
+  const agendaHtml = diasConEntradas.length ? diasConEntradas.map(d => `
+    <div class="cal-agenda-day ${d.esHoy ? 'today' : ''}">
+      <div class="cal-agenda-date">${d.dnum} ${MESES[mesNum - 1].slice(0, 3)}${d.esHoy ? ' <span class="today-mark">· hoy</span>' : ''}</div>
+      ${d.entries.map(entryHtml).join('')}
+    </div>
+  `).join('') : `<div class="cal-agenda-empty">Sin publicaciones programadas este mes.<br>Cada espacio vacío es una decisión editorial, no un descuido.</div>`;
 
   const leyendaHtml = Object.keys(MARCAS).map(k => `
     <div class="legend-item">
@@ -66,6 +76,7 @@ export function renderCalendario(state) {
           <button data-act="cal-next">→</button>
         </div>
       </div>
+      <div class="cal-agenda">${agendaHtml}</div>
       <div class="cal-grid">${dowHtml}${celdasHtml}</div>
       <div class="cal-footer">
         <div class="cal-note">${calNota}<br><span class="cal-quote">«Sin publicación programada. No existe una idea que aporte suficiente valor.»</span></div>
