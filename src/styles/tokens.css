@@ -7,18 +7,18 @@ html, body {
 }
 
 :root {
-  --bg: #0C0E0D;
-  --panel: #131614;
-  --panel2: #1A1E1B;
-  --line: #272C28;
-  --line2: #31372F;
-  --text: #ECE9DF;
-  --muted: #8F968F;
-  --verde: #3BA478;
-  --verdedeep: #2E7D5B;
-  --brant: #D9D3C2;
-  --novena: #C9834F;
-  --rojo: #B0563F;
+  --bg: #000000;
+  --panel: #0D0D0D;
+  --panel2: #181818;
+  --line: #2E2E2E;
+  --line2: #3D3D3D;
+  --text: #FFFFFF;
+  --muted: #8C8C8C;
+  --verde: #42C88F;
+  --verdedeep: #2E9C6C;
+  --brant: #EDE7D3;
+  --novena: #D98A50;
+  --rojo: #C25A3C;
 }
 
 [data-tema="galeria"] {
@@ -34,21 +34,6 @@ html, body {
   --brant: #6B6553;
   --novena: #A85F2E;
   --rojo: #A34B34;
-}
-
-[data-tema="zine"] {
-  --bg: #000000;
-  --panel: #0D0D0D;
-  --panel2: #181818;
-  --line: #2E2E2E;
-  --line2: #3D3D3D;
-  --text: #FFFFFF;
-  --muted: #8C8C8C;
-  --verde: #42C88F;
-  --verdedeep: #2E9C6C;
-  --brant: #EDE7D3;
-  --novena: #D98A50;
-  --rojo: #C25A3C;
 }
 
 ::selection { background: #2E7D5B; color: #fff; }

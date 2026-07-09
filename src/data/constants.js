@@ -56,8 +56,8 @@ export const ENFOQUE = [
   { n: 3, titulo: 'Novena no debe arrancar sola.', texto: 'Con 28 seguidores, publicar al vacío desmotiva. Lanza con la Sesión 001 como colaboración con Bacu y Brant: hereda audiencia desde el día uno y nace como movimiento, no como cuenta nueva.' }
 ];
 
-export const TEMA_MAP = { 'Cine oscuro': 'cine', 'Galería clara': 'galeria', 'Zine crudo': 'zine' };
-export const TEMA_OPTIONS = ['Cine oscuro', 'Galería clara', 'Zine crudo'];
+export const TEMA_MAP = { 'Cine crudo': 'cine', 'Galería clara': 'galeria' };
+export const TEMA_OPTIONS = ['Cine crudo', 'Galería clara'];
 
 // Cada formato de idea se agrupa en una familia de guion: mismos campos de escritura,
 // porque un Reel y un Voice Over se escriben igual (gancho/cuerpo/cierre) aunque

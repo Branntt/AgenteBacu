@@ -14,7 +14,7 @@ export const state = {
   filtro: 'todas',
   filtroDesarrollo: 'todas',
   snapDraft: null,
-  tema: loadValue('sistemaEditorial.tema', 'Cine oscuro'),
+  tema: loadValue('sistemaEditorial.tema', 'Cine crudo'),
   modoCalma: loadValue('sistemaEditorial.modoCalma', false)
 };
 
