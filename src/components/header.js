@@ -15,8 +15,8 @@ export function renderHeader(state) {
   return `
     <header class="app-header">
       <div class="brand">
-        <svg width="34" height="20" viewBox="0 0 40 24" class="brand-mark"><ellipse cx="20" cy="12" rx="18" ry="10" fill="none" stroke="currentColor" stroke-width="1.6"></ellipse><circle cx="20" cy="12" r="5" fill="currentColor"></circle></svg>
-        <div class="brand-title">Sistema Editorial</div>
+        <svg width="34" height="20" viewBox="0 0 40 24" class="brand-mark" aria-hidden="true"><path fill-rule="evenodd" fill="currentColor" d="M4.41,12 A18,18 0 0,1 35.59,12 A18,18 0 0,1 4.41,12 Z M25.5,12 A5.5,5.5 0 1,0 14.5,12 A5.5,5.5 0 1,0 25.5,12 Z"></path></svg>
+        <div class="brand-title">S.A.O BACU</div>
       </div>
       <nav class="nav">${navHtml}</nav>
       <div class="settings">
