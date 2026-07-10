@@ -139,6 +139,14 @@ export function renderDetalle(state) {
           ${prios}
         </div>
 
+        <div class="field">
+          <label class="field-label">Fecha de rodaje</label>
+          <div class="fecha-row">
+            <input type="date" data-change="idea-fecha-rodaje" data-id="${id}" value="${escapeHtml(selIdea.fechaRodaje || '')}" style="flex:1; color-scheme:dark;">
+            ${selIdea.fechaRodaje ? `<button class="btn-ghost" data-act="fecha-rodaje-quitar" data-id="${id}">Quitar</button>` : ''}
+          </div>
+        </div>
+
         <div class="validation-box">
           <div class="section-title">Validación — las cuatro preguntas</div>
           <div style="display:flex; flex-direction:column; gap:14px;">${pregsHtml}</div>

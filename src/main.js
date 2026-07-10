@@ -65,6 +65,7 @@ root.addEventListener('click', e => {
     case 'prio-set': actions.updIdea(id, { prioridad: value }); break;
     case 'pregunta-set': actions.setPregunta(id, Number(idx), value === 'true'); break;
     case 'fecha-quitar': actions.updIdea(id, { fecha: null }); break;
+    case 'fecha-rodaje-quitar': actions.updIdea(id, { fechaRodaje: null }); break;
     case 'etapa-set': actions.updIdea(id, { etapa: Number(idx) }); break;
     case 'grab-toggle': {
       const idea = state.ideas.find(i => i.id === id);
@@ -107,6 +108,7 @@ root.addEventListener('change', e => {
       case 'idea-formato': actions.updIdea(id, { formato: value }); break;
       case 'idea-tiempo': actions.updIdea(id, { tiempo: value }); break;
       case 'idea-fecha': actions.updIdea(id, { fecha: value || null }); break;
+      case 'idea-fecha-rodaje': actions.updIdea(id, { fechaRodaje: value || null }); break;
       case 'idea-estado': actions.updIdea(id, { estado: value }); break;
       case 'idea-metrica': actions.setMetrica(id, campo, value); break;
       case 'idea-aprendizaje': actions.updIdea(id, { aprendizaje: value }); break;

@@ -6,21 +6,32 @@ const DIAS_SEMANA = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 const VISTAS = [['mes', 'Mes'], ['semana', 'Semana'], ['agenda', 'Agenda']];
 const FILTROS = [['todas', 'Todas'], ['brant', 'Brant'], ['bacu', 'Bacu'], ['novena', 'Novena']];
 
-function entryHtml(i) {
+function entryHtml(i, tipo) {
   const M = MARCAS[i.marca];
   const marcaTxt = M.nombre + (i.colab ? ' + ' + MARCAS[i.colab].nombre : '');
   const ok = valida(i);
   const prioridadAlta = i.prioridad === 'Alta' && i.estado !== 'publicada' && i.estado !== 'descartada';
   const flags = (ok ? '<span class="cal-flag ok" title="Validada">✓</span>' : '')
     + (prioridadAlta ? '<span class="cal-flag alta" title="Prioridad alta">⚠</span>' : '');
+  const tag = tipo === 'rodaje' ? '<span class="cal-entry-tag">Rodaje</span>' : '';
 
   return `
-    <div class="cal-entry" data-act="idea-abrir" data-id="${i.id}">
+    <div class="cal-entry ${tipo === 'rodaje' ? 'is-rodaje' : ''}" data-act="idea-abrir" data-id="${i.id}">
       <span class="cal-entry-bar" style="background:${M.color}"></span>
-      <div class="cal-entry-title">${escapeHtml(i.titulo)}</div>
+      <div class="cal-entry-title">${tag}${escapeHtml(i.titulo)}</div>
       <div class="cal-entry-meta">${escapeHtml(i.formato)} · ${escapeHtml(marcaTxt)}${flags ? `<span class="cal-entry-flags">${flags}</span>` : ''}</div>
     </div>
   `;
+}
+
+function entradasDeDia(ideas, fs) {
+  const publicacion = ideas.filter(i => i.fecha === fs && i.estado !== 'descartada').map(i => entryHtml(i, 'publicacion'));
+  const rodaje = ideas.filter(i => i.fechaRodaje === fs && i.estado !== 'descartada').map(i => entryHtml(i, 'rodaje'));
+  return rodaje.concat(publicacion);
+}
+
+function tieneEntradas(ideas, fs) {
+  return ideas.some(i => i.estado !== 'descartada' && (i.fecha === fs || i.fechaRodaje === fs));
 }
 
 function controlesHtml(state) {
@@ -52,7 +63,7 @@ function renderMes(state, ideas) {
     const esMes = dnum >= 1 && dnum <= diasMes;
     const fs = esMes ? state.month + '-' + String(dnum).padStart(2, '0') : null;
     const esHoy = fs === hoy;
-    const entries = esMes ? ideas.filter(i => i.fecha === fs && i.estado !== 'descartada') : [];
+    const entries = esMes ? entradasDeDia(ideas, fs) : [];
     dias.push({ dnum, esMes, fs, esHoy, entries });
   }
 
@@ -60,7 +71,7 @@ function renderMes(state, ideas) {
   const celdasHtml = dias.map(d => `
     <div class="cal-cell">
       <span class="cal-daynum ${d.esHoy ? 'today' : (!d.esMes ? 'out' : '')}">${d.esMes ? d.dnum : ''}</span>
-      ${d.entries.map(entryHtml).join('')}
+      ${d.entries.join('')}
     </div>
   `).join('');
 
@@ -73,7 +84,7 @@ function renderSemana(state, ideas) {
   for (let c = 0; c < 7; c++) {
     const fs = sumarDias(state.semanaInicio, c);
     const [, , dnum] = fs.split('-').map(Number);
-    const entries = ideas.filter(i => i.fecha === fs && i.estado !== 'descartada');
+    const entries = entradasDeDia(ideas, fs);
     dias.push({ fs, dnum, esHoy: fs === hoy, entries });
   }
 
@@ -84,7 +95,7 @@ function renderSemana(state, ideas) {
         <span class="cal-daynum ${d.esHoy ? 'today' : ''}">${d.dnum}</span>
       </div>
       <div class="cal-week-body">
-        ${d.entries.length ? d.entries.map(entryHtml).join('') : '<div class="col-empty">Vacío.</div>'}
+        ${d.entries.length ? d.entries.join('') : '<div class="col-empty">Vacío.</div>'}
       </div>
     </div>
   `).join('');
@@ -100,19 +111,19 @@ function renderAgenda(state, ideas) {
   const dias = [];
   for (let dnum = 1; dnum <= diasMes; dnum++) {
     const fs = state.month + '-' + String(dnum).padStart(2, '0');
-    const entries = ideas.filter(i => i.fecha === fs && i.estado !== 'descartada');
-    if (entries.length) dias.push({ dnum, fs, esHoy: fs === hoy, entries });
+    if (!tieneEntradas(ideas, fs)) continue;
+    dias.push({ dnum, fs, esHoy: fs === hoy, entries: entradasDeDia(ideas, fs) });
   }
 
   if (!dias.length) {
-    return `<div class="cal-agenda-empty">Sin publicaciones programadas este mes.<br>Cada espacio vacío es una decisión editorial, no un descuido.</div>`;
+    return `<div class="cal-agenda-empty">Sin publicaciones ni rodajes programados este mes.<br>Cada espacio vacío es una decisión editorial, no un descuido.</div>`;
   }
 
   const mesLabel = MESES[mesNum - 1];
   return `<div class="cal-agenda">${dias.map(d => `
     <div class="cal-agenda-day ${d.esHoy ? 'today' : ''}">
       <div class="cal-agenda-date">${d.dnum} ${mesLabel.slice(0, 3)}${d.esHoy ? ' <span class="today-mark">· hoy</span>' : ''}</div>
-      ${d.entries.map(entryHtml).join('')}
+      ${d.entries.join('')}
     </div>
   `).join('')}</div>`;
 }
@@ -120,7 +131,7 @@ function renderAgenda(state, ideas) {
 export function renderCalendario(state) {
   const ideas = state.ideas.filter(i => state.filtroCalendario === 'todas' || i.marca === state.filtroCalendario || i.colab === state.filtroCalendario);
 
-  let titulo, contenido, statsIdeas, diasPeriodo, statsLabel;
+  let titulo, contenido, fechasPeriodo, diasPeriodo, statsLabel;
   const mesLabel = MESES[Number(state.month.split('-')[1]) - 1];
   const mesTitulo = mesLabel.charAt(0).toUpperCase() + mesLabel.slice(1) + ' ' + state.month.split('-')[0];
 
@@ -132,22 +143,23 @@ export function renderCalendario(state) {
       ? `${ad}–${bd} ${MESES[am - 1].slice(0, 3)} ${ay}`
       : `${ad} ${MESES[am - 1].slice(0, 3)} – ${bd} ${MESES[bm - 1].slice(0, 3)} ${by}`;
     contenido = renderSemana(state, ideas);
-    const fechas = Array.from({ length: 7 }, (_, i) => sumarDias(state.semanaInicio, i));
-    statsIdeas = ideas.filter(i => i.fecha && fechas.includes(i.fecha) && i.estado !== 'descartada');
+    fechasPeriodo = Array.from({ length: 7 }, (_, i) => sumarDias(state.semanaInicio, i));
     diasPeriodo = 7;
     statsLabel = 'esta semana';
   } else {
     const [anio, mesNum] = state.month.split('-').map(Number);
     titulo = state.calVista === 'agenda' ? `Agenda — ${mesTitulo}` : mesTitulo;
     contenido = state.calVista === 'agenda' ? renderAgenda(state, ideas) : renderMes(state, ideas);
-    statsIdeas = ideas.filter(i => i.fecha && i.fecha.startsWith(state.month) && i.estado !== 'descartada');
     diasPeriodo = new Date(anio, mesNum, 0).getDate();
+    fechasPeriodo = Array.from({ length: diasPeriodo }, (_, i) => state.month + '-' + String(i + 1).padStart(2, '0'));
     statsLabel = 'este mes';
   }
 
+  const statsIdeas = ideas.filter(i => i.fecha && fechasPeriodo.includes(i.fecha) && i.estado !== 'descartada');
+  const rodajesPeriodo = ideas.filter(i => i.fechaRodaje && fechasPeriodo.includes(i.fechaRodaje) && i.estado !== 'descartada');
   const diasConPub = new Set(statsIdeas.map(i => i.fecha)).size;
   const prioridadAltaPendiente = statsIdeas.filter(i => i.prioridad === 'Alta' && i.estado !== 'publicada').length;
-  const statsHtml = `${statsIdeas.length} publicaciones ${statsLabel} · ${diasPeriodo - diasConPub} días sin publicar · ${prioridadAltaPendiente} con prioridad alta pendiente`;
+  const statsHtml = `${statsIdeas.length} publicaciones ${statsLabel} · ${diasPeriodo - diasConPub} días sin publicar · ${rodajesPeriodo.length} rodajes · ${prioridadAltaPendiente} con prioridad alta pendiente`;
 
   return `
     <main class="calendario">
