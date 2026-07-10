@@ -165,16 +165,20 @@ root.addEventListener('click', e => {
     case 'guion-marcar-lista': actions.updIdea(id, { estado: 'lista' }); actions.cerrarGuion(); break;
     case 'descartar-aviso-guardado': actions.descartarAvisoGuardado(); break;
     case 'logout': actions.logout(); break;
+    case 'auth-toggle-modo': actions.authToggleModo(); break;
   }
 });
 
 root.addEventListener('submit', e => {
-  const form = e.target.closest('[data-form="login"]');
+  const loginForm = e.target.closest('[data-form="login"]');
+  const signupForm = e.target.closest('[data-form="signup"]');
+  const form = loginForm || signupForm;
   if (!form) return;
   e.preventDefault();
   const email = form.querySelector('[name="email"]').value;
   const password = form.querySelector('[name="password"]').value;
-  actions.login(email, password);
+  if (signupForm) actions.signup(email, password);
+  else actions.login(email, password);
 });
 
 root.addEventListener('change', e => {

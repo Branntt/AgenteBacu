@@ -217,6 +217,16 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
   padding: 10px 12px;
   margin-bottom: 16px;
 }
+.login-info {
+  background: var(--panel2);
+  border: 1px solid var(--verde);
+  color: var(--text);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  line-height: 1.5;
+  padding: 10px 12px;
+  margin-bottom: 16px;
+}
 
 /* ---------- save error banner ---------- */
 .save-error-banner {

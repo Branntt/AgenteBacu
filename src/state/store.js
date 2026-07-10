@@ -25,6 +25,8 @@ export const state = {
   authReady: false,
   authBusy: false,
   authError: null,
+  authInfo: null,
+  authMode: 'login',
   dataReady: false
 };
 
@@ -131,12 +133,26 @@ export const actions = {
   descartarAvisoGuardado: () => setState({ saveError: false }),
 
   login: async (email, password) => {
-    setState({ authBusy: true, authError: null });
+    setState({ authBusy: true, authError: null, authInfo: null });
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) setState({ authBusy: false, authError: 'No pudimos iniciar sesión. Revisá el email y la contraseña.' });
     else setState({ authBusy: false, authError: null });
   },
+  signup: async (email, password) => {
+    setState({ authBusy: true, authError: null, authInfo: null });
+    const { data, error } = await supabase.auth.signUp({ email, password });
+    if (error) {
+      setState({ authBusy: false, authError: error.message.includes('Password') ? 'La contraseña necesita al menos 6 caracteres.' : 'No pudimos crear la cuenta. Probá con otro email.' });
+      return;
+    }
+    if (data.session) {
+      setState({ authBusy: false });
+    } else {
+      setState({ authBusy: false, authMode: 'login', authInfo: 'Cuenta creada. Si tu proyecto pide confirmar el email, revisá tu correo antes de entrar — si no, ya podés iniciar sesión.' });
+    }
+  },
   logout: async () => { await supabase.auth.signOut(); },
+  authToggleModo: () => setState({ authMode: state.authMode === 'login' ? 'signup' : 'login', authError: null, authInfo: null }),
 
   nuevaIdea: () => {
     const nueva = { id: 'u' + Date.now(), marca: 'brant', colab: '', titulo: '', nota: '', gancho: '', objetivos: [], formato: 'Reel', estado: 'desarrollo', fecha: null, fechaRodaje: null, preguntas: [null, null, null, null], tiempo: '', grabacion: false, edicion: false, prioridad: 'Media', etapa: 0 };
