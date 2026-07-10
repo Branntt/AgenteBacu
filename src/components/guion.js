@@ -11,6 +11,16 @@ function camposFijosHtml(idea, fam) {
   `).join('');
 }
 
+function notasHtml(idea, fam) {
+  const g = idea.guion || {};
+  return `
+    <div class="field">
+      <label class="field-label">${escapeHtml(fam.notas.label)}</label>
+      <textarea class="nota-field" data-change="guion-campo" data-id="${idea.id}" data-campo="notas" rows="5" placeholder="${escapeHtml(fam.notas.placeholder)}">${escapeHtml(g.notas || '')}</textarea>
+    </div>
+  `;
+}
+
 function itemsHtml(idea, fam) {
   const items = (idea.guion || {}).items || [];
   const rows = items.length ? items.map((it, idx) => `
@@ -39,7 +49,7 @@ export function renderGuion(state) {
 
   const fam = FAMILIAS_GUION[familiaDeFormato(idea.formato)];
   const M = MARCAS[idea.marca];
-  const cuerpo = fam.campos ? camposFijosHtml(idea, fam) : itemsHtml(idea, fam);
+  const cuerpo = fam.notas ? notasHtml(idea, fam) : (fam.campos ? camposFijosHtml(idea, fam) : itemsHtml(idea, fam));
 
   return `
     <div class="drawer-overlay">

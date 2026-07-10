@@ -17,6 +17,7 @@ export const state = {
   calVista: 'mes',
   semanaInicio: lunesDe(hoyStr()),
   snapDraft: null,
+  rodajeDraft: null,
   tema: loadValue('sistemaEditorial.tema', 'Cine crudo'),
   modoCalma: loadValue('sistemaEditorial.modoCalma', false),
   saveError: false,
@@ -160,6 +161,22 @@ export const actions = {
     setState({ selId: nueva.id, view: (state.view === 'banco' || state.view === 'desarrollo') ? state.view : 'banco' });
     supabase.from('ideas').insert(toDbIdea(nueva)).then(({ error }) => marcarGuardado(!error));
   },
+  rodajeRapidoAbrir: fecha => setState({ rodajeDraft: { titulo: '', marca: 'brant', fecha: fecha || hoyStr() } }),
+  rodajeRapidoCerrar: () => setState({ rodajeDraft: null }),
+  rodajeRapidoSetCampo: (campo, val) => setState({ rodajeDraft: { ...state.rodajeDraft, [campo]: val } }),
+  rodajeRapidoGuardar: () => {
+    const D = state.rodajeDraft;
+    if (!D || !D.titulo.trim()) return;
+    const nueva = {
+      id: 'u' + Date.now(), marca: D.marca, colab: '', titulo: D.titulo, nota: '', gancho: '',
+      objetivos: [], formato: 'Cubrimiento', estado: 'desarrollo', fecha: null, fechaRodaje: D.fecha,
+      preguntas: [null, null, null, null], tiempo: '', grabacion: true, edicion: false, prioridad: 'Media', etapa: 0
+    };
+    state.ideas = [nueva].concat(state.ideas);
+    setState({ rodajeDraft: null });
+    supabase.from('ideas').insert(toDbIdea(nueva)).then(({ error }) => marcarGuardado(!error));
+  },
+
   abrirIdea: id => setState({ selId: id }),
   cerrarDrawer: () => setState({ selId: null }),
   updIdea: (id, patch) => {

@@ -69,7 +69,7 @@ function renderMes(state, ideas) {
 
   const dowHtml = DIAS_SEMANA.map(ds => `<div class="cal-dow">${ds}</div>`).join('');
   const celdasHtml = dias.map(d => `
-    <div class="cal-cell">
+    <div class="cal-cell ${d.esMes ? 'clickable' : ''}" ${d.esMes ? `data-act="rodaje-rapido-abrir" data-fecha="${d.fs}"` : ''}>
       <span class="cal-daynum ${d.esHoy ? 'today' : (!d.esMes ? 'out' : '')}">${d.esMes ? d.dnum : ''}</span>
       ${d.entries.join('')}
     </div>
@@ -94,8 +94,8 @@ function renderSemana(state, ideas) {
         <span class="cal-dow">${DIAS_SEMANA[i]}</span>
         <span class="cal-daynum ${d.esHoy ? 'today' : ''}">${d.dnum}</span>
       </div>
-      <div class="cal-week-body">
-        ${d.entries.length ? d.entries.join('') : '<div class="col-empty">Vacío.</div>'}
+      <div class="cal-week-body clickable" data-act="rodaje-rapido-abrir" data-fecha="${d.fs}">
+        ${d.entries.length ? d.entries.join('') : '<div class="col-empty">Tocá para agendar.</div>'}
       </div>
     </div>
   `).join('');

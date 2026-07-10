@@ -3,6 +3,7 @@ import { TEMA_MAP } from './data/constants.js';
 import { renderHeader } from './components/header.js';
 import { renderDetalle } from './components/detalle.js';
 import { renderGuion } from './components/guion.js';
+import { renderRodajeRapido } from './components/rodajeRapido.js';
 import { renderLogin } from './views/login.js';
 import { renderPanorama } from './views/panorama.js';
 import { renderBanco } from './views/banco.js';
@@ -78,12 +79,13 @@ function render() {
       ${view(state)}
       ${renderDetalle(state)}
       ${renderGuion(state)}
+      ${renderRodajeRapido(state)}
     </div>
   `;
   root.scrollTop = scroll;
   restaurarFoco(foco);
 
-  const drawerAbiertoAhora = !!(state.selId || state.guionId);
+  const drawerAbiertoAhora = !!(state.selId || state.guionId || state.rodajeDraft);
   if (drawerAbiertoAhora && !drawerAbiertoAntes) {
     const drawer = root.querySelector('.drawer');
     const primero = drawer && drawer.querySelector(FOCUSABLE);
@@ -97,12 +99,13 @@ render();
 initAuth();
 
 document.addEventListener('keydown', e => {
-  const drawerAbierto = state.selId || state.guionId;
+  const drawerAbierto = state.selId || state.guionId || state.rodajeDraft;
   if (!drawerAbierto) return;
 
   if (e.key === 'Escape') {
     if (state.selId) actions.cerrarDrawer();
     if (state.guionId) actions.cerrarGuion();
+    if (state.rodajeDraft) actions.rodajeRapidoCerrar();
     return;
   }
 
@@ -120,7 +123,7 @@ document.addEventListener('keydown', e => {
 root.addEventListener('click', e => {
   const el = e.target.closest('[data-act]');
   if (!el) return;
-  const { act, id, view, marca, filtro, idx, value, vista } = el.dataset;
+  const { act, id, view, marca, filtro, idx, value, vista, fecha } = el.dataset;
 
   switch (act) {
     case 'nav-go': actions.setView(view); break;
@@ -166,6 +169,9 @@ root.addEventListener('click', e => {
     case 'descartar-aviso-guardado': actions.descartarAvisoGuardado(); break;
     case 'logout': actions.logout(); break;
     case 'auth-toggle-modo': actions.authToggleModo(); break;
+    case 'rodaje-rapido-abrir': actions.rodajeRapidoAbrir(fecha); break;
+    case 'rodaje-rapido-cerrar': actions.rodajeRapidoCerrar(); break;
+    case 'rodaje-rapido-guardar': actions.rodajeRapidoGuardar(); break;
   }
 });
 
@@ -219,6 +225,7 @@ root.addEventListener('change', e => {
       case 'calma': actions.setModoCalma(value); break;
       case 'guion-campo': actions.setGuionCampo(id, campo, value); break;
       case 'guion-item-campo': actions.updGuionItem(id, Number(idx), campo, value); break;
+      case 'rodaje-rapido-campo': actions.rodajeRapidoSetCampo(campo, value); break;
     }
     return;
   }

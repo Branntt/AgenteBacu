@@ -24,7 +24,7 @@ export const MARCAS = {
 
 export const OBJETIVOS = ['Autoridad', 'Excelencia', 'Historia', 'Proceso real', 'Inspirar', 'Conversación', 'Identidad', 'Comunidad', 'Clientes', 'Impulsar artistas', 'Cultura creativa'];
 
-export const FORMATOS = ['Reel', 'Carrusel', 'Fotografía', 'Documento', 'Historia', 'Live', 'Artículo', 'Making Of', 'Mini documental', 'Entrevista', 'Moodboard', 'Voice Over'];
+export const FORMATOS = ['Reel', 'Carrusel', 'Fotografía', 'Documento', 'Historia', 'Live', 'Artículo', 'Making Of', 'Mini documental', 'Entrevista', 'Moodboard', 'Voice Over', 'Cubrimiento'];
 
 export const PIPELINE = ['Idea', 'Validación', 'Preproducción', 'Producción', 'Edición', 'Revisión', 'Programación', 'Publicación', 'Análisis', 'Aprendizajes'];
 
@@ -109,6 +109,12 @@ export const FAMILIAS_GUION = {
     itemLabel: 'Toma',
     campoPrincipal: { key: 'principal', label: 'Descripción de la toma', placeholder: 'Qué se fotografía' },
     campoSecundario: { key: 'secundario', label: 'Locación / referencia', placeholder: 'Dónde, con qué luz' }
+  },
+  cubrimiento: {
+    label: 'Cubrimiento (sin guion)',
+    descripcion: 'Cobertura en vivo — no se escribe, se anota qué no perderse.',
+    formatos: ['Cubrimiento'],
+    notas: { label: 'Qué no perderse', placeholder: 'Momentos clave a capturar: quién, qué pasa, en qué orden aproximado.' }
   }
 };
 

@@ -24,6 +24,7 @@ export function renderHeader(state) {
         <label><input type="checkbox" id="calma-checkbox" data-change="calma" ${state.modoCalma ? 'checked' : ''}> Modo calma</label>
         ${state.session ? `<button class="btn-text-muted" data-act="logout" title="${escapeHtml(state.session.user.email)}">Salir</button>` : ''}
       </div>
+      <button class="btn-ghost" data-act="rodaje-rapido-abrir">+ Rodaje rápido</button>
       <button class="btn-primary" data-act="nueva-idea">+ Nueva idea</button>
     </header>
   `;
