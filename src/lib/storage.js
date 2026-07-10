@@ -13,7 +13,7 @@ export function load(key, seed) {
 }
 
 export function persist(key, val) {
-  try { localStorage.setItem(key, JSON.stringify(val)); } catch (e) {}
+  try { localStorage.setItem(key, JSON.stringify(val)); return true; } catch (e) { return false; }
 }
 
 export function loadValue(key, fallback) {
@@ -25,5 +25,5 @@ export function loadValue(key, fallback) {
 }
 
 export function persistValue(key, val) {
-  try { localStorage.setItem(key, JSON.stringify(val)); } catch (e) {}
+  try { localStorage.setItem(key, JSON.stringify(val)); return true; } catch (e) { return false; }
 }

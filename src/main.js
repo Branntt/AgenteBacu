@@ -20,13 +20,43 @@ const VIEWS = {
 };
 
 const root = document.getElementById('app');
+const FOCUSABLE = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+
+function capturarFoco() {
+  const el = document.activeElement;
+  if (!el || el === document.body || !root.contains(el)) return null;
+  const attrs = ['data-change', 'data-act', 'data-id', 'data-campo', 'data-idx', 'data-key', 'id'];
+  const sel = attrs.map(a => el.getAttribute(a) ? `[${a}="${CSS.escape(el.getAttribute(a))}"]` : '').join('');
+  if (!sel) return null;
+  return { selector: el.tagName.toLowerCase() + sel, start: el.selectionStart, end: el.selectionEnd };
+}
+
+function restaurarFoco(info) {
+  if (!info) return;
+  const el = root.querySelector(info.selector);
+  if (!el) return;
+  el.focus();
+  if (typeof info.start === 'number' && el.setSelectionRange) {
+    try { el.setSelectionRange(info.start, info.end); } catch (e) {}
+  }
+}
+
+let drawerAbiertoAntes = false;
 
 function render() {
   const temaAttr = TEMA_MAP[state.tema] || 'cine';
   const view = VIEWS[state.view] || renderPanorama;
   const scroll = root.scrollTop;
+  const foco = capturarFoco();
+
   root.innerHTML = `
     <div class="app-root" data-tema="${temaAttr}">
+      ${state.saveError ? `
+        <div class="save-error-banner" role="alert">
+          <span>No se pudo guardar el último cambio. Puede que el almacenamiento del navegador esté lleno o en modo privado.</span>
+          <button data-act="descartar-aviso-guardado">✕</button>
+        </div>
+      ` : ''}
       ${renderHeader(state)}
       ${view(state)}
       ${renderDetalle(state)}
@@ -34,10 +64,40 @@ function render() {
     </div>
   `;
   root.scrollTop = scroll;
+  restaurarFoco(foco);
+
+  const drawerAbiertoAhora = !!(state.selId || state.guionId);
+  if (drawerAbiertoAhora && !drawerAbiertoAntes) {
+    const drawer = root.querySelector('.drawer');
+    const primero = drawer && drawer.querySelector(FOCUSABLE);
+    if (primero) primero.focus();
+  }
+  drawerAbiertoAntes = drawerAbiertoAhora;
 }
 
 subscribe(render);
 render();
+
+document.addEventListener('keydown', e => {
+  const drawerAbierto = state.selId || state.guionId;
+  if (!drawerAbierto) return;
+
+  if (e.key === 'Escape') {
+    if (state.selId) actions.cerrarDrawer();
+    if (state.guionId) actions.cerrarGuion();
+    return;
+  }
+
+  if (e.key === 'Tab') {
+    const drawer = root.querySelector('.drawer');
+    if (!drawer) return;
+    const focusables = Array.from(drawer.querySelectorAll(FOCUSABLE));
+    if (!focusables.length) return;
+    const first = focusables[0], last = focusables[focusables.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  }
+});
 
 root.addEventListener('click', e => {
   const el = e.target.closest('[data-act]');
@@ -85,6 +145,7 @@ root.addEventListener('click', e => {
     case 'guion-item-agregar': actions.addGuionItem(id); break;
     case 'guion-item-quitar': actions.removeGuionItem(id, Number(idx)); break;
     case 'guion-marcar-lista': actions.updIdea(id, { estado: 'lista' }); actions.cerrarGuion(); break;
+    case 'descartar-aviso-guardado': actions.descartarAvisoGuardado(); break;
   }
 });
 
@@ -104,7 +165,11 @@ root.addEventListener('change', e => {
         actions.updIdea(id, { marca: value, colab });
         break;
       }
-      case 'idea-colab': actions.updIdea(id, { colab: value }); break;
+      case 'idea-colab': {
+        const idea = state.ideas.find(i => i.id === id);
+        actions.updIdea(id, { colab: idea && value === idea.marca ? '' : value });
+        break;
+      }
       case 'idea-formato': actions.updIdea(id, { formato: value }); break;
       case 'idea-tiempo': actions.updIdea(id, { tiempo: value }); break;
       case 'idea-fecha': actions.updIdea(id, { fecha: value || null }); break;

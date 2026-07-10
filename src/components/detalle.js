@@ -75,7 +75,7 @@ export function renderDetalle(state) {
   return `
     <div class="drawer-overlay">
       <div class="drawer-backdrop" data-act="drawer-cerrar"></div>
-      <div class="drawer">
+      <div class="drawer" role="dialog" aria-modal="true" aria-label="Detalle de idea">
         <div class="drawer-top">
           <span class="chip">${estadoChip}</span>
           <button class="btn-close" data-act="drawer-cerrar">✕</button>

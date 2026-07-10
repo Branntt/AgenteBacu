@@ -181,6 +181,29 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
   input, select { min-height: 0; font-size: inherit; }
 }
 
+/* ---------- save error banner ---------- */
+.save-error-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: var(--rojo);
+  color: #fff;
+  padding: 10px 16px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  line-height: 1.4;
+}
+.save-error-banner button {
+  background: none;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 4px 8px;
+  flex-shrink: 0;
+}
+
 /* ---------- header / navigation ---------- */
 .app-header {
   position: sticky;

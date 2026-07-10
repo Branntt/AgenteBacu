@@ -44,7 +44,7 @@ export function renderGuion(state) {
   return `
     <div class="drawer-overlay">
       <div class="drawer-backdrop" data-act="guion-cerrar"></div>
-      <div class="drawer">
+      <div class="drawer" role="dialog" aria-modal="true" aria-label="Editor de guion">
         <div class="drawer-top">
           <span class="chip"><span class="dot" style="width:8px;height:8px;background:${M.color};margin-right:6px;"></span>${escapeHtml(M.nombre)} · ${escapeHtml(idea.formato)}</span>
           <button class="btn-close" data-act="guion-cerrar">✕</button>

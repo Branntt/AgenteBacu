@@ -18,7 +18,8 @@ export const state = {
   semanaInicio: lunesDe(hoyStr()),
   snapDraft: null,
   tema: loadValue('sistemaEditorial.tema', 'Cine crudo'),
-  modoCalma: loadValue('sistemaEditorial.modoCalma', false)
+  modoCalma: loadValue('sistemaEditorial.modoCalma', false),
+  saveError: false
 };
 
 const listeners = [];
@@ -30,17 +31,22 @@ function setState(patch) {
   notify();
 }
 
-function saveIdeas(ideas) { setState({ ideas }); persist('sistemaEditorial.v1', ideas); }
-function saveSnaps(snaps) { setState({ snaps }); persist('sistemaEditorial.snaps.v1', snaps); }
-function saveClientes(clientes) { setState({ clientes }); persist('sistemaEditorial.clientes.v1', clientes); }
+function marcarGuardado(ok) {
+  if (state.saveError !== !ok) setState({ saveError: !ok });
+}
+
+function saveIdeas(ideas) { setState({ ideas }); marcarGuardado(persist('sistemaEditorial.v1', ideas)); }
+function saveSnaps(snaps) { setState({ snaps }); marcarGuardado(persist('sistemaEditorial.snaps.v1', snaps)); }
+function saveClientes(clientes) { setState({ clientes }); marcarGuardado(persist('sistemaEditorial.clientes.v1', clientes)); }
 
 export const actions = {
   setView: v => setState({ view: v }),
   setFiltro: v => setState({ filtro: v }),
   abrirMarca: marca => setState({ view: 'banco', filtro: marca }),
 
-  setTema: v => { persistValue('sistemaEditorial.tema', v); setState({ tema: v }); },
-  setModoCalma: v => { persistValue('sistemaEditorial.modoCalma', v); setState({ modoCalma: v }); },
+  setTema: v => { const ok = persistValue('sistemaEditorial.tema', v); setState({ tema: v }); marcarGuardado(ok); },
+  setModoCalma: v => { const ok = persistValue('sistemaEditorial.modoCalma', v); setState({ modoCalma: v }); marcarGuardado(ok); },
+  descartarAvisoGuardado: () => setState({ saveError: false }),
 
   nuevaIdea: () => {
     const nueva = { id: 'u' + Date.now(), marca: 'brant', colab: '', titulo: '', nota: '', gancho: '', objetivos: [], formato: 'Reel', estado: 'desarrollo', fecha: null, preguntas: [null, null, null, null], tiempo: '', grabacion: false, edicion: false, prioridad: 'Media', etapa: 0 };
