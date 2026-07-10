@@ -181,6 +181,43 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
   input, select { min-height: 0; font-size: inherit; }
 }
 
+/* ---------- login / loading ---------- */
+.carga-pantalla {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.login-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 24px;
+}
+.login-box {
+  width: 100%;
+  max-width: 340px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  padding: 32px 28px;
+}
+.login-box form { display: flex; flex-direction: column; gap: 16px; }
+.login-box input { padding: 12px; width: 100%; }
+.login-error {
+  background: var(--rojo);
+  color: #fff;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  padding: 10px 12px;
+  margin-bottom: 16px;
+}
+
 /* ---------- save error banner ---------- */
 .save-error-banner {
   display: flex;

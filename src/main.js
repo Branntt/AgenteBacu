@@ -1,8 +1,9 @@
-import { state, actions, subscribe } from './state/store.js';
+import { state, actions, subscribe, initAuth } from './state/store.js';
 import { TEMA_MAP } from './data/constants.js';
 import { renderHeader } from './components/header.js';
 import { renderDetalle } from './components/detalle.js';
 import { renderGuion } from './components/guion.js';
+import { renderLogin } from './views/login.js';
 import { renderPanorama } from './views/panorama.js';
 import { renderBanco } from './views/banco.js';
 import { renderDesarrollo } from './views/desarrollo.js';
@@ -45,10 +46,26 @@ let drawerAbiertoAntes = false;
 
 function render() {
   const temaAttr = TEMA_MAP[state.tema] || 'cine';
-  const view = VIEWS[state.view] || renderPanorama;
   const scroll = root.scrollTop;
   const foco = capturarFoco();
 
+  if (!state.authReady) {
+    root.innerHTML = `<div class="app-root" data-tema="${temaAttr}"><div class="carga-pantalla">Cargando…</div></div>`;
+    return;
+  }
+
+  if (!state.session) {
+    root.innerHTML = `<div class="app-root" data-tema="${temaAttr}">${renderLogin(state)}</div>`;
+    restaurarFoco(foco);
+    return;
+  }
+
+  if (!state.dataReady) {
+    root.innerHTML = `<div class="app-root" data-tema="${temaAttr}">${renderHeader(state)}<div class="carga-pantalla">Sincronizando datos…</div></div>`;
+    return;
+  }
+
+  const view = VIEWS[state.view] || renderPanorama;
   root.innerHTML = `
     <div class="app-root" data-tema="${temaAttr}">
       ${state.saveError ? `
@@ -77,6 +94,7 @@ function render() {
 
 subscribe(render);
 render();
+initAuth();
 
 document.addEventListener('keydown', e => {
   const drawerAbierto = state.selId || state.guionId;
@@ -146,7 +164,17 @@ root.addEventListener('click', e => {
     case 'guion-item-quitar': actions.removeGuionItem(id, Number(idx)); break;
     case 'guion-marcar-lista': actions.updIdea(id, { estado: 'lista' }); actions.cerrarGuion(); break;
     case 'descartar-aviso-guardado': actions.descartarAvisoGuardado(); break;
+    case 'logout': actions.logout(); break;
   }
+});
+
+root.addEventListener('submit', e => {
+  const form = e.target.closest('[data-form="login"]');
+  if (!form) return;
+  e.preventDefault();
+  const email = form.querySelector('[name="email"]').value;
+  const password = form.querySelector('[name="password"]').value;
+  actions.login(email, password);
 });
 
 root.addEventListener('change', e => {

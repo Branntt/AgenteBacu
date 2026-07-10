@@ -1,14 +1,14 @@
-import { seedIdeas, seedSnaps, seedClientes } from '../data/seed.js';
-import { load, persist, loadValue, persistValue } from '../lib/storage.js';
+import { loadValue, persistValue } from '../lib/storage.js';
 import { parseN } from '../lib/format.js';
 import { mesActual, hoyStr, lunesDe, sumarDias } from '../lib/idea.js';
+import { supabase } from '../lib/supabaseClient.js';
 
 export const state = {
   view: 'calendario',
   month: mesActual(),
-  ideas: load('sistemaEditorial.v1', seedIdeas()),
-  snaps: load('sistemaEditorial.snaps.v1', seedSnaps()),
-  clientes: load('sistemaEditorial.clientes.v1', seedClientes()),
+  ideas: [],
+  snaps: [],
+  clientes: [],
   selId: null,
   guionId: null,
   filtro: 'todas',
@@ -19,7 +19,13 @@ export const state = {
   snapDraft: null,
   tema: loadValue('sistemaEditorial.tema', 'Cine crudo'),
   modoCalma: loadValue('sistemaEditorial.modoCalma', false),
-  saveError: false
+  saveError: false,
+
+  session: null,
+  authReady: false,
+  authBusy: false,
+  authError: null,
+  dataReady: false
 };
 
 const listeners = [];
@@ -33,11 +39,87 @@ function setState(patch) {
 
 function marcarGuardado(ok) {
   if (state.saveError !== !ok) setState({ saveError: !ok });
+  else notify();
 }
 
-function saveIdeas(ideas) { setState({ ideas }); marcarGuardado(persist('sistemaEditorial.v1', ideas)); }
-function saveSnaps(snaps) { setState({ snaps }); marcarGuardado(persist('sistemaEditorial.snaps.v1', snaps)); }
-function saveClientes(clientes) { setState({ clientes }); marcarGuardado(persist('sistemaEditorial.clientes.v1', clientes)); }
+// ---- conversión de columnas (snake_case en la base -> camelCase en la app) ----
+function fromDbIdea(row) {
+  const { fecha_rodaje, ...rest } = row;
+  return { ...rest, fechaRodaje: fecha_rodaje };
+}
+function toDbIdea(idea) {
+  const { fechaRodaje, ...rest } = idea;
+  return { ...rest, fecha_rodaje: fechaRodaje ?? null };
+}
+function toDbPatch(patch) {
+  if (!('fechaRodaje' in patch)) return patch;
+  const { fechaRodaje, ...rest } = patch;
+  return { ...rest, fecha_rodaje: fechaRodaje ?? null };
+}
+
+// ---- auth ----
+export async function initAuth() {
+  const { data } = await supabase.auth.getSession();
+  state.session = data.session;
+  state.authReady = true;
+  notify();
+  if (state.session) cargarDatos();
+
+  supabase.auth.onAuthStateChange((_event, session) => {
+    const teniaSesion = !!state.session;
+    state.session = session;
+    notify();
+    if (session && !teniaSesion) cargarDatos();
+    if (!session) setState({ ideas: [], snaps: [], clientes: [], dataReady: false });
+  });
+}
+
+async function cargarDatos() {
+  const [ideasRes, snapsRes, clientesRes] = await Promise.all([
+    supabase.from('ideas').select('*').order('id'),
+    supabase.from('snaps').select('*').order('fecha'),
+    supabase.from('clientes').select('*').order('id')
+  ]);
+  state.ideas = (ideasRes.data || []).map(fromDbIdea);
+  state.snaps = snapsRes.data || [];
+  state.clientes = clientesRes.data || [];
+  state.dataReady = true;
+  notify();
+  suscribirRealtime();
+}
+
+function suscribirRealtime() {
+  supabase.channel('sync-ideas').on('postgres_changes', { event: '*', schema: 'public', table: 'ideas' }, payload => {
+    if (payload.eventType === 'DELETE') {
+      state.ideas = state.ideas.filter(i => i.id !== payload.old.id);
+    } else {
+      const idea = fromDbIdea(payload.new);
+      const existe = state.ideas.some(i => i.id === idea.id);
+      state.ideas = existe ? state.ideas.map(i => i.id === idea.id ? idea : i) : [idea].concat(state.ideas);
+    }
+    notify();
+  }).subscribe();
+
+  supabase.channel('sync-clientes').on('postgres_changes', { event: '*', schema: 'public', table: 'clientes' }, payload => {
+    if (payload.eventType === 'DELETE') {
+      state.clientes = state.clientes.filter(c => c.id !== payload.old.id);
+    } else {
+      const existe = state.clientes.some(c => c.id === payload.new.id);
+      state.clientes = existe ? state.clientes.map(c => c.id === payload.new.id ? payload.new : c) : [payload.new].concat(state.clientes);
+    }
+    notify();
+  }).subscribe();
+
+  supabase.channel('sync-snaps').on('postgres_changes', { event: '*', schema: 'public', table: 'snaps' }, payload => {
+    if (payload.eventType === 'DELETE') {
+      state.snaps = state.snaps.filter(s => s.id !== payload.old.id);
+    } else {
+      const existe = state.snaps.some(s => s.id === payload.new.id);
+      state.snaps = existe ? state.snaps.map(s => s.id === payload.new.id ? payload.new : s) : state.snaps.concat([payload.new]);
+    }
+    notify();
+  }).subscribe();
+}
 
 export const actions = {
   setView: v => setState({ view: v }),
@@ -48,37 +130,50 @@ export const actions = {
   setModoCalma: v => { const ok = persistValue('sistemaEditorial.modoCalma', v); setState({ modoCalma: v }); marcarGuardado(ok); },
   descartarAvisoGuardado: () => setState({ saveError: false }),
 
+  login: async (email, password) => {
+    setState({ authBusy: true, authError: null });
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) setState({ authBusy: false, authError: 'No pudimos iniciar sesión. Revisá el email y la contraseña.' });
+    else setState({ authBusy: false, authError: null });
+  },
+  logout: async () => { await supabase.auth.signOut(); },
+
   nuevaIdea: () => {
-    const nueva = { id: 'u' + Date.now(), marca: 'brant', colab: '', titulo: '', nota: '', gancho: '', objetivos: [], formato: 'Reel', estado: 'desarrollo', fecha: null, preguntas: [null, null, null, null], tiempo: '', grabacion: false, edicion: false, prioridad: 'Media', etapa: 0 };
-    saveIdeas([nueva].concat(state.ideas));
+    const nueva = { id: 'u' + Date.now(), marca: 'brant', colab: '', titulo: '', nota: '', gancho: '', objetivos: [], formato: 'Reel', estado: 'desarrollo', fecha: null, fechaRodaje: null, preguntas: [null, null, null, null], tiempo: '', grabacion: false, edicion: false, prioridad: 'Media', etapa: 0 };
+    state.ideas = [nueva].concat(state.ideas);
     setState({ selId: nueva.id, view: (state.view === 'banco' || state.view === 'desarrollo') ? state.view : 'banco' });
+    supabase.from('ideas').insert(toDbIdea(nueva)).then(({ error }) => marcarGuardado(!error));
   },
   abrirIdea: id => setState({ selId: id }),
   cerrarDrawer: () => setState({ selId: null }),
-  updIdea: (id, patch) => saveIdeas(state.ideas.map(i => i.id === id ? { ...i, ...patch } : i)),
+  updIdea: (id, patch) => {
+    state.ideas = state.ideas.map(i => i.id === id ? { ...i, ...patch } : i);
+    notify();
+    supabase.from('ideas').update(toDbPatch(patch)).eq('id', id).then(({ error }) => marcarGuardado(!error));
+  },
   eliminarIdea: id => {
-    if (window.confirm('¿Eliminar esta idea definitivamente?')) {
-      saveIdeas(state.ideas.filter(x => x.id !== id));
-      setState({ selId: null });
-    }
+    if (!window.confirm('¿Eliminar esta idea definitivamente?')) return;
+    state.ideas = state.ideas.filter(x => x.id !== id);
+    setState({ selId: null });
+    supabase.from('ideas').delete().eq('id', id).then(({ error }) => marcarGuardado(!error));
   },
   toggleObjetivo: (id, idx) => {
     const idea = state.ideas.find(i => i.id === id);
     if (!idea) return;
     const objetivos = idea.objetivos.includes(idx) ? idea.objetivos.filter(x => x !== idx) : idea.objetivos.concat([idx]);
-    saveIdeas(state.ideas.map(i => i.id === id ? { ...i, objetivos } : i));
+    actions.updIdea(id, { objetivos });
   },
   setPregunta: (id, qi, val) => {
     const idea = state.ideas.find(i => i.id === id);
     if (!idea) return;
     const preguntas = idea.preguntas.slice();
     preguntas[qi] = preguntas[qi] === val ? null : val;
-    saveIdeas(state.ideas.map(i => i.id === id ? { ...i, preguntas } : i));
+    actions.updIdea(id, { preguntas });
   },
   setMetrica: (id, campo, val) => {
     const idea = state.ideas.find(i => i.id === id);
     if (!idea) return;
-    saveIdeas(state.ideas.map(i => i.id === id ? { ...i, metricas: { ...(i.metricas || {}), [campo]: val } } : i));
+    actions.updIdea(id, { metricas: { ...(idea.metricas || {}), [campo]: val } });
   },
 
   setFiltroDesarrollo: v => setState({ filtroDesarrollo: v }),
@@ -87,26 +182,26 @@ export const actions = {
   setGuionCampo: (id, campo, val) => {
     const idea = state.ideas.find(i => i.id === id);
     if (!idea) return;
-    saveIdeas(state.ideas.map(i => i.id === id ? { ...i, guion: { ...(i.guion || {}), [campo]: val } } : i));
+    actions.updIdea(id, { guion: { ...(idea.guion || {}), [campo]: val } });
   },
   addGuionItem: id => {
     const idea = state.ideas.find(i => i.id === id);
     if (!idea) return;
     const items = ((idea.guion || {}).items || []).concat([{ principal: '', secundario: '' }]);
-    saveIdeas(state.ideas.map(i => i.id === id ? { ...i, guion: { ...(i.guion || {}), items } } : i));
+    actions.updIdea(id, { guion: { ...(idea.guion || {}), items } });
   },
   updGuionItem: (id, idx, campo, val) => {
     const idea = state.ideas.find(i => i.id === id);
     if (!idea) return;
     const items = ((idea.guion || {}).items || []).slice();
     items[idx] = { ...items[idx], [campo]: val };
-    saveIdeas(state.ideas.map(i => i.id === id ? { ...i, guion: { ...(i.guion || {}), items } } : i));
+    actions.updIdea(id, { guion: { ...(idea.guion || {}), items } });
   },
   removeGuionItem: (id, idx) => {
     const idea = state.ideas.find(i => i.id === id);
     if (!idea) return;
     const items = ((idea.guion || {}).items || []).filter((_, i2) => i2 !== idx);
-    saveIdeas(state.ideas.map(i => i.id === id ? { ...i, guion: { ...(i.guion || {}), items } } : i));
+    actions.updIdea(id, { guion: { ...(idea.guion || {}), items } });
   },
 
   cambiaMes: delta => {
@@ -124,12 +219,20 @@ export const actions = {
 
   nuevoCliente: () => {
     const c = { id: 'c' + Date.now(), nombre: '', estado: 'prospecto', proyecto: '', nota: '' };
-    saveClientes([c].concat(state.clientes));
+    state.clientes = [c].concat(state.clientes);
     setState({ view: 'clientes' });
+    supabase.from('clientes').insert(c).then(({ error }) => marcarGuardado(!error));
   },
-  updCliente: (id, patch) => saveClientes(state.clientes.map(c => c.id === id ? { ...c, ...patch } : c)),
+  updCliente: (id, patch) => {
+    state.clientes = state.clientes.map(c => c.id === id ? { ...c, ...patch } : c);
+    notify();
+    supabase.from('clientes').update(patch).eq('id', id).then(({ error }) => marcarGuardado(!error));
+  },
   eliminarCliente: id => {
-    if (window.confirm('¿Eliminar este cliente?')) saveClientes(state.clientes.filter(x => x.id !== id));
+    if (!window.confirm('¿Eliminar este cliente?')) return;
+    state.clientes = state.clientes.filter(x => x.id !== id);
+    notify();
+    supabase.from('clientes').delete().eq('id', id).then(({ error }) => marcarGuardado(!error));
   },
 
   snapAbre: () => {
@@ -144,13 +247,23 @@ export const actions = {
   snapGuarda: () => {
     const D = state.snapDraft;
     if (!D) return;
-    const nuevo = {
-      id: 's' + Date.now(), fecha: D.fecha || hoyStr(),
+    const datos = {
+      fecha: D.fecha || hoyStr(),
       brant: { seg: parseN(D.brantSeg), vis: parseN(D.brantVis) },
       bacu: { seg: parseN(D.bacuSeg), vis: parseN(D.bacuVis) },
       novena: { seg: parseN(D.novenaSeg), vis: parseN(D.novenaVis) }
     };
-    saveSnaps(state.snaps.filter(s => s.fecha !== nuevo.fecha).concat([nuevo]));
-    setState({ snapDraft: null });
+    const existente = state.snaps.find(s => s.fecha === datos.fecha);
+    if (existente) {
+      const actualizado = { ...existente, ...datos };
+      state.snaps = state.snaps.map(s => s.id === existente.id ? actualizado : s);
+      setState({ snapDraft: null });
+      supabase.from('snaps').update(datos).eq('id', existente.id).then(({ error }) => marcarGuardado(!error));
+    } else {
+      const nuevo = { id: 's' + Date.now(), ...datos };
+      state.snaps = state.snaps.concat([nuevo]);
+      setState({ snapDraft: null });
+      supabase.from('snaps').insert(nuevo).then(({ error }) => marcarGuardado(!error));
+    }
   }
 };
