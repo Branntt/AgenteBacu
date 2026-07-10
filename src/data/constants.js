@@ -50,11 +50,7 @@ export const PREGUNTAS = [
 
 export const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
 
-export const ENFOQUE = [
-  { n: 1, titulo: 'Bacu tiene alcance, no conversión.', texto: '692 mil visualizaciones → 795 seguidores. El contenido detiene el scroll pero el perfil no cierra. Reescribe la bio (qué haces, para quién, prueba), fija 3 casos de estudio y termina cada reel con una razón para entrar al perfil.' },
-  { n: 2, titulo: 'Brant tiene audiencia dormida.', texto: '4.095 seguidores con 4 publicaciones: ya hay confianza acumulada. Una pieza validada por semana (proceso, decisión, visión) reactiva ese archivo sin quemarte.' },
-  { n: 3, titulo: 'Novena no debe arrancar sola.', texto: 'Con 28 seguidores, publicar al vacío desmotiva. Lanza con la Sesión 001 como colaboración con Bacu y Brant: hereda audiencia desde el día uno y nace como movimiento, no como cuenta nueva.' }
-];
+export const ENFOQUE = [];
 
 export const TEMA_MAP = { 'Cine crudo': 'cine', 'Galería clara': 'galeria' };
 export const TEMA_OPTIONS = ['Cine crudo', 'Galería clara'];

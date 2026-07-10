@@ -58,7 +58,7 @@ export function renderSeguimiento(state) {
     `;
   }).join('');
 
-  const enfoqueHtml = ENFOQUE.map(ef => `
+  const enfoqueHtml = ENFOQUE.length ? ENFOQUE.map(ef => `
     <div class="enfoque-row">
       <span class="enfoque-num">0${ef.n}</span>
       <div>
@@ -66,7 +66,10 @@ export function renderSeguimiento(state) {
         <div class="enfoque-text">${escapeHtml(ef.texto)}</div>
       </div>
     </div>
-  `).join('');
+  `).join('') : `<div class="empty-note">Todavía no hay suficientes registros para sacar conclusiones. Cargá seguidores y alcance seguido y esto se va a ir llenando solo.</div>`;
+
+  const hoyMes = new Date();
+  const mesActualLabel = MESES[hoyMes.getMonth()].charAt(0).toUpperCase() + MESES[hoyMes.getMonth()].slice(1) + ' ' + hoyMes.getFullYear();
 
   const snapRows = snaps.slice().reverse().map(s => {
     const resumen = ['brant', 'bacu', 'novena'].map(k => (s[k] ? fmtNum(s[k].seg) : '—')).join(' / ');
@@ -100,7 +103,7 @@ export function renderSeguimiento(state) {
       <div class="cuentas-grid">${cuentasHtml}</div>
       <div class="seg-bottom">
         <div class="panel">
-          <div class="section-title">Enfoque de crecimiento — julio 2026</div>
+          <div class="section-title">Enfoque de crecimiento — ${mesActualLabel}</div>
           <div style="display:flex; flex-direction:column; gap:16px;">${enfoqueHtml}</div>
         </div>
         <div class="side-col">
