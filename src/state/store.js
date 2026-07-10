@@ -4,7 +4,7 @@ import { parseN } from '../lib/format.js';
 import { mesActual, hoyStr, lunesDe, sumarDias } from '../lib/idea.js';
 
 export const state = {
-  view: 'panorama',
+  view: 'calendario',
   month: mesActual(),
   ideas: load('sistemaEditorial.v1', seedIdeas()),
   snaps: load('sistemaEditorial.snaps.v1', seedSnaps()),
@@ -51,7 +51,7 @@ export const actions = {
   nuevaIdea: () => {
     const nueva = { id: 'u' + Date.now(), marca: 'brant', colab: '', titulo: '', nota: '', gancho: '', objetivos: [], formato: 'Reel', estado: 'desarrollo', fecha: null, preguntas: [null, null, null, null], tiempo: '', grabacion: false, edicion: false, prioridad: 'Media', etapa: 0 };
     saveIdeas([nueva].concat(state.ideas));
-    setState({ selId: nueva.id, view: state.view === 'panorama' ? 'banco' : state.view });
+    setState({ selId: nueva.id, view: (state.view === 'banco' || state.view === 'desarrollo') ? state.view : 'banco' });
   },
   abrirIdea: id => setState({ selId: id }),
   cerrarDrawer: () => setState({ selId: null }),
