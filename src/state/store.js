@@ -2,6 +2,8 @@ import { loadValue, persistValue } from '../lib/storage.js';
 import { parseN } from '../lib/format.js';
 import { mesActual, hoyStr, lunesDe, sumarDias } from '../lib/idea.js';
 import { supabase } from '../lib/supabaseClient.js';
+import { generarCuentaCobroPDF } from '../lib/pdfInvoice.js';
+import { MESES } from '../data/constants.js';
 
 export const state = {
   view: 'calendario',
@@ -18,6 +20,8 @@ export const state = {
   semanaInicio: lunesDe(hoyStr()),
   snapDraft: null,
   rodajeDraft: null,
+  cuentaCobroDraft: null,
+  cuentasCobro: [],
   tema: loadValue('sistemaEditorial.tema', 'Cine crudo'),
   modoCalma: loadValue('sistemaEditorial.modoCalma', false),
   saveError: false,
@@ -78,14 +82,16 @@ export async function initAuth() {
 }
 
 async function cargarDatos() {
-  const [ideasRes, snapsRes, clientesRes] = await Promise.all([
+  const [ideasRes, snapsRes, clientesRes, cuentasRes] = await Promise.all([
     supabase.from('ideas').select('*').order('id'),
     supabase.from('snaps').select('*').order('fecha'),
-    supabase.from('clientes').select('*').order('id')
+    supabase.from('clientes').select('*').order('id'),
+    supabase.from('cuentas_cobro').select('*').order('numero')
   ]);
   state.ideas = (ideasRes.data || []).map(fromDbIdea);
   state.snaps = snapsRes.data || [];
   state.clientes = clientesRes.data || [];
+  state.cuentasCobro = cuentasRes.data || [];
   state.dataReady = true;
   notify();
   suscribirRealtime();
@@ -119,6 +125,16 @@ function suscribirRealtime() {
     } else {
       const existe = state.snaps.some(s => s.id === payload.new.id);
       state.snaps = existe ? state.snaps.map(s => s.id === payload.new.id ? payload.new : s) : state.snaps.concat([payload.new]);
+    }
+    notify();
+  }).subscribe();
+
+  supabase.channel('sync-cuentas-cobro').on('postgres_changes', { event: '*', schema: 'public', table: 'cuentas_cobro' }, payload => {
+    if (payload.eventType === 'DELETE') {
+      state.cuentasCobro = state.cuentasCobro.filter(c => c.id !== payload.old.id);
+    } else {
+      const existe = state.cuentasCobro.some(c => c.id === payload.new.id);
+      state.cuentasCobro = existe ? state.cuentasCobro.map(c => c.id === payload.new.id ? payload.new : c) : state.cuentasCobro.concat([payload.new]);
     }
     notify();
   }).subscribe();
@@ -266,6 +282,66 @@ export const actions = {
     state.clientes = state.clientes.filter(x => x.id !== id);
     notify();
     supabase.from('clientes').delete().eq('id', id).then(({ error }) => marcarGuardado(!error));
+  },
+
+  cuentaCobroAbrir: cliente => setState({
+    cuentaCobroDraft: {
+      clienteId: cliente.id,
+      clienteNombre: cliente.nombre || '',
+      documento: cliente.documento || '',
+      fecha: hoyStr(),
+      items: [{ descripcion: '', cantidad: '1', valor: '' }]
+    }
+  }),
+  cuentaCobroCerrar: () => setState({ cuentaCobroDraft: null }),
+  cuentaCobroSetCampo: (campo, val) => setState({ cuentaCobroDraft: { ...state.cuentaCobroDraft, [campo]: val } }),
+  cuentaCobroAddItem: () => {
+    const items = state.cuentaCobroDraft.items.concat([{ descripcion: '', cantidad: '1', valor: '' }]);
+    setState({ cuentaCobroDraft: { ...state.cuentaCobroDraft, items } });
+  },
+  cuentaCobroUpdItem: (idx, campo, val) => {
+    const items = state.cuentaCobroDraft.items.slice();
+    items[idx] = { ...items[idx], [campo]: val };
+    setState({ cuentaCobroDraft: { ...state.cuentaCobroDraft, items } });
+  },
+  cuentaCobroRemoveItem: idx => {
+    const items = state.cuentaCobroDraft.items.filter((_, i) => i !== idx);
+    setState({ cuentaCobroDraft: { ...state.cuentaCobroDraft, items } });
+  },
+  cuentaCobroGenerar: () => {
+    const D = state.cuentaCobroDraft;
+    if (!D || !D.clienteNombre.trim() || !D.items.length) return;
+    const total = D.items.reduce((sum, it) => sum + (Number(it.cantidad) || 1) * (Number(it.valor) || 0), 0);
+    if (!total) return;
+
+    const [anio, mesNum, diaNum] = D.fecha.split('-').map(Number);
+    const prefijo = D.fecha.slice(0, 4) + D.fecha.slice(5, 7);
+    const delMes = state.cuentasCobro.filter(cc => cc.numero.startsWith(prefijo)).length;
+    const numero = delMes === 0 ? prefijo : `${prefijo}-${delMes + 1}`;
+    const fechaLabel = `${diaNum} de ${MESES[mesNum - 1]} de ${anio}`;
+
+    const registro = {
+      id: 'cc' + Date.now(),
+      numero,
+      fecha: D.fecha,
+      cliente_id: D.clienteId || null,
+      cliente_nombre: D.clienteNombre,
+      cliente_documento: D.documento || '',
+      items: D.items.map(it => ({ descripcion: it.descripcion, cantidad: Number(it.cantidad) || 1, valor: Number(it.valor) || 0 })),
+      total
+    };
+    state.cuentasCobro = state.cuentasCobro.concat([registro]);
+    setState({ cuentaCobroDraft: null });
+    supabase.from('cuentas_cobro').insert(registro).then(({ error }) => marcarGuardado(!error));
+
+    generarCuentaCobroPDF({
+      numero,
+      fechaLabel,
+      cliente: D.clienteNombre,
+      documento: D.documento,
+      items: D.items.map(it => ({ descripcion: it.descripcion, cantidad: it.cantidad, valor: it.valor })),
+      total
+    });
   },
 
   snapAbre: () => {

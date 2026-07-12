@@ -652,7 +652,7 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
 .cliente-nombre { border: none; border-bottom: 1px solid var(--line); background: none; font-family: 'Instrument Serif', serif; font-size: 22px; padding: 4px 0; width: 100%; }
 .cliente-proyecto { font-size: 13px; padding: 9px 12px; width: 100%; }
 .cliente-nota { font-size: 12.5px; line-height: 1.5; padding: 9px 12px; resize: vertical; width: 100%; }
-.cliente-footer { display: flex; justify-content: flex-end; }
+.cliente-footer { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
 
 @media (min-width: 600px) {
   .clientes-grid { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
@@ -732,6 +732,26 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
   max-width: 420px;
   max-height: 90vh;
   border: 1px solid var(--line2);
+}
+.drawer.cuenta-cobro {
+  top: 50%; left: 50%; right: auto; bottom: auto;
+  transform: translate(-50%, -50%);
+  width: 92vw;
+  max-width: 520px;
+  max-height: 90vh;
+  border: 1px solid var(--line2);
+}
+.cc-items { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+.cc-item { display: grid; grid-template-columns: 1fr 60px 110px 28px; gap: 6px; align-items: center; }
+.cc-item input { padding: 9px 10px; font-size: 13px; }
+.cc-total { display: flex; justify-content: space-between; align-items: baseline; padding: 14px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); }
+.cc-total-valor { font-family: 'Space Grotesk', sans-serif; font-size: 22px; font-weight: 600; color: var(--verde); text-transform: none; letter-spacing: 0; }
+@media (max-width: 480px) {
+  .cc-item { grid-template-columns: 1fr 1fr; grid-template-areas: "desc desc" "cant valor" "quitar quitar"; }
+  .cc-item input[data-campo="descripcion"] { grid-area: desc; }
+  .cc-item input[data-campo="cantidad"] { grid-area: cant; }
+  .cc-item input[data-campo="valor"] { grid-area: valor; }
+  .cc-item button { grid-area: quitar; justify-self: end; }
 }
 .drawer-top { display: flex; justify-content: space-between; align-items: center; }
 .chip { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); border: 1px solid var(--line); padding: 6px 10px; }

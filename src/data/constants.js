@@ -55,6 +55,23 @@ export const ENFOQUE = [];
 export const TEMA_MAP = { 'Cine crudo': 'cine', 'Galería clara': 'galeria' };
 export const TEMA_OPTIONS = ['Cine crudo', 'Galería clara'];
 
+// Datos fijos de quien emite las cuentas de cobro — se completan solos en cada PDF.
+export const EMISOR = {
+  nombre: 'Brandon S. Cárdenas García',
+  rol: 'REALIZADOR AUDIOVISUAL',
+  cc: 'C.C. 1.095.791.525 de Floridablanca',
+  ccCorto: 'C.C. 1.095.791.525',
+  nit: 'NIT — no aplica',
+  direccion: ['Carrera 37 #100-23, Altos de Tajamar,', 'Portería 1, T6 · Apto 802'],
+  ciudad: 'Bucaramanga',
+  telefono: 'Cel. 322 310 4935',
+  contacto: '@bacu_creative · brant@bacucreative.co',
+  banco: 'Bancolombia',
+  tipoCuenta: 'Ahorros',
+  numeroCuenta: '078-251189-21',
+  titular: 'Brandon S. Cárdenas G.'
+};
+
 // Cada formato de idea se agrupa en una familia de guion: mismos campos de escritura,
 // porque un Reel y un Voice Over se escriben igual (gancho/cuerpo/cierre) aunque
 // se produzcan distinto, mientras que una Entrevista necesita preguntas, no párrafos.

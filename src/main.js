@@ -4,6 +4,7 @@ import { renderHeader } from './components/header.js';
 import { renderDetalle } from './components/detalle.js';
 import { renderGuion } from './components/guion.js';
 import { renderRodajeRapido } from './components/rodajeRapido.js';
+import { renderCuentaCobro } from './components/cuentaCobro.js';
 import { renderLogin } from './views/login.js';
 import { renderPanorama } from './views/panorama.js';
 import { renderBanco } from './views/banco.js';
@@ -80,12 +81,13 @@ function render() {
       ${renderDetalle(state)}
       ${renderGuion(state)}
       ${renderRodajeRapido(state)}
+      ${renderCuentaCobro(state)}
     </div>
   `;
   root.scrollTop = scroll;
   restaurarFoco(foco);
 
-  const drawerAbiertoAhora = !!(state.selId || state.guionId || state.rodajeDraft);
+  const drawerAbiertoAhora = !!(state.selId || state.guionId || state.rodajeDraft || state.cuentaCobroDraft);
   if (drawerAbiertoAhora && !drawerAbiertoAntes) {
     const drawer = root.querySelector('.drawer');
     const primero = drawer && drawer.querySelector(FOCUSABLE);
@@ -99,13 +101,14 @@ render();
 initAuth();
 
 document.addEventListener('keydown', e => {
-  const drawerAbierto = state.selId || state.guionId || state.rodajeDraft;
+  const drawerAbierto = state.selId || state.guionId || state.rodajeDraft || state.cuentaCobroDraft;
   if (!drawerAbierto) return;
 
   if (e.key === 'Escape') {
     if (state.selId) actions.cerrarDrawer();
     if (state.guionId) actions.cerrarGuion();
     if (state.rodajeDraft) actions.rodajeRapidoCerrar();
+    if (state.cuentaCobroDraft) actions.cuentaCobroCerrar();
     return;
   }
 
@@ -172,6 +175,15 @@ root.addEventListener('click', e => {
     case 'rodaje-rapido-abrir': actions.rodajeRapidoAbrir(fecha); break;
     case 'rodaje-rapido-cerrar': actions.rodajeRapidoCerrar(); break;
     case 'rodaje-rapido-guardar': actions.rodajeRapidoGuardar(); break;
+    case 'cc-abrir': {
+      const cliente = state.clientes.find(c => c.id === id);
+      if (cliente) actions.cuentaCobroAbrir(cliente);
+      break;
+    }
+    case 'cc-cerrar': actions.cuentaCobroCerrar(); break;
+    case 'cc-generar': actions.cuentaCobroGenerar(); break;
+    case 'cc-item-agregar': actions.cuentaCobroAddItem(); break;
+    case 'cc-item-quitar': actions.cuentaCobroRemoveItem(Number(idx)); break;
   }
 });
 
@@ -217,6 +229,7 @@ root.addEventListener('change', e => {
       case 'idea-aprendizaje': actions.updIdea(id, { aprendizaje: value }); break;
       case 'cliente-nombre': actions.updCliente(id, { nombre: value }); break;
       case 'cliente-proyecto': actions.updCliente(id, { proyecto: value }); break;
+      case 'cliente-documento': actions.updCliente(id, { documento: value }); break;
       case 'cliente-nota': actions.updCliente(id, { nota: value }); break;
       case 'cliente-estado': actions.updCliente(id, { estado: value }); break;
       case 'snap-fecha': actions.snapSetFecha(value); break;
@@ -226,6 +239,8 @@ root.addEventListener('change', e => {
       case 'guion-campo': actions.setGuionCampo(id, campo, value); break;
       case 'guion-item-campo': actions.updGuionItem(id, Number(idx), campo, value); break;
       case 'rodaje-rapido-campo': actions.rodajeRapidoSetCampo(campo, value); break;
+      case 'cc-campo': actions.cuentaCobroSetCampo(campo, value); break;
+      case 'cc-item-campo': actions.cuentaCobroUpdItem(Number(idx), campo, value); break;
     }
     return;
   }

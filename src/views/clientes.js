@@ -17,8 +17,10 @@ export function renderClientes(state) {
       </div>
       <input class="cliente-nombre" data-change="cliente-nombre" data-id="${c.id}" value="${escapeHtml(c.nombre)}" placeholder="Nombre del cliente">
       <input class="cliente-proyecto" data-change="cliente-proyecto" data-id="${c.id}" value="${escapeHtml(c.proyecto)}" placeholder="Proyecto / servicio">
+      <input class="cliente-proyecto" data-change="cliente-documento" data-id="${c.id}" value="${escapeHtml(c.documento || '')}" placeholder="C.C. / NIT (para cuentas de cobro)">
       <textarea class="cliente-nota" data-change="cliente-nota" data-id="${c.id}" rows="2" placeholder="Siguiente paso concreto…">${escapeHtml(c.nota)}</textarea>
       <div class="cliente-footer">
+        <button class="btn-ghost" data-act="cc-abrir" data-id="${c.id}">Cuenta de cobro</button>
         <button class="btn-text-muted" data-act="cliente-eliminar" data-id="${c.id}">Eliminar</button>
       </div>
     </div>
