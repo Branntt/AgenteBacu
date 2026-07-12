@@ -161,13 +161,16 @@ export function renderCalendario(state) {
   const prioridadAltaPendiente = statsIdeas.filter(i => i.prioridad === 'Alta' && i.estado !== 'publicada').length;
   const statsHtml = `${statsIdeas.length} publicaciones ${statsLabel} · ${diasPeriodo - diasConPub} días sin publicar · ${rodajesPeriodo.length} rodajes · ${prioridadAltaPendiente} con prioridad alta pendiente`;
 
+  const mesRealLabel = MESES[new Date().getMonth()];
+  const hoyBtnLabel = mesRealLabel.charAt(0).toUpperCase() + mesRealLabel.slice(1);
+
   return `
     <main class="calendario">
       <div class="cal-head">
         <h2 class="serif" style="margin:0;font-size:32px;">${titulo}</h2>
         <div class="cal-nav">
           <button data-act="cal-prev">←</button>
-          <button class="hoy-btn" data-act="cal-hoy">Hoy</button>
+          <button class="hoy-btn" data-act="cal-hoy" title="Ir a hoy">${hoyBtnLabel}</button>
           <button data-act="cal-next">→</button>
         </div>
       </div>

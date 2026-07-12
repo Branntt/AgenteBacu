@@ -417,7 +417,9 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
 
 /* ---------- banco ---------- */
 .banco-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 16px; }
-.filtros { display: flex; gap: 6px; flex-wrap: wrap; }
+.filtros { display: flex; gap: 6px; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.filtros::-webkit-scrollbar { display: none; }
+.filtros .filtro-btn { flex: 0 0 auto; }
 .filtro-btn {
   background: none;
   border: 1px solid var(--line);
@@ -529,7 +531,16 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
 .cal-stats { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: var(--muted); line-height: 1.6; margin-bottom: 20px; }
 
 .cal-controls { display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between; margin-bottom: 20px; }
-.segmented { display: inline-flex; border: 1px solid var(--line); align-self: flex-start; }
+.segmented {
+  display: flex;
+  border: 1px solid var(--line);
+  align-self: flex-start;
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.segmented::-webkit-scrollbar { display: none; }
 .segmented-btn {
   background: none;
   border: none;
@@ -537,6 +548,7 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
   cursor: pointer;
   padding: 10px 16px;
   min-height: 40px;
+  flex: 0 0 auto;
   font-family: 'IBM Plex Mono', monospace;
   font-size: 10.5px;
   letter-spacing: 1.5px;
