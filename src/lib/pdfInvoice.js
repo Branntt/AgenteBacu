@@ -60,11 +60,14 @@ function fmtMoney(n) {
 
 export const OBSERVACIONES_DEFAULT = 'Gracias por confiar en Bacu Creative. Documento válido como soporte de cobro por prestación de servicios.';
 
+const CONDICIONES_PAGO = 'Para confirmar la fecha de grabación se requiere el pago de un abono, correspondiente a un porcentaje del valor total, con mínimo 24 horas de anticipación a la grabación. Una vez cancelado el valor total del servicio, la entrega del material editado se realizará en un plazo máximo de una semana.';
+
 export function generarCuentaCobroPDF({ numero, fechaLabel, fechaVencimientoLabel, cliente, documento, items, total, observaciones }) {
   const doc = new jsPDF({ unit: 'pt', format: 'letter' });
   const W = doc.internal.pageSize.getWidth();
   const H = doc.internal.pageSize.getHeight();
   const MARGIN = 46;
+  const footH = 46;
 
   const track = (text, x, y, size, spacing, color) => {
     doc.setTextColor(color);
@@ -152,11 +155,11 @@ export function generarCuentaCobroPDF({ numero, fechaLabel, fechaVencimientoLabe
   doc.setFontSize(10);
   doc.setTextColor(TEXT_DARK);
   let yy = y2 + 16;
-  for (const line of rowsLeft) { if (line) doc.text(line, col1, yy); yy += 13.5; }
+  for (const line of rowsLeft) { if (line) doc.text(line, col1, yy); yy += 12.5; }
   let yyR = y2 + 16;
-  for (const line of rowsRight) { if (line) doc.text(line, col2, yyR); yyR += 13.5; }
+  for (const line of rowsRight) { if (line) doc.text(line, col2, yyR); yyR += 12.5; }
 
-  y = Math.max(yy, yyR) + 14;
+  y = Math.max(yy, yyR) + 12;
 
   // ---- LA SUMA DE ----
   const bandH = 40;
@@ -210,13 +213,13 @@ export function generarCuentaCobroPDF({ numero, fechaLabel, fechaVencimientoLabe
     doc.text(fmtMoney(vu), colVu, y);
     doc.setFont('helvetica', 'bold');
     doc.text(fmtMoney(sub), colSub, y, { align: 'right' });
-    y += 20;
+    y += 18;
   }
 
   y += 2;
   doc.setDrawColor(LINE_SOFT);
   doc.line(MARGIN, y, W - MARGIN, y);
-  y += 20;
+  y += 18;
 
   // ---- totales ----
   const totX = W - MARGIN - 220;
@@ -225,11 +228,11 @@ export function generarCuentaCobroPDF({ numero, fechaLabel, fechaVencimientoLabe
   doc.setTextColor(TEXT_DARK);
   doc.text('Subtotal', totX, y);
   doc.text(fmtMoney(total), W - MARGIN, y, { align: 'right' });
-  y += 16;
+  y += 15;
   doc.setTextColor(MUTED);
   doc.text('Retención en la fuente', totX, y);
   doc.text('No aplica', W - MARGIN, y, { align: 'right' });
-  y += 18;
+  y += 16;
 
   const barH = 34;
   doc.setFillColor(BG_DARK);
@@ -240,7 +243,28 @@ export function generarCuentaCobroPDF({ numero, fechaLabel, fechaVencimientoLabe
   doc.setFontSize(15);
   doc.text(fmtMoney(total), W - MARGIN - 14, y + barH / 2 + 5, { align: 'right' });
 
-  y += barH + 26;
+  y += barH + 18;
+
+  // ---- condiciones de pago (fijas, en toda cuenta de cobro) ----
+  track('CONDICIONES DE PAGO', MARGIN, y, 7.5, 1.3, VERDE);
+  doc.setDrawColor(LINE);
+  doc.setLineWidth(0.6);
+  doc.line(MARGIN, y + 6, W - MARGIN, y + 6);
+  y += 15;
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9.5);
+  doc.setTextColor(TEXT_DARK);
+  const condicionesLines = wrapText(CONDICIONES_PAGO, W - 2 * MARGIN, 'helvetica', 'normal', 9.5);
+  for (const line of condicionesLines) { doc.text(line, MARGIN, y); y += 11.5; }
+  y += 6;
+
+  // ---- si no queda espacio suficiente antes del pie de página, el resto pasa a una página nueva ----
+  const bancRowsCount = 4 + (EMISOR.nequi ? 1 : 0) + (EMISOR.daviplata ? 1 : 0);
+  const alturaRestante = 22 + bancRowsCount * 13 + 18 + 27;
+  if (y + alturaRestante > H - footH) {
+    doc.addPage();
+    y = MARGIN + 10;
+  }
 
   // ---- bancaria / observaciones ----
   sectionLabel('INFORMACIÓN BANCARIA', col1, y);
@@ -257,7 +281,7 @@ export function generarCuentaCobroPDF({ numero, fechaLabel, fechaVencimientoLabe
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(TEXT_DARK);
     doc.text(val, col1 + colW, yyB, { align: 'right' });
-    yyB += 15;
+    yyB += 13;
   }
 
   doc.setFont('helvetica', 'normal');
@@ -267,7 +291,7 @@ export function generarCuentaCobroPDF({ numero, fechaLabel, fechaVencimientoLabe
   let yyO = y + 22;
   for (const line of obsLines) { doc.text(line, col2, yyO); yyO += 13; }
 
-  y = Math.max(yyB, yyO) + 24;
+  y = Math.max(yyB, yyO) + 18;
 
   // ---- firma ----
   doc.setDrawColor(LINE);
@@ -286,7 +310,6 @@ export function generarCuentaCobroPDF({ numero, fechaLabel, fechaVencimientoLabe
   eyeIcon(W - MARGIN - 26, y - 15, 26, 15, VERDE);
 
   // ---- footer ----
-  const footH = 46;
   doc.setFillColor(CREAM);
   doc.rect(0, H - footH, W, footH, 'F');
   doc.setFont('helvetica', 'normal');
