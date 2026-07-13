@@ -426,12 +426,11 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
 
 /* ---------- banco ---------- */
 .banco-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 16px; }
-.filtros { display: flex; gap: 6px; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
-.filtros::-webkit-scrollbar { display: none; }
-.filtros .filtro-btn { flex: 0 0 auto; }
-.filtro-btn {
-  background: none;
+.filtros { display: flex; }
+.filtro-select {
+  background: var(--panel2);
   border: 1px solid var(--line);
+  color: var(--text);
   cursor: pointer;
   padding: 10px 14px;
   min-height: 40px;
@@ -439,9 +438,7 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
   font-size: 10.5px;
   letter-spacing: 1.5px;
   text-transform: uppercase;
-  color: var(--muted);
 }
-.filtro-btn.active { color: var(--verde); }
 
 /* Mobile + tablet-portrait: kanban columns become a horizontally-swipeable strip. */
 .banco-grid {
@@ -488,7 +485,7 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
   .banco-col { min-height: 400px; }
 }
 @media (min-width: 1200px) {
-  .filtro-btn { min-height: 0; padding: 8px 14px; }
+  .filtro-select { min-height: 0; padding: 8px 14px; }
 }
 
 /* ---------- desarrollo ---------- */
@@ -540,32 +537,19 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
 .cal-stats { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: var(--muted); line-height: 1.6; margin-bottom: 20px; }
 
 .cal-controls { display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between; margin-bottom: 20px; }
-.segmented {
-  display: flex;
-  border: 1px solid var(--line);
+.vista-select {
   align-self: flex-start;
-  max-width: 100%;
-  overflow-x: auto;
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
-}
-.segmented::-webkit-scrollbar { display: none; }
-.segmented-btn {
-  background: none;
-  border: none;
-  border-right: 1px solid var(--line);
+  border: 1px solid var(--line);
+  background: var(--panel2);
+  color: var(--text);
   cursor: pointer;
   padding: 10px 16px;
   min-height: 40px;
-  flex: 0 0 auto;
   font-family: 'IBM Plex Mono', monospace;
   font-size: 10.5px;
   letter-spacing: 1.5px;
   text-transform: uppercase;
-  color: var(--muted);
 }
-.segmented-btn:last-child { border-right: none; }
-.segmented-btn.active { background: var(--verde); color: #0C0E0D; }
 
 /* Agenda: chronological list of days that have entries — works at any width, no grid needed. */
 .cal-agenda { display: flex; flex-direction: column; gap: 10px; }
@@ -649,7 +633,7 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
 }
 @media (min-width: 1200px) {
   .cal-nav button { min-height: 0; padding: 8px 16px; }
-  .segmented-btn, .filtro-btn { min-height: 0; padding: 8px 14px; }
+  .vista-select, .filtro-select { min-height: 0; padding: 8px 14px; }
 }
 
 /* ---------- clientes ---------- */

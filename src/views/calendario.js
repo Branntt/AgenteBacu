@@ -35,16 +35,12 @@ function tieneEntradas(ideas, fs) {
 }
 
 function controlesHtml(state) {
-  const vistaHtml = VISTAS.map(([v, label]) => `
-    <button class="segmented-btn ${state.calVista === v ? 'active' : ''}" data-act="cal-vista-set" data-vista="${v}">${label}</button>
-  `).join('');
-  const filtroHtml = FILTROS.map(([v, label]) => `
-    <button class="filtro-btn ${state.filtroCalendario === v ? 'active' : ''}" data-act="filtro-calendario-set" data-filtro="${v}">${label}</button>
-  `).join('');
+  const vistaOpts = VISTAS.map(([v, label]) => `<option value="${v}" ${state.calVista === v ? 'selected' : ''}>${label}</option>`).join('');
+  const filtroOpts = FILTROS.map(([v, label]) => `<option value="${v}" ${state.filtroCalendario === v ? 'selected' : ''}>${label}</option>`).join('');
   return `
     <div class="cal-controls">
-      <div class="segmented">${vistaHtml}</div>
-      <div class="filtros">${filtroHtml}</div>
+      <select class="vista-select" data-change="cal-vista-set">${vistaOpts}</select>
+      <select class="filtro-select" data-change="filtro-calendario-set">${filtroOpts}</select>
     </div>
   `;
 }
@@ -161,8 +157,9 @@ export function renderCalendario(state) {
   const prioridadAltaPendiente = statsIdeas.filter(i => i.prioridad === 'Alta' && i.estado !== 'publicada').length;
   const statsHtml = `${statsIdeas.length} publicaciones ${statsLabel} · ${diasPeriodo - diasConPub} días sin publicar · ${rodajesPeriodo.length} rodajes · ${prioridadAltaPendiente} con prioridad alta pendiente`;
 
-  const mesRealLabel = MESES[new Date().getMonth()];
-  const hoyBtnLabel = mesRealLabel.charAt(0).toUpperCase() + mesRealLabel.slice(1);
+  const mesVisibleNum = state.calVista === 'semana' ? Number(state.semanaInicio.split('-')[1]) : Number(state.month.split('-')[1]);
+  const mesVisibleLabel = MESES[mesVisibleNum - 1];
+  const hoyBtnLabel = mesVisibleLabel.charAt(0).toUpperCase() + mesVisibleLabel.slice(1);
 
   return `
     <main class="calendario">

@@ -30,9 +30,8 @@ export function renderDesarrollo(state) {
   const filtro = state.filtroDesarrollo;
   const ideas = state.ideas.filter(i => i.estado === 'desarrollo' && (filtro === 'todas' || i.marca === filtro || i.colab === filtro));
 
-  const filtrosHtml = FILTROS.map(([v, label]) => `
-    <button class="filtro-btn ${filtro === v ? 'active' : ''}" data-act="filtro-desarrollo-set" data-filtro="${v}">${label}</button>
-  `).join('');
+  const filtrosOpts = FILTROS.map(([v, label]) => `<option value="${v}" ${filtro === v ? 'selected' : ''}>${label}</option>`).join('');
+  const filtrosHtml = `<select class="filtro-select" data-change="filtro-desarrollo-set">${filtrosOpts}</select>`;
 
   const columnasHtml = Object.keys(FAMILIAS_GUION).map(key => {
     const fam = FAMILIAS_GUION[key];

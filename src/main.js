@@ -126,20 +126,17 @@ document.addEventListener('keydown', e => {
 root.addEventListener('click', e => {
   const el = e.target.closest('[data-act]');
   if (!el) return;
-  const { act, id, view, marca, filtro, idx, value, vista, fecha } = el.dataset;
+  const { act, id, view, marca, idx, value, fecha } = el.dataset;
 
   switch (act) {
     case 'nav-go': actions.setView(view); break;
     case 'nueva-idea': actions.nuevaIdea(); break;
     case 'marca-abrir': actions.abrirMarca(marca); break;
-    case 'filtro-set': actions.setFiltro(filtro); break;
     case 'idea-abrir': actions.abrirIdea(id); break;
     case 'idea-eliminar': actions.eliminarIdea(id); break;
     case 'cal-prev': state.calVista === 'semana' ? actions.cambiaSemana(-1) : actions.cambiaMes(-1); break;
     case 'cal-next': state.calVista === 'semana' ? actions.cambiaSemana(1) : actions.cambiaMes(1); break;
     case 'cal-hoy': actions.irAHoy(); break;
-    case 'cal-vista-set': actions.setCalVista(vista); break;
-    case 'filtro-calendario-set': actions.setFiltroCalendario(filtro); break;
     case 'cliente-nuevo': actions.nuevoCliente(); break;
     case 'cliente-eliminar': actions.eliminarCliente(id); break;
     case 'clientes-exportar': actions.exportarListadoClientes(); break;
@@ -164,7 +161,6 @@ root.addEventListener('click', e => {
     }
     case 'drawer-cerrar': actions.cerrarDrawer(); break;
     case 'ir-a-guion': actions.cerrarDrawer(); actions.abrirGuion(id); break;
-    case 'filtro-desarrollo-set': actions.setFiltroDesarrollo(filtro); break;
     case 'guion-abrir': actions.abrirGuion(id); break;
     case 'guion-cerrar': actions.cerrarGuion(); break;
     case 'guion-item-agregar': actions.addGuionItem(id); break;
@@ -238,6 +234,10 @@ root.addEventListener('change', e => {
       case 'rodaje-rapido-campo': actions.rodajeRapidoSetCampo(campo, value); break;
       case 'cc-campo': actions.cuentaCobroSetCampo(campo, value); break;
       case 'cc-item-campo': actions.cuentaCobroUpdItem(Number(idx), campo, value); break;
+      case 'cal-vista-set': actions.setCalVista(value); break;
+      case 'filtro-set': actions.setFiltro(value); break;
+      case 'filtro-calendario-set': actions.setFiltroCalendario(value); break;
+      case 'filtro-desarrollo-set': actions.setFiltroDesarrollo(value); break;
     }
     return;
   }

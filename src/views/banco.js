@@ -33,9 +33,8 @@ export function renderBanco(state) {
   const ideas = state.ideas;
   const filtradas = ideas.filter(i => state.filtro === 'todas' || i.marca === state.filtro || i.colab === state.filtro);
 
-  const filtrosHtml = FILTROS.map(([v, label]) => `
-    <button class="filtro-btn ${state.filtro === v ? 'active' : ''}" data-act="filtro-set" data-filtro="${v}">${label}</button>
-  `).join('');
+  const filtrosOpts = FILTROS.map(([v, label]) => `<option value="${v}" ${state.filtro === v ? 'selected' : ''}>${label}</option>`).join('');
+  const filtrosHtml = `<select class="filtro-select" data-change="filtro-set">${filtrosOpts}</select>`;
 
   const colsHtml = COLUMNAS.map(([estado, titulo]) => {
     const items = filtradas.filter(i => i.estado === estado);
