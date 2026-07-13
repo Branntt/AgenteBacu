@@ -17,7 +17,7 @@ function cardHtml(i, calma) {
   const valTxt = i.estado === 'descartada' ? 'No pasó el filtro' : (ok ? '✓ Validada' : '○ Sin validar');
 
   return `
-    <div class="idea-card" data-act="idea-abrir" data-id="${i.id}">
+    <div class="idea-card" data-act="idea-abrir" data-id="${escapeHtml(i.id)}">
       <div class="idea-card-top">
         <span class="dot" style="width:9px;height:9px;background:${M.color}"></span>
         <span class="idea-marca">${escapeHtml(marcaTxt)}</span>

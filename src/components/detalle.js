@@ -8,7 +8,7 @@ export function renderDetalle(state) {
   const selIdea = state.ideas.find(i => i.id === state.selId);
   if (!selIdea) return '';
 
-  const id = selIdea.id;
+  const id = escapeHtml(selIdea.id);
   const ok = valida(selIdea);
   const met = selIdea.metricas || {};
 

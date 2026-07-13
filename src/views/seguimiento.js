@@ -85,7 +85,7 @@ export function renderSeguimiento(state) {
     if (m.seguidores) parts.push('+' + m.seguidores + ' seg');
     const meta = MARCAS[i.marca].nombre + ' · ' + (parts.length ? parts.join(' · ') : 'sin resultados registrados');
     return `
-      <div class="top-pub" data-act="idea-abrir" data-id="${i.id}">
+      <div class="top-pub" data-act="idea-abrir" data-id="${escapeHtml(i.id)}">
         <div class="top-pub-title">${escapeHtml(i.titulo)}</div>
         <div class="top-pub-meta">${escapeHtml(meta)}</div>
       </div>

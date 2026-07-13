@@ -14,7 +14,7 @@ function cardHtml(i) {
   const M = MARCAS[i.marca];
   const listo = tieneContenido(i);
   return `
-    <div class="idea-card" data-act="guion-abrir" data-id="${i.id}">
+    <div class="idea-card" data-act="guion-abrir" data-id="${escapeHtml(i.id)}">
       <div class="idea-card-top">
         <span class="dot" style="width:9px;height:9px;background:${M.color}"></span>
         <span class="idea-marca">${escapeHtml(M.nombre)}</span>

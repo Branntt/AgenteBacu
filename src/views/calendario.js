@@ -16,7 +16,7 @@ function entryHtml(i, tipo) {
   const tag = tipo === 'rodaje' ? '<span class="cal-entry-tag">Rodaje</span>' : '';
 
   return `
-    <div class="cal-entry ${tipo === 'rodaje' ? 'is-rodaje' : ''}" data-act="idea-abrir" data-id="${i.id}">
+    <div class="cal-entry ${tipo === 'rodaje' ? 'is-rodaje' : ''}" data-act="idea-abrir" data-id="${escapeHtml(i.id)}">
       <span class="cal-entry-bar" style="background:${M.color}"></span>
       <div class="cal-entry-title">${tag}${escapeHtml(i.titulo)}</div>
       <div class="cal-entry-meta">${escapeHtml(i.formato)} · ${escapeHtml(marcaTxt)}${flags ? `<span class="cal-entry-flags">${flags}</span>` : ''}</div>

@@ -142,6 +142,7 @@ root.addEventListener('click', e => {
     case 'filtro-calendario-set': actions.setFiltroCalendario(filtro); break;
     case 'cliente-nuevo': actions.nuevoCliente(); break;
     case 'cliente-eliminar': actions.eliminarCliente(id); break;
+    case 'clientes-exportar': actions.exportarListadoClientes(); break;
     case 'snap-abre': actions.snapAbre(); break;
     case 'snap-cierra': actions.snapCierra(); break;
     case 'snap-guarda': actions.snapGuarda(); break;
@@ -171,7 +172,6 @@ root.addEventListener('click', e => {
     case 'guion-marcar-lista': actions.updIdea(id, { estado: 'lista' }); actions.cerrarGuion(); break;
     case 'descartar-aviso-guardado': actions.descartarAvisoGuardado(); break;
     case 'logout': actions.logout(); break;
-    case 'auth-toggle-modo': actions.authToggleModo(); break;
     case 'rodaje-rapido-abrir': actions.rodajeRapidoAbrir(fecha); break;
     case 'rodaje-rapido-cerrar': actions.rodajeRapidoCerrar(); break;
     case 'rodaje-rapido-guardar': actions.rodajeRapidoGuardar(); break;
@@ -188,15 +188,12 @@ root.addEventListener('click', e => {
 });
 
 root.addEventListener('submit', e => {
-  const loginForm = e.target.closest('[data-form="login"]');
-  const signupForm = e.target.closest('[data-form="signup"]');
-  const form = loginForm || signupForm;
+  const form = e.target.closest('[data-form="login"]');
   if (!form) return;
   e.preventDefault();
   const email = form.querySelector('[name="email"]').value;
   const password = form.querySelector('[name="password"]').value;
-  if (signupForm) actions.signup(email, password);
-  else actions.login(email, password);
+  actions.login(email, password);
 });
 
 root.addEventListener('change', e => {

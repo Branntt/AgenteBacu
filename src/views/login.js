@@ -1,5 +1,4 @@
 export function renderLogin(state) {
-  const esSignup = state.authMode === 'signup';
   return `
     <div class="login-screen">
       <div class="login-box">
@@ -9,22 +8,19 @@ export function renderLogin(state) {
         </div>
         ${state.authError ? `<div class="login-error">${state.authError}</div>` : ''}
         ${state.authInfo ? `<div class="login-info">${state.authInfo}</div>` : ''}
-        <form data-form="${esSignup ? 'signup' : 'login'}">
+        <form data-form="login">
           <div class="field">
             <label class="field-label">Email</label>
             <input type="email" name="email" required autocomplete="username">
           </div>
           <div class="field">
             <label class="field-label">Contraseña</label>
-            <input type="password" name="password" required autocomplete="${esSignup ? 'new-password' : 'current-password'}" minlength="6">
+            <input type="password" name="password" required autocomplete="current-password" minlength="6">
           </div>
           <button type="submit" class="btn-primary" style="width:100%;margin-top:8px;" ${state.authBusy ? 'disabled' : ''}>
-            ${state.authBusy ? 'Un momento…' : (esSignup ? 'Crear cuenta' : 'Iniciar sesión')}
+            ${state.authBusy ? 'Un momento…' : 'Iniciar sesión'}
           </button>
         </form>
-        <button class="btn-text-muted" data-act="auth-toggle-modo" style="margin-top:16px;">
-          ${esSignup ? '¿Ya tenés cuenta? Iniciar sesión' : '¿No tenés cuenta todavía? Crear una'}
-        </button>
       </div>
     </div>
   `;
