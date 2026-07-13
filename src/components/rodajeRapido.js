@@ -28,7 +28,7 @@ export function renderRodajeRapido(state) {
           </div>
           <div class="field">
             <label class="field-label">Fecha de rodaje</label>
-            <input type="date" data-change="rodaje-rapido-campo" data-campo="fecha" value="${escapeHtml(D.fecha)}" style="color-scheme:dark;">
+            <input type="date" data-change="rodaje-rapido-campo" data-campo="fecha" value="${escapeHtml(D.fecha)}" min="2026-01-01" style="color-scheme:dark;">
           </div>
         </div>
 

@@ -47,11 +47,11 @@ export function renderCuentaCobro(state) {
         <div class="field-row-2">
           <div class="field">
             <label class="field-label">Fecha</label>
-            <input type="date" data-change="cc-campo" data-campo="fecha" value="${escapeHtml(D.fecha)}" style="color-scheme:dark;">
+            <input type="date" data-change="cc-campo" data-campo="fecha" value="${escapeHtml(D.fecha)}" min="2026-01-01" style="color-scheme:dark;">
           </div>
           <div class="field">
             <label class="field-label">Vence (opcional)</label>
-            <input type="date" data-change="cc-campo" data-campo="fechaVencimiento" value="${escapeHtml(D.fechaVencimiento || '')}" style="color-scheme:dark;">
+            <input type="date" data-change="cc-campo" data-campo="fechaVencimiento" value="${escapeHtml(D.fechaVencimiento || '')}" min="2026-01-01" style="color-scheme:dark;">
           </div>
         </div>
 

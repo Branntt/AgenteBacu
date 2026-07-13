@@ -49,7 +49,7 @@ export function renderDetalle(state) {
 
   const fechaHtml = ok ? `
     <div class="fecha-row">
-      <input type="date" data-change="idea-fecha" data-id="${id}" value="${escapeHtml(selIdea.fecha || '')}">
+      <input type="date" data-change="idea-fecha" data-id="${id}" value="${escapeHtml(selIdea.fecha || '')}" min="2026-01-01">
       <button class="btn-ghost" data-act="fecha-quitar" data-id="${id}">Quitar</button>
     </div>
   ` : `
@@ -142,7 +142,7 @@ export function renderDetalle(state) {
         <div class="field">
           <label class="field-label">Fecha de rodaje</label>
           <div class="fecha-row">
-            <input type="date" data-change="idea-fecha-rodaje" data-id="${id}" value="${escapeHtml(selIdea.fechaRodaje || '')}" style="flex:1; color-scheme:dark;">
+            <input type="date" data-change="idea-fecha-rodaje" data-id="${id}" value="${escapeHtml(selIdea.fechaRodaje || '')}" min="2026-01-01" style="flex:1; color-scheme:dark;">
             ${selIdea.fechaRodaje ? `<button class="btn-ghost" data-act="fecha-rodaje-quitar" data-id="${id}">Quitar</button>` : ''}
           </div>
         </div>

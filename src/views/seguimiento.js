@@ -11,7 +11,7 @@ export function renderSeguimiento(state) {
     <div class="snap-form">
       <div class="snap-form-head">
         <span>Nuevo registro — copia los números de Instagram</span>
-        <input type="date" data-change="snap-fecha" value="${escapeHtml(D.fecha)}">
+        <input type="date" data-change="snap-fecha" value="${escapeHtml(D.fecha)}" min="2026-01-01">
       </div>
       <div class="snap-fields">
         ${Object.keys(MARCAS).map(k => `
