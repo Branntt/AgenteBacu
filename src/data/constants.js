@@ -65,7 +65,7 @@ export const EMISOR = {
   direccion: ['Carrera 37 #100-23, Altos de Tajamar,', 'Portería 1, T6 · Apto 802'],
   ciudad: 'Bucaramanga',
   telefono: 'Cel. 322 310 4935',
-  contacto: '@bacu_creative · brant@bacucreative.co',
+  contacto: '@bacu_creative · brandoncardenasof@gmail.com',
   banco: 'Bancolombia',
   tipoCuenta: 'Ahorros',
   numeroCuenta: '078-251189-21',
