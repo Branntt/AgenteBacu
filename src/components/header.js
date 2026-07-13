@@ -1,12 +1,19 @@
 import { TEMA_OPTIONS } from '../data/constants.js';
 import { escapeHtml } from '../lib/format.js';
 
-const NAV = [['calendario', 'Calendario'], ['clientes', 'Clientes'], ['banco', 'Banco'], ['desarrollo', 'Desarrollo'], ['panorama', 'Panorama'], ['seguimiento', 'Seguimiento']];
+const NAV = [
+  ['calendario', 'Calendario', 'Calend'],
+  ['clientes', 'Clientes', 'Client'],
+  ['banco', 'Banco', 'Banco'],
+  ['desarrollo', 'Desarrollo', 'Desarr'],
+  ['panorama', 'Panorama', 'Panora'],
+  ['seguimiento', 'Seguimiento', 'Seguim']
+];
 
 export function renderHeader(state) {
-  const navHtml = NAV.map(([v, label]) => `
+  const navHtml = NAV.map(([v, label, corto]) => `
     <button class="nav-btn ${state.view === v ? 'active' : ''}" data-act="nav-go" data-view="${v}">
-      <span>${label}</span>
+      <span class="nav-label-full">${label}</span><span class="nav-label-corto">${corto}</span>
     </button>
   `).join('');
 
