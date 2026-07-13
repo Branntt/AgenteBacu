@@ -182,6 +182,7 @@ root.addEventListener('click', e => {
     case 'cc-generar': actions.cuentaCobroGenerar(); break;
     case 'cc-item-agregar': actions.cuentaCobroAddItem(); break;
     case 'cc-item-quitar': actions.cuentaCobroRemoveItem(Number(idx)); break;
+    case 'cc-item-concepto': actions.cuentaCobroUpdItem(Number(idx), 'descripcion', value); break;
     case 'historial-abrir': actions.historialAbrir(); break;
     case 'historial-cerrar': actions.historialCerrar(); break;
     case 'cc-historial-descargar': {
