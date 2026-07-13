@@ -8,16 +8,14 @@ import { renderCuentaCobro } from './components/cuentaCobro.js';
 import { renderHistorialCuentas } from './components/historialCuentas.js';
 import { renderLogin } from './views/login.js';
 import { renderPanorama } from './views/panorama.js';
-import { renderBanco } from './views/banco.js';
-import { renderDesarrollo } from './views/desarrollo.js';
+import { renderGuiones } from './views/guiones.js';
 import { renderCalendario } from './views/calendario.js';
 import { renderClientes } from './views/clientes.js';
 import { renderSeguimiento } from './views/seguimiento.js';
 
 const VIEWS = {
   panorama: renderPanorama,
-  banco: renderBanco,
-  desarrollo: renderDesarrollo,
+  guiones: renderGuiones,
   calendario: renderCalendario,
   clientes: renderClientes,
   seguimiento: renderSeguimiento
@@ -247,9 +245,9 @@ root.addEventListener('change', e => {
       case 'cc-item-campo': actions.cuentaCobroUpdItem(Number(idx), campo, value); break;
       case 'historial-busqueda': actions.historialSetBusqueda(value); break;
       case 'cal-vista-set': actions.setCalVista(value); break;
-      case 'filtro-set': actions.setFiltro(value); break;
       case 'filtro-calendario-set': actions.setFiltroCalendario(value); break;
-      case 'filtro-desarrollo-set': actions.setFiltroDesarrollo(value); break;
+      case 'filtro-guiones-set': actions.setFiltroGuiones(value); break;
+      case 'guiones-vista-set': actions.setGuionesVista(value); break;
     }
     return;
   }

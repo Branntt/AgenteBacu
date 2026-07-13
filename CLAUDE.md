@@ -40,11 +40,11 @@ Sirve con headers `no-store` — importante porque **GitHub Pages + el navegador
 
 ## Convenciones de diseño
 
-Tema oscuro "Cine crudo" (negro puro) o claro "Galería clara", variables CSS en `src/styles/tokens.css`. Tipografía: IBM Plex Mono (labels/mono), Instrument Serif (títulos), Space Grotesk (cuerpo). Mobile-first, breakpoints en `src/styles/main.css` (600/900/1200/1600/1920px). Componentes de lista → grilla con scroll horizontal en mobile (mismo patrón en Banco, Desarrollo, filtros).
+Tema oscuro "Cine crudo" (negro puro) o claro "Galería clara", variables CSS en `src/styles/tokens.css`. Tipografía: IBM Plex Mono (labels/mono), Instrument Serif (títulos), Space Grotesk (cuerpo). Mobile-first, breakpoints en `src/styles/main.css` (600/900/1200/1600/1920px). Componentes de lista → grilla con scroll horizontal en mobile (mismo patrón en Guiones, filtros).
 
 ## Features ya construidas
 
-Calendario (vistas Mes/Semana/Agenda, fechas de publicación y de rodaje separadas, rodaje rápido con un clic en el día), Banco de ideas (kanban por estado), Desarrollo (clasificación de guiones por familia — incluye "Cubrimiento" sin guion, solo notas), Clientes (con cuentas de cobro generables en PDF), Seguimiento (métricas de redes), Panorama (overview).
+Calendario (vistas Mes/Semana/Agenda, fechas de publicación y de rodaje separadas, rodaje rápido con un clic en el día, y las fechas de grabación cargadas desde Clientes), Guiones (fusión de lo que antes eran "Banco" y "Desarrollo" — un selector alterna entre "Vista general", kanban por estado, y "Por tipo de guion", columnas por familia solo para ideas en desarrollo; incluye "Cubrimiento" sin guion, solo notas), Clientes (con cuentas de cobro generables en PDF, historial de cuentas, y fecha de grabación que alimenta el Calendario), Seguimiento (métricas de redes), Panorama (overview).
 
 ## Deploy
 

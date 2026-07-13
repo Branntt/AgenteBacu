@@ -14,8 +14,8 @@ export const state = {
   clientes: [],
   selId: null,
   guionId: null,
-  filtro: 'todas',
-  filtroDesarrollo: 'todas',
+  filtroGuiones: 'todas',
+  guionesVista: 'general',
   filtroCalendario: 'todas',
   calVista: 'mes',
   semanaInicio: lunesDe(hoyStr()),
@@ -149,8 +149,9 @@ function suscribirRealtime() {
 
 export const actions = {
   setView: v => setState({ view: v }),
-  setFiltro: v => setState({ filtro: v }),
-  abrirMarca: marca => setState({ view: 'banco', filtro: marca }),
+  setFiltroGuiones: v => setState({ filtroGuiones: v }),
+  setGuionesVista: v => setState({ guionesVista: v }),
+  abrirMarca: marca => setState({ view: 'guiones', filtroGuiones: marca, guionesVista: 'general' }),
 
   setTema: v => { const ok = persistValue('sistemaEditorial.tema', v); setState({ tema: v }); marcarGuardado(ok); },
   setModoCalma: v => { const ok = persistValue('sistemaEditorial.modoCalma', v); setState({ modoCalma: v }); marcarGuardado(ok); },
@@ -167,7 +168,7 @@ export const actions = {
   nuevaIdea: () => {
     const nueva = { id: 'u' + Date.now(), marca: 'brant', colab: '', titulo: '', nota: '', gancho: '', objetivos: [], formato: 'Reel', estado: 'desarrollo', fecha: null, fechaRodaje: null, preguntas: [null, null, null, null], tiempo: '', grabacion: false, edicion: false, prioridad: 'Media', etapa: 0 };
     state.ideas = [nueva].concat(state.ideas);
-    setState({ selId: nueva.id, view: (state.view === 'banco' || state.view === 'desarrollo') ? state.view : 'banco' });
+    setState({ selId: nueva.id, view: 'guiones' });
     supabase.from('ideas').insert(toDbIdea(nueva)).then(({ error }) => marcarGuardado(!error));
   },
   rodajeRapidoAbrir: fecha => setState({ rodajeDraft: { titulo: '', marca: 'brant', fecha: fecha || hoyStr() } }),
@@ -218,7 +219,6 @@ export const actions = {
     actions.updIdea(id, { metricas: { ...(idea.metricas || {}), [campo]: val } });
   },
 
-  setFiltroDesarrollo: v => setState({ filtroDesarrollo: v }),
   abrirGuion: id => setState({ guionId: id }),
   cerrarGuion: () => setState({ guionId: null }),
   setGuionCampo: (id, campo, val) => {
