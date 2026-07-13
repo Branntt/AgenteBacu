@@ -18,6 +18,11 @@ export function renderClientes(state) {
       <input class="cliente-nombre" data-change="cliente-nombre" data-id="${escapeHtml(c.id)}" value="${escapeHtml(c.nombre)}" placeholder="Nombre del cliente">
       <input class="cliente-proyecto" data-change="cliente-proyecto" data-id="${escapeHtml(c.id)}" value="${escapeHtml(c.proyecto)}" placeholder="Proyecto / servicio">
       <input class="cliente-proyecto" data-change="cliente-documento" data-id="${escapeHtml(c.id)}" value="${escapeHtml(c.documento || '')}" placeholder="C.C. / NIT (para cuentas de cobro)">
+      <div class="cliente-grabacion">
+        <label class="field-label">Fecha de grabación</label>
+        <input type="date" data-change="cliente-fecha-grabacion" data-id="${escapeHtml(c.id)}" value="${escapeHtml(c.fecha_grabacion || '')}" style="color-scheme:dark;">
+        <span class="panel-footnote" style="margin:4px 0 0;">${c.estado === 'conversacion' ? 'En conversación: no aparece en el Calendario todavía.' : 'Aparece automáticamente en el Calendario.'}</span>
+      </div>
       <textarea class="cliente-nota" data-change="cliente-nota" data-id="${escapeHtml(c.id)}" rows="2" placeholder="Siguiente paso concreto…">${escapeHtml(c.nota)}</textarea>
       <div class="cliente-footer">
         <button class="btn-ghost" data-act="cc-abrir" data-id="${escapeHtml(c.id)}">Cuenta de cobro</button>

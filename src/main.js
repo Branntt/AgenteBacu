@@ -234,6 +234,7 @@ root.addEventListener('change', e => {
       case 'cliente-proyecto': actions.updCliente(id, { proyecto: value }); break;
       case 'cliente-documento': actions.updCliente(id, { documento: value }); break;
       case 'cliente-nota': actions.updCliente(id, { nota: value }); break;
+      case 'cliente-fecha-grabacion': actions.updCliente(id, { fecha_grabacion: value || null }); break;
       case 'cliente-estado': actions.updCliente(id, { estado: value }); break;
       case 'snap-fecha': actions.snapSetFecha(value); break;
       case 'snap-campo': actions.snapSetCampo(key, value); break;

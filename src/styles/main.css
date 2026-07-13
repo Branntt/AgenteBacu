@@ -645,6 +645,8 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
 .cliente-nombre { border: none; border-bottom: 1px solid var(--line); background: none; font-family: 'Instrument Serif', serif; font-size: 22px; padding: 4px 0; width: 100%; }
 .cliente-proyecto { font-size: 13px; padding: 9px 12px; width: 100%; }
 .cliente-nota { font-size: 12.5px; line-height: 1.5; padding: 9px 12px; resize: vertical; width: 100%; }
+.cliente-grabacion { display: flex; flex-direction: column; gap: 6px; }
+.cliente-grabacion input { width: 100%; }
 .cliente-footer { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
 
 @media (min-width: 600px) {
