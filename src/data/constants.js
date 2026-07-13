@@ -69,7 +69,9 @@ export const EMISOR = {
   banco: 'Bancolombia',
   tipoCuenta: 'Ahorros',
   numeroCuenta: '078-251189-21',
-  titular: 'Brandon S. Cárdenas G.'
+  titular: 'Brandon S. Cárdenas G.',
+  nequi: '',
+  daviplata: ''
 };
 
 // Cada formato de idea se agrupa en una familia de guion: mismos campos de escritura,

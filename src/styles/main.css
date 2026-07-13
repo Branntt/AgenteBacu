@@ -734,6 +734,22 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
   max-height: 90vh;
   border: 1px solid var(--line2);
 }
+.drawer.historial-cuentas {
+  top: 50%; left: 50%; right: auto; bottom: auto;
+  transform: translate(-50%, -50%);
+  width: 92vw;
+  max-width: 560px;
+  max-height: 90vh;
+  border: 1px solid var(--line2);
+}
+.historial-lista { display: flex; flex-direction: column; gap: 8px; overflow-y: auto; }
+.historial-item { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 12px 14px; border: 1px solid var(--line); flex-wrap: wrap; }
+.historial-item-main { display: flex; flex-direction: column; gap: 3px; }
+.historial-numero { font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); }
+.historial-cliente { font-family: 'Space Grotesk', sans-serif; font-size: 14px; font-weight: 600; }
+.historial-fecha { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--muted); }
+.historial-item-side { display: flex; align-items: center; gap: 12px; }
+.historial-total { font-family: 'Space Grotesk', sans-serif; font-size: 14px; font-weight: 600; color: var(--verde); }
 .cc-items { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
 .cc-item { display: grid; grid-template-columns: 1fr 60px 110px 28px; gap: 6px; align-items: center; }
 .cc-item input { padding: 9px 10px; font-size: 13px; }

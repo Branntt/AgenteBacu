@@ -31,6 +31,7 @@ export function renderClientes(state) {
       <div class="clientes-head">
         <h2 class="serif" style="margin:0;font-size:32px;">Clientes</h2>
         <div style="display:flex;gap:10px;">
+          <button class="btn-ghost" data-act="historial-abrir" ${state.cuentasCobro.length ? '' : 'disabled'}>Historial de cobros</button>
           <button class="btn-ghost" data-act="clientes-exportar" ${clientes.length ? '' : 'disabled'}>Exportar listado</button>
           <button class="btn-primary" data-act="cliente-nuevo">+ Nuevo cliente</button>
         </div>

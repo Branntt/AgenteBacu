@@ -5,6 +5,7 @@ import { renderDetalle } from './components/detalle.js';
 import { renderGuion } from './components/guion.js';
 import { renderRodajeRapido } from './components/rodajeRapido.js';
 import { renderCuentaCobro } from './components/cuentaCobro.js';
+import { renderHistorialCuentas } from './components/historialCuentas.js';
 import { renderLogin } from './views/login.js';
 import { renderPanorama } from './views/panorama.js';
 import { renderBanco } from './views/banco.js';
@@ -82,12 +83,13 @@ function render() {
       ${renderGuion(state)}
       ${renderRodajeRapido(state)}
       ${renderCuentaCobro(state)}
+      ${renderHistorialCuentas(state)}
     </div>
   `;
   root.scrollTop = scroll;
   restaurarFoco(foco);
 
-  const drawerAbiertoAhora = !!(state.selId || state.guionId || state.rodajeDraft || state.cuentaCobroDraft);
+  const drawerAbiertoAhora = !!(state.selId || state.guionId || state.rodajeDraft || state.cuentaCobroDraft || state.historialAbierto);
   if (drawerAbiertoAhora && !drawerAbiertoAntes) {
     const drawer = root.querySelector('.drawer');
     const primero = drawer && drawer.querySelector(FOCUSABLE);
@@ -180,6 +182,13 @@ root.addEventListener('click', e => {
     case 'cc-generar': actions.cuentaCobroGenerar(); break;
     case 'cc-item-agregar': actions.cuentaCobroAddItem(); break;
     case 'cc-item-quitar': actions.cuentaCobroRemoveItem(Number(idx)); break;
+    case 'historial-abrir': actions.historialAbrir(); break;
+    case 'historial-cerrar': actions.historialCerrar(); break;
+    case 'cc-historial-descargar': {
+      const cc = state.cuentasCobro.find(c => c.id === id);
+      if (cc) actions.cuentaCobroDescargar(cc);
+      break;
+    }
   }
 });
 
@@ -234,6 +243,7 @@ root.addEventListener('change', e => {
       case 'rodaje-rapido-campo': actions.rodajeRapidoSetCampo(campo, value); break;
       case 'cc-campo': actions.cuentaCobroSetCampo(campo, value); break;
       case 'cc-item-campo': actions.cuentaCobroUpdItem(Number(idx), campo, value); break;
+      case 'historial-busqueda': actions.historialSetBusqueda(value); break;
       case 'cal-vista-set': actions.setCalVista(value); break;
       case 'filtro-set': actions.setFiltro(value); break;
       case 'filtro-calendario-set': actions.setFiltroCalendario(value); break;

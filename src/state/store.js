@@ -2,7 +2,7 @@ import { loadValue, persistValue } from '../lib/storage.js';
 import { parseN } from '../lib/format.js';
 import { mesActual, hoyStr, lunesDe, sumarDias } from '../lib/idea.js';
 import { supabase } from '../lib/supabaseClient.js';
-import { generarCuentaCobroPDF } from '../lib/pdfInvoice.js';
+import { generarCuentaCobroPDF, OBSERVACIONES_DEFAULT } from '../lib/pdfInvoice.js';
 import { generarListadoClientesPDF } from '../lib/pdfListadoClientes.js';
 import { MESES } from '../data/constants.js';
 
@@ -23,6 +23,8 @@ export const state = {
   rodajeDraft: null,
   cuentaCobroDraft: null,
   cuentasCobro: [],
+  historialAbierto: false,
+  historialBusqueda: '',
   tema: loadValue('sistemaEditorial.tema', 'Cine crudo'),
   modoCalma: loadValue('sistemaEditorial.modoCalma', false),
   saveError: false,
@@ -62,6 +64,11 @@ function toDbPatch(patch) {
   if (!('fechaRodaje' in patch)) return patch;
   const { fechaRodaje, ...rest } = patch;
   return { ...rest, fecha_rodaje: fechaRodaje ?? null };
+}
+
+function fechaALabel(fechaStr) {
+  const [anio, mesNum, diaNum] = fechaStr.split('-').map(Number);
+  return `${diaNum} de ${MESES[mesNum - 1]} de ${anio}`;
 }
 
 // ---- auth ----
@@ -277,6 +284,8 @@ export const actions = {
       clienteNombre: cliente.nombre || '',
       documento: cliente.documento || '',
       fecha: hoyStr(),
+      fechaVencimiento: '',
+      observaciones: OBSERVACIONES_DEFAULT,
       items: [{ descripcion: '', cantidad: '1', valor: '' }]
     }
   }),
@@ -301,16 +310,18 @@ export const actions = {
     const total = D.items.reduce((sum, it) => sum + (Number(it.cantidad) || 1) * (Number(it.valor) || 0), 0);
     if (!total) return;
 
-    const [anio, mesNum, diaNum] = D.fecha.split('-').map(Number);
     const prefijo = D.fecha.slice(0, 4) + D.fecha.slice(5, 7);
     const delMes = state.cuentasCobro.filter(cc => cc.numero.startsWith(prefijo)).length;
     const numero = delMes === 0 ? prefijo : `${prefijo}-${delMes + 1}`;
-    const fechaLabel = `${diaNum} de ${MESES[mesNum - 1]} de ${anio}`;
+    const fechaLabel = fechaALabel(D.fecha);
+    const observaciones = D.observaciones && D.observaciones.trim() ? D.observaciones.trim() : OBSERVACIONES_DEFAULT;
 
     const registro = {
       id: 'cc' + Date.now(),
       numero,
       fecha: D.fecha,
+      fecha_vencimiento: D.fechaVencimiento || null,
+      observaciones,
       cliente_id: D.clienteId || null,
       cliente_nombre: D.clienteNombre,
       cliente_documento: D.documento || '',
@@ -324,10 +335,28 @@ export const actions = {
     generarCuentaCobroPDF({
       numero,
       fechaLabel,
+      fechaVencimientoLabel: D.fechaVencimiento ? fechaALabel(D.fechaVencimiento) : '',
       cliente: D.clienteNombre,
       documento: D.documento,
       items: D.items.map(it => ({ descripcion: it.descripcion, cantidad: it.cantidad, valor: it.valor })),
-      total
+      total,
+      observaciones
+    });
+  },
+
+  historialAbrir: () => setState({ historialAbierto: true, historialBusqueda: '' }),
+  historialCerrar: () => setState({ historialAbierto: false }),
+  historialSetBusqueda: v => setState({ historialBusqueda: v }),
+  cuentaCobroDescargar: cc => {
+    generarCuentaCobroPDF({
+      numero: cc.numero,
+      fechaLabel: fechaALabel(cc.fecha),
+      fechaVencimientoLabel: cc.fecha_vencimiento ? fechaALabel(cc.fecha_vencimiento) : '',
+      cliente: cc.cliente_nombre,
+      documento: cc.cliente_documento,
+      items: cc.items,
+      total: cc.total,
+      observaciones: cc.observaciones
     });
   },
 

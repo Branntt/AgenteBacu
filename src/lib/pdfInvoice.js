@@ -58,7 +58,9 @@ function fmtMoney(n) {
   return '$' + Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 }
 
-export function generarCuentaCobroPDF({ numero, fechaLabel, cliente, documento, items, total }) {
+export const OBSERVACIONES_DEFAULT = 'Gracias por confiar en Bacu Creative. Documento válido como soporte de cobro por prestación de servicios.';
+
+export function generarCuentaCobroPDF({ numero, fechaLabel, fechaVencimientoLabel, cliente, documento, items, total, observaciones }) {
   const doc = new jsPDF({ unit: 'pt', format: 'letter' });
   const W = doc.internal.pageSize.getWidth();
   const H = doc.internal.pageSize.getHeight();
@@ -113,6 +115,9 @@ export function generarCuentaCobroPDF({ numero, fechaLabel, cliente, documento, 
   doc.setFontSize(9);
   doc.setTextColor(MUTED_LT);
   doc.text('Bucaramanga · ' + fechaLabel, W - MARGIN, 74, { align: 'right' });
+  if (fechaVencimientoLabel) {
+    doc.text('Vence · ' + fechaVencimientoLabel, W - MARGIN, 87, { align: 'right' });
+  }
 
   let y = HEADER_H + 34;
 
@@ -242,6 +247,8 @@ export function generarCuentaCobroPDF({ numero, fechaLabel, cliente, documento, 
   sectionLabel('OBSERVACIONES', col2, y);
   let yyB = y + 22;
   const banc = [['Banco', EMISOR.banco], ['Tipo de cuenta', EMISOR.tipoCuenta], ['N.º de cuenta', EMISOR.numeroCuenta], ['Titular', EMISOR.titular]];
+  if (EMISOR.nequi) banc.push(['Nequi', EMISOR.nequi]);
+  if (EMISOR.daviplata) banc.push(['Daviplata', EMISOR.daviplata]);
   for (const [label, val] of banc) {
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(9.5);
@@ -256,7 +263,7 @@ export function generarCuentaCobroPDF({ numero, fechaLabel, cliente, documento, 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9.5);
   doc.setTextColor(TEXT_DARK);
-  const obsLines = wrapText('Gracias por confiar en Bacu Creative. Documento válido como soporte de cobro por prestación de servicios.', colW, 'helvetica', 'normal', 9.5);
+  const obsLines = wrapText(observaciones || OBSERVACIONES_DEFAULT, colW, 'helvetica', 'normal', 9.5);
   let yyO = y + 22;
   for (const line of obsLines) { doc.text(line, col2, yyO); yyO += 13; }
 

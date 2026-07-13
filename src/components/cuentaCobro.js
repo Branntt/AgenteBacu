@@ -40,9 +40,15 @@ export function renderCuentaCobro(state) {
           </div>
         </div>
 
-        <div class="field">
-          <label class="field-label">Fecha</label>
-          <input type="date" data-change="cc-campo" data-campo="fecha" value="${escapeHtml(D.fecha)}" style="color-scheme:dark; max-width:200px;">
+        <div class="field-row-2">
+          <div class="field">
+            <label class="field-label">Fecha</label>
+            <input type="date" data-change="cc-campo" data-campo="fecha" value="${escapeHtml(D.fecha)}" style="color-scheme:dark;">
+          </div>
+          <div class="field">
+            <label class="field-label">Vence (opcional)</label>
+            <input type="date" data-change="cc-campo" data-campo="fechaVencimiento" value="${escapeHtml(D.fechaVencimiento || '')}" style="color-scheme:dark;">
+          </div>
         </div>
 
         <div class="field">
@@ -54,6 +60,11 @@ export function renderCuentaCobro(state) {
         <div class="cc-total">
           <span>Total</span>
           <span class="cc-total-valor">${fmtMoney(total) || '$0'}</span>
+        </div>
+
+        <div class="field">
+          <label class="field-label">Observaciones</label>
+          <textarea data-change="cc-campo" data-campo="observaciones" rows="2">${escapeHtml(D.observaciones || '')}</textarea>
         </div>
 
         <div class="panel-footnote" style="margin-top:0;">Se genera el PDF con tus datos de emisor ya cargados y se descarga al instante.</div>
