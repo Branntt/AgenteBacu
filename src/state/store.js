@@ -2,7 +2,8 @@ import { loadValue, persistValue } from '../lib/storage.js';
 import { parseN } from '../lib/format.js';
 import { mesActual, hoyStr, lunesDe, sumarDias } from '../lib/idea.js';
 import { supabase } from '../lib/supabaseClient.js';
-import { generarCuentaCobroPDF } from '../lib/pdfInvoice.js';
+import { generarCuentaCobroPDF, OBSERVACIONES_DEFAULT } from '../lib/pdfInvoice.js';
+import { generarListadoClientesPDF } from '../lib/pdfListadoClientes.js';
 import { MESES } from '../data/constants.js';
 
 export const state = {
@@ -13,8 +14,8 @@ export const state = {
   clientes: [],
   selId: null,
   guionId: null,
-  filtro: 'todas',
-  filtroDesarrollo: 'todas',
+  filtroGuiones: 'todas',
+  guionesVista: 'general',
   filtroCalendario: 'todas',
   calVista: 'mes',
   semanaInicio: lunesDe(hoyStr()),
@@ -22,6 +23,8 @@ export const state = {
   rodajeDraft: null,
   cuentaCobroDraft: null,
   cuentasCobro: [],
+  historialAbierto: false,
+  historialBusqueda: '',
   tema: loadValue('sistemaEditorial.tema', 'Cine crudo'),
   modoCalma: loadValue('sistemaEditorial.modoCalma', false),
   saveError: false,
@@ -31,7 +34,6 @@ export const state = {
   authBusy: false,
   authError: null,
   authInfo: null,
-  authMode: 'login',
   dataReady: false
 };
 
@@ -62,6 +64,11 @@ function toDbPatch(patch) {
   if (!('fechaRodaje' in patch)) return patch;
   const { fechaRodaje, ...rest } = patch;
   return { ...rest, fecha_rodaje: fechaRodaje ?? null };
+}
+
+function fechaALabel(fechaStr) {
+  const [anio, mesNum, diaNum] = fechaStr.split('-').map(Number);
+  return `${diaNum} de ${MESES[mesNum - 1]} de ${anio}`;
 }
 
 // ---- auth ----
@@ -142,8 +149,9 @@ function suscribirRealtime() {
 
 export const actions = {
   setView: v => setState({ view: v }),
-  setFiltro: v => setState({ filtro: v }),
-  abrirMarca: marca => setState({ view: 'banco', filtro: marca }),
+  setFiltroGuiones: v => setState({ filtroGuiones: v }),
+  setGuionesVista: v => setState({ guionesVista: v }),
+  abrirMarca: marca => setState({ view: 'guiones', filtroGuiones: marca, guionesVista: 'general' }),
 
   setTema: v => { const ok = persistValue('sistemaEditorial.tema', v); setState({ tema: v }); marcarGuardado(ok); },
   setModoCalma: v => { const ok = persistValue('sistemaEditorial.modoCalma', v); setState({ modoCalma: v }); marcarGuardado(ok); },
@@ -155,26 +163,12 @@ export const actions = {
     if (error) setState({ authBusy: false, authError: 'No pudimos iniciar sesión. Revisá el email y la contraseña.' });
     else setState({ authBusy: false, authError: null });
   },
-  signup: async (email, password) => {
-    setState({ authBusy: true, authError: null, authInfo: null });
-    const { data, error } = await supabase.auth.signUp({ email, password });
-    if (error) {
-      setState({ authBusy: false, authError: error.message.includes('Password') ? 'La contraseña necesita al menos 6 caracteres.' : 'No pudimos crear la cuenta. Probá con otro email.' });
-      return;
-    }
-    if (data.session) {
-      setState({ authBusy: false });
-    } else {
-      setState({ authBusy: false, authMode: 'login', authInfo: 'Cuenta creada. Si tu proyecto pide confirmar el email, revisá tu correo antes de entrar — si no, ya podés iniciar sesión.' });
-    }
-  },
   logout: async () => { await supabase.auth.signOut(); },
-  authToggleModo: () => setState({ authMode: state.authMode === 'login' ? 'signup' : 'login', authError: null, authInfo: null }),
 
   nuevaIdea: () => {
     const nueva = { id: 'u' + Date.now(), marca: 'brant', colab: '', titulo: '', nota: '', gancho: '', objetivos: [], formato: 'Reel', estado: 'desarrollo', fecha: null, fechaRodaje: null, preguntas: [null, null, null, null], tiempo: '', grabacion: false, edicion: false, prioridad: 'Media', etapa: 0 };
     state.ideas = [nueva].concat(state.ideas);
-    setState({ selId: nueva.id, view: (state.view === 'banco' || state.view === 'desarrollo') ? state.view : 'banco' });
+    setState({ selId: nueva.id, view: 'guiones' });
     supabase.from('ideas').insert(toDbIdea(nueva)).then(({ error }) => marcarGuardado(!error));
   },
   rodajeRapidoAbrir: fecha => setState({ rodajeDraft: { titulo: '', marca: 'brant', fecha: fecha || hoyStr() } }),
@@ -225,7 +219,6 @@ export const actions = {
     actions.updIdea(id, { metricas: { ...(idea.metricas || {}), [campo]: val } });
   },
 
-  setFiltroDesarrollo: v => setState({ filtroDesarrollo: v }),
   abrirGuion: id => setState({ guionId: id }),
   cerrarGuion: () => setState({ guionId: null }),
   setGuionCampo: (id, campo, val) => {
@@ -283,6 +276,7 @@ export const actions = {
     notify();
     supabase.from('clientes').delete().eq('id', id).then(({ error }) => marcarGuardado(!error));
   },
+  exportarListadoClientes: () => generarListadoClientesPDF(state.clientes),
 
   cuentaCobroAbrir: cliente => setState({
     cuentaCobroDraft: {
@@ -290,6 +284,8 @@ export const actions = {
       clienteNombre: cliente.nombre || '',
       documento: cliente.documento || '',
       fecha: hoyStr(),
+      fechaVencimiento: '',
+      observaciones: OBSERVACIONES_DEFAULT,
       items: [{ descripcion: '', cantidad: '1', valor: '' }]
     }
   }),
@@ -314,16 +310,18 @@ export const actions = {
     const total = D.items.reduce((sum, it) => sum + (Number(it.cantidad) || 1) * (Number(it.valor) || 0), 0);
     if (!total) return;
 
-    const [anio, mesNum, diaNum] = D.fecha.split('-').map(Number);
     const prefijo = D.fecha.slice(0, 4) + D.fecha.slice(5, 7);
     const delMes = state.cuentasCobro.filter(cc => cc.numero.startsWith(prefijo)).length;
     const numero = delMes === 0 ? prefijo : `${prefijo}-${delMes + 1}`;
-    const fechaLabel = `${diaNum} de ${MESES[mesNum - 1]} de ${anio}`;
+    const fechaLabel = fechaALabel(D.fecha);
+    const observaciones = D.observaciones && D.observaciones.trim() ? D.observaciones.trim() : OBSERVACIONES_DEFAULT;
 
     const registro = {
       id: 'cc' + Date.now(),
       numero,
       fecha: D.fecha,
+      fecha_vencimiento: D.fechaVencimiento || null,
+      observaciones,
       cliente_id: D.clienteId || null,
       cliente_nombre: D.clienteNombre,
       cliente_documento: D.documento || '',
@@ -337,10 +335,28 @@ export const actions = {
     generarCuentaCobroPDF({
       numero,
       fechaLabel,
+      fechaVencimientoLabel: D.fechaVencimiento ? fechaALabel(D.fechaVencimiento) : '',
       cliente: D.clienteNombre,
       documento: D.documento,
       items: D.items.map(it => ({ descripcion: it.descripcion, cantidad: it.cantidad, valor: it.valor })),
-      total
+      total,
+      observaciones
+    });
+  },
+
+  historialAbrir: () => setState({ historialAbierto: true, historialBusqueda: '' }),
+  historialCerrar: () => setState({ historialAbierto: false }),
+  historialSetBusqueda: v => setState({ historialBusqueda: v }),
+  cuentaCobroDescargar: cc => {
+    generarCuentaCobroPDF({
+      numero: cc.numero,
+      fechaLabel: fechaALabel(cc.fecha),
+      fechaVencimientoLabel: cc.fecha_vencimiento ? fechaALabel(cc.fecha_vencimiento) : '',
+      cliente: cc.cliente_nombre,
+      documento: cc.cliente_documento,
+      items: cc.items,
+      total: cc.total,
+      observaciones: cc.observaciones
     });
   },
 

@@ -5,18 +5,17 @@ import { renderDetalle } from './components/detalle.js';
 import { renderGuion } from './components/guion.js';
 import { renderRodajeRapido } from './components/rodajeRapido.js';
 import { renderCuentaCobro } from './components/cuentaCobro.js';
+import { renderHistorialCuentas } from './components/historialCuentas.js';
 import { renderLogin } from './views/login.js';
 import { renderPanorama } from './views/panorama.js';
-import { renderBanco } from './views/banco.js';
-import { renderDesarrollo } from './views/desarrollo.js';
+import { renderGuiones } from './views/guiones.js';
 import { renderCalendario } from './views/calendario.js';
 import { renderClientes } from './views/clientes.js';
 import { renderSeguimiento } from './views/seguimiento.js';
 
 const VIEWS = {
   panorama: renderPanorama,
-  banco: renderBanco,
-  desarrollo: renderDesarrollo,
+  guiones: renderGuiones,
   calendario: renderCalendario,
   clientes: renderClientes,
   seguimiento: renderSeguimiento
@@ -82,12 +81,13 @@ function render() {
       ${renderGuion(state)}
       ${renderRodajeRapido(state)}
       ${renderCuentaCobro(state)}
+      ${renderHistorialCuentas(state)}
     </div>
   `;
   root.scrollTop = scroll;
   restaurarFoco(foco);
 
-  const drawerAbiertoAhora = !!(state.selId || state.guionId || state.rodajeDraft || state.cuentaCobroDraft);
+  const drawerAbiertoAhora = !!(state.selId || state.guionId || state.rodajeDraft || state.cuentaCobroDraft || state.historialAbierto);
   if (drawerAbiertoAhora && !drawerAbiertoAntes) {
     const drawer = root.querySelector('.drawer');
     const primero = drawer && drawer.querySelector(FOCUSABLE);
@@ -132,22 +132,20 @@ document.addEventListener('keydown', e => {
 root.addEventListener('click', e => {
   const el = e.target.closest('[data-act]');
   if (!el) return;
-  const { act, id, view, marca, filtro, idx, value, vista, fecha } = el.dataset;
+  const { act, id, view, marca, idx, value, fecha } = el.dataset;
 
   switch (act) {
     case 'nav-go': actions.setView(view); break;
     case 'nueva-idea': actions.nuevaIdea(); break;
     case 'marca-abrir': actions.abrirMarca(marca); break;
-    case 'filtro-set': actions.setFiltro(filtro); break;
     case 'idea-abrir': actions.abrirIdea(id); break;
     case 'idea-eliminar': actions.eliminarIdea(id); break;
     case 'cal-prev': state.calVista === 'semana' ? actions.cambiaSemana(-1) : actions.cambiaMes(-1); break;
     case 'cal-next': state.calVista === 'semana' ? actions.cambiaSemana(1) : actions.cambiaMes(1); break;
     case 'cal-hoy': actions.irAHoy(); break;
-    case 'cal-vista-set': actions.setCalVista(vista); break;
-    case 'filtro-calendario-set': actions.setFiltroCalendario(filtro); break;
     case 'cliente-nuevo': actions.nuevoCliente(); break;
     case 'cliente-eliminar': actions.eliminarCliente(id); break;
+    case 'clientes-exportar': actions.exportarListadoClientes(); break;
     case 'snap-abre': actions.snapAbre(); break;
     case 'snap-cierra': actions.snapCierra(); break;
     case 'snap-guarda': actions.snapGuarda(); break;
@@ -169,7 +167,6 @@ root.addEventListener('click', e => {
     }
     case 'drawer-cerrar': actions.cerrarDrawer(); break;
     case 'ir-a-guion': actions.cerrarDrawer(); actions.abrirGuion(id); break;
-    case 'filtro-desarrollo-set': actions.setFiltroDesarrollo(filtro); break;
     case 'guion-abrir': actions.abrirGuion(id); break;
     case 'guion-cerrar': actions.cerrarGuion(); break;
     case 'guion-item-agregar': actions.addGuionItem(id); break;
@@ -177,7 +174,6 @@ root.addEventListener('click', e => {
     case 'guion-marcar-lista': actions.updIdea(id, { estado: 'lista' }); actions.cerrarGuion(); break;
     case 'descartar-aviso-guardado': actions.descartarAvisoGuardado(); break;
     case 'logout': actions.logout(); break;
-    case 'auth-toggle-modo': actions.authToggleModo(); break;
     case 'rodaje-rapido-abrir': actions.rodajeRapidoAbrir(fecha); break;
     case 'rodaje-rapido-cerrar': actions.rodajeRapidoCerrar(); break;
     case 'rodaje-rapido-guardar': actions.rodajeRapidoGuardar(); break;
@@ -190,19 +186,24 @@ root.addEventListener('click', e => {
     case 'cc-generar': actions.cuentaCobroGenerar(); break;
     case 'cc-item-agregar': actions.cuentaCobroAddItem(); break;
     case 'cc-item-quitar': actions.cuentaCobroRemoveItem(Number(idx)); break;
+    case 'cc-item-concepto': actions.cuentaCobroUpdItem(Number(idx), 'descripcion', value); break;
+    case 'historial-abrir': actions.historialAbrir(); break;
+    case 'historial-cerrar': actions.historialCerrar(); break;
+    case 'cc-historial-descargar': {
+      const cc = state.cuentasCobro.find(c => c.id === id);
+      if (cc) actions.cuentaCobroDescargar(cc);
+      break;
+    }
   }
 });
 
 root.addEventListener('submit', e => {
-  const loginForm = e.target.closest('[data-form="login"]');
-  const signupForm = e.target.closest('[data-form="signup"]');
-  const form = loginForm || signupForm;
+  const form = e.target.closest('[data-form="login"]');
   if (!form) return;
   e.preventDefault();
   const email = form.querySelector('[name="email"]').value;
   const password = form.querySelector('[name="password"]').value;
-  if (signupForm) actions.signup(email, password);
-  else actions.login(email, password);
+  actions.login(email, password);
 });
 
 root.addEventListener('change', e => {
@@ -237,6 +238,7 @@ root.addEventListener('change', e => {
       case 'cliente-proyecto': actions.updCliente(id, { proyecto: value }); break;
       case 'cliente-documento': actions.updCliente(id, { documento: value }); break;
       case 'cliente-nota': actions.updCliente(id, { nota: value }); break;
+      case 'cliente-fecha-grabacion': actions.updCliente(id, { fecha_grabacion: value || null }); break;
       case 'cliente-estado': actions.updCliente(id, { estado: value }); break;
       case 'snap-fecha': actions.snapSetFecha(value); break;
       case 'snap-campo': actions.snapSetCampo(key, value); break;
@@ -247,6 +249,11 @@ root.addEventListener('change', e => {
       case 'rodaje-rapido-campo': actions.rodajeRapidoSetCampo(campo, value); break;
       case 'cc-campo': actions.cuentaCobroSetCampo(campo, value); break;
       case 'cc-item-campo': actions.cuentaCobroUpdItem(Number(idx), campo, value); break;
+      case 'historial-busqueda': actions.historialSetBusqueda(value); break;
+      case 'cal-vista-set': actions.setCalVista(value); break;
+      case 'filtro-calendario-set': actions.setFiltroCalendario(value); break;
+      case 'filtro-guiones-set': actions.setFiltroGuiones(value); break;
+      case 'guiones-vista-set': actions.setGuionesVista(value); break;
     }
     return;
   }

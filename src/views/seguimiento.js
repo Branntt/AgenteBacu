@@ -11,7 +11,7 @@ export function renderSeguimiento(state) {
     <div class="snap-form">
       <div class="snap-form-head">
         <span>Nuevo registro — copia los números de Instagram</span>
-        <input type="date" data-change="snap-fecha" value="${escapeHtml(D.fecha)}">
+        <input type="date" data-change="snap-fecha" value="${escapeHtml(D.fecha)}" min="2026-01-01">
       </div>
       <div class="snap-fields">
         ${Object.keys(MARCAS).map(k => `
@@ -85,7 +85,7 @@ export function renderSeguimiento(state) {
     if (m.seguidores) parts.push('+' + m.seguidores + ' seg');
     const meta = MARCAS[i.marca].nombre + ' · ' + (parts.length ? parts.join(' · ') : 'sin resultados registrados');
     return `
-      <div class="top-pub" data-act="idea-abrir" data-id="${i.id}">
+      <div class="top-pub" data-act="idea-abrir" data-id="${escapeHtml(i.id)}">
         <div class="top-pub-title">${escapeHtml(i.titulo)}</div>
         <div class="top-pub-meta">${escapeHtml(meta)}</div>
       </div>

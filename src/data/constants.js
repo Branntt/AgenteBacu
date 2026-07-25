@@ -28,6 +28,13 @@ export const FORMATOS = ['Reel', 'Carrusel', 'Fotografía', 'Documento', 'Histor
 
 export const PIPELINE = ['Idea', 'Validación', 'Preproducción', 'Producción', 'Edición', 'Revisión', 'Programación', 'Publicación', 'Análisis', 'Aprendizajes'];
 
+// Conceptos rápidos para la descripción de ítems en una cuenta de cobro — atajos, el campo sigue siendo de texto libre.
+export const CONCEPTOS_COBRO = [
+  'Fotografía', 'Video', 'Podcast', 'Producción audiovisual', 'Dirección creativa',
+  'Edición de video', 'Cubrimiento de evento', 'Sesión de fotos', 'Reel para redes',
+  'Diseño gráfico', 'Motion graphics', 'Locución', 'Guionización', 'Alquiler de equipo', 'Desplazamiento'
+];
+
 export const ETAPA_HINTS = [
   'Captura el núcleo: ¿cuál es la historia?',
   'Pasa las cuatro preguntas antes de invertir tiempo.',
@@ -65,11 +72,13 @@ export const EMISOR = {
   direccion: ['Carrera 37 #100-23, Altos de Tajamar,', 'Portería 1, T6 · Apto 802'],
   ciudad: 'Bucaramanga',
   telefono: 'Cel. 322 310 4935',
-  contacto: '@bacu_creative · brant@bacucreative.co',
+  contacto: '@bacu_creative · brandoncardenasof@gmail.com',
   banco: 'Bancolombia',
   tipoCuenta: 'Ahorros',
   numeroCuenta: '078-251189-21',
-  titular: 'Brandon S. Cárdenas G.'
+  titular: 'Brandon S. Cárdenas G.',
+  nequi: '',
+  daviplata: ''
 };
 
 // Cada formato de idea se agrupa en una familia de guion: mismos campos de escritura,

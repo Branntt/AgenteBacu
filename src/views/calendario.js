@@ -16,7 +16,7 @@ function entryHtml(i, tipo) {
   const tag = tipo === 'rodaje' ? '<span class="cal-entry-tag">Rodaje</span>' : '';
 
   return `
-    <div class="cal-entry ${tipo === 'rodaje' ? 'is-rodaje' : ''}" data-act="idea-abrir" data-id="${i.id}">
+    <div class="cal-entry ${tipo === 'rodaje' ? 'is-rodaje' : ''}" data-act="idea-abrir" data-id="${escapeHtml(i.id)}">
       <span class="cal-entry-bar" style="background:${M.color}"></span>
       <div class="cal-entry-title">${tag}${escapeHtml(i.titulo)}</div>
       <div class="cal-entry-meta">
@@ -27,32 +27,44 @@ function entryHtml(i, tipo) {
   `;
 }
 
-function entradasDeDia(ideas, fs) {
-  const publicacion = ideas.filter(i => i.fecha === fs && i.estado !== 'descartada').map(i => entryHtml(i, 'publicacion'));
-  const rodaje = ideas.filter(i => i.fechaRodaje === fs && i.estado !== 'descartada').map(i => entryHtml(i, 'rodaje'));
-  return rodaje.concat(publicacion);
-}
-
-function tieneEntradas(ideas, fs) {
-  return ideas.some(i => i.estado !== 'descartada' && (i.fecha === fs || i.fechaRodaje === fs));
-}
-
-function controlesHtml(state) {
-  const vistaHtml = VISTAS.map(([v, label]) => `
-    <button class="segmented-btn ${state.calVista === v ? 'active' : ''}" data-act="cal-vista-set" data-vista="${v}">${label}</button>
-  `).join('');
-  const filtroHtml = FILTROS.map(([v, label]) => `
-    <button class="filtro-btn ${state.filtroCalendario === v ? 'active' : ''}" data-act="filtro-calendario-set" data-filtro="${v}">${label}</button>
-  `).join('');
+// Grabación agendada desde la ficha de un cliente (pestaña Clientes) — se muestra en el calendario en modo solo lectura.
+function entryClienteHtml(c) {
   return `
-    <div class="cal-controls">
-      <div class="segmented">${vistaHtml}</div>
-      <div class="filtros">${filtroHtml}</div>
+    <div class="cal-entry is-rodaje" data-act="nav-go" data-view="clientes" title="Editar en la pestaña Clientes">
+      <span class="cal-entry-bar" style="background:var(--verde)"></span>
+      <div class="cal-entry-title"><span class="cal-entry-tag">Grabación</span>${escapeHtml(c.nombre || 'Cliente')}</div>
+      <div class="cal-entry-meta"><span class="cal-entry-meta-text">${escapeHtml(c.proyecto || 'Proyecto sin definir')}</span></div>
     </div>
   `;
 }
 
-function renderMes(state, ideas) {
+function clientesDeDia(clientes, fs) {
+  return clientes.filter(c => c.fecha_grabacion === fs && c.estado !== 'conversacion');
+}
+
+function entradasDeDia(ideas, clientes, fs) {
+  const publicacion = ideas.filter(i => i.fecha === fs && i.estado !== 'descartada').map(i => entryHtml(i, 'publicacion'));
+  const rodaje = ideas.filter(i => i.fechaRodaje === fs && i.estado !== 'descartada').map(i => entryHtml(i, 'rodaje'));
+  const grabaciones = clientesDeDia(clientes, fs).map(entryClienteHtml);
+  return grabaciones.concat(rodaje, publicacion);
+}
+
+function tieneEntradas(ideas, clientes, fs) {
+  return ideas.some(i => i.estado !== 'descartada' && (i.fecha === fs || i.fechaRodaje === fs)) || clientesDeDia(clientes, fs).length > 0;
+}
+
+function controlesHtml(state) {
+  const vistaOpts = VISTAS.map(([v, label]) => `<option value="${v}" ${state.calVista === v ? 'selected' : ''}>${label}</option>`).join('');
+  const filtroOpts = FILTROS.map(([v, label]) => `<option value="${v}" ${state.filtroCalendario === v ? 'selected' : ''}>${label}</option>`).join('');
+  return `
+    <div class="cal-controls">
+      <select class="vista-select" data-change="cal-vista-set">${vistaOpts}</select>
+      <select class="filtro-select" data-change="filtro-calendario-set">${filtroOpts}</select>
+    </div>
+  `;
+}
+
+function renderMes(state, ideas, clientes) {
   const [anio, mesNum] = state.month.split('-').map(Number);
   const diasMes = new Date(anio, mesNum, 0).getDate();
   const hoy = hoyStr();
@@ -66,7 +78,7 @@ function renderMes(state, ideas) {
     const esMes = dnum >= 1 && dnum <= diasMes;
     const fs = esMes ? state.month + '-' + String(dnum).padStart(2, '0') : null;
     const esHoy = fs === hoy;
-    const entries = esMes ? entradasDeDia(ideas, fs) : [];
+    const entries = esMes ? entradasDeDia(ideas, clientes, fs) : [];
     dias.push({ dnum, esMes, fs, esHoy, entries });
   }
 
@@ -81,13 +93,13 @@ function renderMes(state, ideas) {
   return `<div class="cal-grid">${dowHtml}${celdasHtml}</div>`;
 }
 
-function renderSemana(state, ideas) {
+function renderSemana(state, ideas, clientes) {
   const hoy = hoyStr();
   const dias = [];
   for (let c = 0; c < 7; c++) {
     const fs = sumarDias(state.semanaInicio, c);
     const [, , dnum] = fs.split('-').map(Number);
-    const entries = entradasDeDia(ideas, fs);
+    const entries = entradasDeDia(ideas, clientes, fs);
     dias.push({ fs, dnum, esHoy: fs === hoy, entries });
   }
 
@@ -106,7 +118,7 @@ function renderSemana(state, ideas) {
   return `<div class="cal-week">${colsHtml}</div>`;
 }
 
-function renderAgenda(state, ideas) {
+function renderAgenda(state, ideas, clientes) {
   const [anio, mesNum] = state.month.split('-').map(Number);
   const diasMes = new Date(anio, mesNum, 0).getDate();
   const hoy = hoyStr();
@@ -114,8 +126,8 @@ function renderAgenda(state, ideas) {
   const dias = [];
   for (let dnum = 1; dnum <= diasMes; dnum++) {
     const fs = state.month + '-' + String(dnum).padStart(2, '0');
-    if (!tieneEntradas(ideas, fs)) continue;
-    dias.push({ dnum, fs, esHoy: fs === hoy, entries: entradasDeDia(ideas, fs) });
+    if (!tieneEntradas(ideas, clientes, fs)) continue;
+    dias.push({ dnum, fs, esHoy: fs === hoy, entries: entradasDeDia(ideas, clientes, fs) });
   }
 
   if (!dias.length) {
@@ -133,6 +145,7 @@ function renderAgenda(state, ideas) {
 
 export function renderCalendario(state) {
   const ideas = state.ideas.filter(i => state.filtroCalendario === 'todas' || i.marca === state.filtroCalendario || i.colab === state.filtroCalendario);
+  const clientes = state.clientes || [];
 
   let titulo, contenido, fechasPeriodo, diasPeriodo, statsLabel;
   const mesLabel = MESES[Number(state.month.split('-')[1]) - 1];
@@ -145,14 +158,14 @@ export function renderCalendario(state) {
     titulo = am === bm
       ? `${ad}–${bd} ${MESES[am - 1].slice(0, 3)} ${ay}`
       : `${ad} ${MESES[am - 1].slice(0, 3)} – ${bd} ${MESES[bm - 1].slice(0, 3)} ${by}`;
-    contenido = renderSemana(state, ideas);
+    contenido = renderSemana(state, ideas, clientes);
     fechasPeriodo = Array.from({ length: 7 }, (_, i) => sumarDias(state.semanaInicio, i));
     diasPeriodo = 7;
     statsLabel = 'esta semana';
   } else {
     const [anio, mesNum] = state.month.split('-').map(Number);
     titulo = state.calVista === 'agenda' ? `Agenda — ${mesTitulo}` : mesTitulo;
-    contenido = state.calVista === 'agenda' ? renderAgenda(state, ideas) : renderMes(state, ideas);
+    contenido = state.calVista === 'agenda' ? renderAgenda(state, ideas, clientes) : renderMes(state, ideas, clientes);
     diasPeriodo = new Date(anio, mesNum, 0).getDate();
     fechasPeriodo = Array.from({ length: diasPeriodo }, (_, i) => state.month + '-' + String(i + 1).padStart(2, '0'));
     statsLabel = 'este mes';
@@ -164,8 +177,9 @@ export function renderCalendario(state) {
   const prioridadAltaPendiente = statsIdeas.filter(i => i.prioridad === 'Alta' && i.estado !== 'publicada').length;
   const statsHtml = `${statsIdeas.length} publicaciones ${statsLabel} · ${diasPeriodo - diasConPub} días sin publicar · ${rodajesPeriodo.length} rodajes · ${prioridadAltaPendiente} con prioridad alta pendiente`;
 
-  const mesRealLabel = MESES[new Date().getMonth()];
-  const hoyBtnLabel = mesRealLabel.charAt(0).toUpperCase() + mesRealLabel.slice(1);
+  const mesVisibleNum = state.calVista === 'semana' ? Number(state.semanaInicio.split('-')[1]) : Number(state.month.split('-')[1]);
+  const mesVisibleLabel = MESES[mesVisibleNum - 1];
+  const hoyBtnLabel = mesVisibleLabel.charAt(0).toUpperCase() + mesVisibleLabel.slice(1);
 
   return `
     <main class="calendario">
