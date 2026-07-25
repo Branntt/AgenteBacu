@@ -19,7 +19,10 @@ function entryHtml(i, tipo) {
     <div class="cal-entry ${tipo === 'rodaje' ? 'is-rodaje' : ''}" data-act="idea-abrir" data-id="${i.id}">
       <span class="cal-entry-bar" style="background:${M.color}"></span>
       <div class="cal-entry-title">${tag}${escapeHtml(i.titulo)}</div>
-      <div class="cal-entry-meta">${escapeHtml(i.formato)} · ${escapeHtml(marcaTxt)}${flags ? `<span class="cal-entry-flags">${flags}</span>` : ''}</div>
+      <div class="cal-entry-meta">
+        <span class="cal-entry-meta-text">${escapeHtml(i.formato)} · ${escapeHtml(marcaTxt)}</span>
+        ${flags ? `<span class="cal-entry-flags">${flags}</span>` : ''}
+      </div>
     </div>
   `;
 }

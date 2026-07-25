@@ -589,7 +589,18 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
   color: var(--muted);
   background: var(--panel);
 }
-.cal-cell { min-height: 112px; padding: 8px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); display: flex; flex-direction: column; gap: 6px; }
+.cal-cell {
+  min-height: 112px;
+  max-height: 190px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 8px;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
 .cal-cell.clickable, .cal-week-body.clickable { cursor: pointer; }
 .cal-cell.clickable:hover, .cal-week-body.clickable:hover { background: var(--panel); }
 .cal-daynum { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--muted); }
@@ -607,15 +618,24 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
 .cal-week-col { background: var(--panel); border: 1px solid var(--line); min-height: 200px; }
 .cal-week-head { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; border-bottom: 1px solid var(--line); }
 .cal-week-head.today { border-bottom-color: var(--verde); }
-.cal-week-body { display: flex; flex-direction: column; gap: 8px; padding: 10px; }
+.cal-week-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  max-height: 260px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
 
 /* shared entry card — used by mes, semana and agenda alike */
-.cal-entry { background: var(--panel2); padding: 8px 10px; cursor: pointer; display: flex; flex-direction: column; gap: 3px; min-height: 44px; justify-content: center; }
+.cal-entry { background: var(--panel2); padding: 8px 10px; cursor: pointer; display: flex; flex-direction: column; flex-shrink: 0; gap: 3px; min-height: 44px; justify-content: center; }
 .cal-entry:hover { background: var(--panel); }
-.cal-entry-bar { display: block; width: 22px; height: 2px; }
-.cal-entry-title { font-size: 12px; font-weight: 600; line-height: 1.3; }
-.cal-entry-meta { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); display: flex; align-items: center; gap: 6px; }
-.cal-entry-flags { display: inline-flex; gap: 4px; }
+.cal-entry-bar { display: block; width: 22px; height: 2px; flex-shrink: 0; }
+.cal-entry-title { font-size: 12px; font-weight: 600; line-height: 1.3; overflow-wrap: break-word; flex-shrink: 0; }
+.cal-entry-meta { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.cal-entry-meta-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.cal-entry-flags { display: inline-flex; gap: 4px; flex-shrink: 0; }
 .cal-flag { font-size: 10px; line-height: 1; }
 .cal-flag.ok { color: var(--verde); }
 .cal-flag.alta { color: var(--rojo); }
@@ -632,6 +652,29 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
   padding: 1px 4px;
   margin-right: 6px;
   vertical-align: middle;
+}
+
+/* Mes/Semana on phones: show the whole grid at once instead of scrolling sideways for it —
+   entries collapse to compact colored bars (tap still opens that idea directly). The Agenda
+   view is untouched by this and always keeps full text, at any width. */
+@media (max-width: 599px) {
+  .cal-grid { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+  .cal-dow { padding: 6px 2px; font-size: 9px; letter-spacing: 1px; text-align: center; }
+  .cal-cell { min-width: 0; min-height: 52px; max-height: 96px; padding: 3px; gap: 3px; }
+  .cal-daynum { font-size: 10px; }
+  .cal-daynum.today { width: 18px; height: 18px; }
+
+  .cal-week { grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 3px; }
+  .cal-week-col { min-width: 0; min-height: 90px; }
+  .cal-week-head { flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 1px; padding: 5px 4px; }
+  .cal-week-body { gap: 3px; padding: 3px; max-height: 96px; }
+  .cal-week-body .col-empty { padding: 8px 4px; font-size: 9px; }
+
+  .cal-cell .cal-entry, .cal-week-body .cal-entry { min-height: 0; height: 10px; padding: 0; border-radius: 2px; overflow: hidden; }
+  .cal-cell .cal-entry:hover, .cal-week-body .cal-entry:hover { background: var(--panel2); }
+  .cal-cell .cal-entry-bar, .cal-week-body .cal-entry-bar { width: 100%; height: 100%; }
+  .cal-cell .cal-entry-title, .cal-week-body .cal-entry-title,
+  .cal-cell .cal-entry-meta, .cal-week-body .cal-entry-meta { display: none; }
 }
 
 @media (min-width: 900px) {
