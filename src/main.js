@@ -3,6 +3,7 @@ import { TEMA_MAP } from './data/constants.js';
 import { parseN } from './lib/format.js';
 import { renderHeader } from './components/header.js';
 import { renderDetalle } from './components/detalle.js';
+import { renderClienteDetalle } from './components/clienteDetalle.js';
 import { renderGuion } from './components/guion.js';
 import { renderRodajeRapido } from './components/rodajeRapido.js';
 import { renderCuentaCobro } from './components/cuentaCobro.js';
@@ -79,6 +80,7 @@ function render() {
       ${renderHeader(state)}
       ${view(state)}
       ${renderDetalle(state)}
+      ${renderClienteDetalle(state)}
       ${renderGuion(state)}
       ${renderRodajeRapido(state)}
       ${renderCuentaCobro(state)}
@@ -88,7 +90,7 @@ function render() {
   root.scrollTop = scroll;
   restaurarFoco(foco);
 
-  const drawerAbiertoAhora = !!(state.selId || state.guionId || state.rodajeDraft || state.cuentaCobroDraft || state.historialAbierto);
+  const drawerAbiertoAhora = !!(state.selId || state.clienteSelId || state.guionId || state.rodajeDraft || state.cuentaCobroDraft || state.historialAbierto);
   if (drawerAbiertoAhora && !drawerAbiertoAntes) {
     const drawer = root.querySelector('.drawer');
     const primero = drawer && drawer.querySelector(FOCUSABLE);
@@ -108,11 +110,12 @@ if ('serviceWorker' in navigator) {
 }
 
 document.addEventListener('keydown', e => {
-  const drawerAbierto = state.selId || state.guionId || state.rodajeDraft || state.cuentaCobroDraft;
+  const drawerAbierto = state.selId || state.clienteSelId || state.guionId || state.rodajeDraft || state.cuentaCobroDraft;
   if (!drawerAbierto) return;
 
   if (e.key === 'Escape') {
     if (state.selId) actions.cerrarDrawer();
+    if (state.clienteSelId) actions.cerrarClienteDetalle();
     if (state.guionId) actions.cerrarGuion();
     if (state.rodajeDraft) actions.rodajeRapidoCerrar();
     if (state.cuentaCobroDraft) actions.cuentaCobroCerrar();
@@ -135,7 +138,7 @@ root.addEventListener('click', e => {
   if (!el) return;
   const noNav = e.target.closest('[data-no-nav]');
   if (noNav && !noNav.contains(el)) return;
-  const { act, id, view, marca, idx, value, fecha, categoria } = el.dataset;
+  const { act, id, view, marca, idx, value, fecha, categoria, direccion } = el.dataset;
 
   switch (act) {
     case 'nav-go': actions.setView(view); break;
@@ -147,6 +150,8 @@ root.addEventListener('click', e => {
     case 'cal-next': state.calVista === 'semana' ? actions.cambiaSemana(1) : actions.cambiaMes(1); break;
     case 'cal-hoy': actions.irAHoy(); break;
     case 'cliente-nuevo': actions.nuevoCliente(); break;
+    case 'cliente-abrir': actions.abrirCliente(id); break;
+    case 'cliente-detalle-cerrar': actions.cerrarClienteDetalle(); break;
     case 'cliente-eliminar': actions.eliminarCliente(id); break;
     case 'clientes-exportar': actions.exportarListadoClientes(); break;
     case 'snap-abre': actions.snapAbre(); break;
@@ -182,7 +187,7 @@ root.addEventListener('click', e => {
     case 'rodaje-rapido-guardar': actions.rodajeRapidoGuardar(); break;
     case 'cc-abrir': {
       const cliente = state.clientes.find(c => c.id === id);
-      if (cliente) actions.cuentaCobroAbrir(cliente);
+      if (cliente) { actions.cerrarClienteDetalle(); actions.cuentaCobroAbrir(cliente); }
       break;
     }
     case 'cc-cerrar': actions.cuentaCobroCerrar(); break;
@@ -192,6 +197,9 @@ root.addEventListener('click', e => {
     case 'cc-item-concepto': actions.cuentaCobroUpdItem(Number(idx), 'descripcion', value); break;
     case 'movimiento-nuevo': actions.movimientoNuevo(); break;
     case 'movimiento-eliminar': actions.eliminarMovimiento(id); break;
+    case 'deuda-nueva': actions.deudaNueva(direccion); break;
+    case 'deuda-toggle': actions.toggleDeudaPagada(id); break;
+    case 'deuda-eliminar': actions.eliminarDeuda(id); break;
     case 'meta-personal-nueva': actions.metaPersonalNueva(categoria); break;
     case 'meta-personal-eliminar': actions.eliminarMetaPersonal(id); break;
     case 'meta-personal-toggle': {
@@ -270,6 +278,9 @@ root.addEventListener('change', e => {
       case 'movimiento-fecha': actions.updMovimiento(id, { fecha: value }); break;
       case 'movimiento-monto': actions.updMovimiento(id, { monto: parseN(value) }); break;
       case 'movimiento-nota': actions.updMovimiento(id, { nota: value }); break;
+      case 'deuda-persona': actions.updDeuda(id, { persona: value }); break;
+      case 'deuda-monto': actions.updDeuda(id, { monto: parseN(value) }); break;
+      case 'deuda-nota': actions.updDeuda(id, { nota: value }); break;
       case 'meta-personal-titulo': actions.updMetaPersonal(id, { titulo: value }); break;
       case 'meta-personal-fecha': actions.updMetaPersonal(id, { fecha: value || null }); break;
       case 'meta-mensual-set': actions.setMetaMensual(marca, state.month, parseN(value)); break;

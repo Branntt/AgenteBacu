@@ -1,5 +1,5 @@
 import { escapeHtml } from '../lib/format.js';
-import { calcularTotalFinanciamiento } from '../lib/financiamiento.js';
+import { calcularFinanciamiento, calcularFacturado } from '../lib/financiamiento.js';
 
 const FUENTES = [['bancolombia', 'Bancolombia'], ['nequi', 'Nequi'], ['efectivo', 'Efectivo'], ['otro', 'Otro']];
 
@@ -34,14 +34,36 @@ function movimientoCardHtml(m) {
   `;
 }
 
+function deudaCardHtml(d) {
+  return `
+    <div class="deuda-card ${d.pagada ? 'pagada' : ''}">
+      <input class="deuda-persona" data-change="deuda-persona" data-id="${escapeHtml(d.id)}" value="${escapeHtml(d.persona)}" placeholder="¿Quién?">
+      <div class="field-row-2">
+        <input data-change="deuda-monto" data-id="${escapeHtml(d.id)}" value="${d.monto ? String(d.monto) : ''}" inputmode="numeric" placeholder="Monto">
+        <input data-change="deuda-nota" data-id="${escapeHtml(d.id)}" value="${escapeHtml(d.nota || '')}" placeholder="Nota (opcional)">
+      </div>
+      <div class="deuda-footer">
+        <button class="btn-text-muted" data-act="deuda-toggle" data-id="${escapeHtml(d.id)}">${d.pagada ? '✓ Resuelta' : 'Marcar resuelta'}</button>
+        <span class="deuda-monto-label">${fmtMoney(d.monto)}</span>
+        <button class="btn-text-muted" data-act="deuda-eliminar" data-id="${escapeHtml(d.id)}">✕</button>
+      </div>
+    </div>
+  `;
+}
+
 export function renderFinanciamiento(state) {
   const cuentas = state.cuentasCobro || [];
   const movimientos = state.movimientosFinanciamiento || [];
+  const deudas = state.deudas || [];
 
-  const { totalTrabajos, totalMovimientos, total } = calcularTotalFinanciamiento(cuentas, movimientos);
+  const { efectivo, debes, teDeben, patrimonio } = calcularFinanciamiento(movimientos, deudas);
+  const facturado = calcularFacturado(cuentas);
 
   const movimientosOrdenados = movimientos.slice().sort((a, b) => b.fecha.localeCompare(a.fecha));
   const tarjetasHtml = movimientosOrdenados.map(movimientoCardHtml).join('');
+
+  const meDebenHtml = deudas.filter(d => d.direccion === 'me_deben');
+  const yoDeboHtml = deudas.filter(d => d.direccion === 'debo');
 
   return `
     <main class="financiamiento">
@@ -49,15 +71,35 @@ export function renderFinanciamiento(state) {
         <h2 class="serif" style="margin:0;font-size:32px;">Financiamiento</h2>
         <button class="btn-primary" data-act="movimiento-nuevo">+ Movimiento</button>
       </div>
-      <div class="vista-sub">Cálculo aproximado de tu bolsillo — no es contabilidad exacta: suma lo que facturas más lo que registres de Bancolombia, Nequi o efectivo.</div>
+      <div class="vista-sub">Lo real: lo que tienes en Bancolombia/Nequi/efectivo, más lo que te deben, menos lo que debes. Lo facturado se muestra aparte — facturar no es cobrar.</div>
 
-      <div class="financ-total-card">
-        <span class="mono-label">Total acumulado</span>
-        <div class="financ-total-value">${fmtMoney(total)}</div>
-        <div class="financ-total-breakdown">${fmtMoney(totalTrabajos)} de ${cuentas.length} cuenta${cuentas.length === 1 ? '' : 's'} de cobro · ${fmtMoney(totalMovimientos)} de ${movimientos.length} movimiento${movimientos.length === 1 ? '' : 's'} registrado${movimientos.length === 1 ? '' : 's'}</div>
+      <div class="financ-total-card ${patrimonio < 0 ? 'negativo' : ''}">
+        <span class="mono-label">Patrimonio neto estimado</span>
+        <div class="financ-total-value">${fmtMoney(patrimonio)}</div>
+        <div class="financ-total-breakdown">${fmtMoney(efectivo)} efectivo · ${fmtMoney(teDeben)} te deben · ${fmtMoney(debes)} debes</div>
       </div>
 
-      ${movimientos.length ? `<div class="movimientos-grid">${tarjetasHtml}</div>` : `<div class="empty-state">Todavía no registraste movimientos de Bancolombia, Nequi o efectivo.<br>Los de trabajos ya se suman solos desde tus cuentas de cobro.</div>`}
+      <div class="panel-footnote" style="margin:-8px 0 24px;">Facturado en total: ${fmtMoney(facturado)} (${cuentas.length} cuenta${cuentas.length === 1 ? '' : 's'} de cobro) — no cuenta como tuyo hasta que te paguen.</div>
+
+      <div class="section-title">Efectivo real</div>
+      ${movimientos.length ? `<div class="movimientos-grid">${tarjetasHtml}</div>` : `<div class="empty-state">Todavía no registraste movimientos de Bancolombia, Nequi o efectivo.</div>`}
+
+      <div class="financ-deudas-grid">
+        <div>
+          <div class="financ-deudas-head">
+            <div class="section-title" style="margin-bottom:0;">Debes</div>
+            <button class="btn-text-muted" data-act="deuda-nueva" data-direccion="debo">+ Agregar</button>
+          </div>
+          ${yoDeboHtml.length ? yoDeboHtml.map(deudaCardHtml).join('') : '<div class="empty-note">Nada pendiente por pagar.</div>'}
+        </div>
+        <div>
+          <div class="financ-deudas-head">
+            <div class="section-title" style="margin-bottom:0;">Te deben</div>
+            <button class="btn-text-muted" data-act="deuda-nueva" data-direccion="me_deben">+ Agregar</button>
+          </div>
+          ${meDebenHtml.length ? meDebenHtml.map(deudaCardHtml).join('') : '<div class="empty-note">Nadie te debe nada registrado.</div>'}
+        </div>
+      </div>
     </main>
   `;
 }

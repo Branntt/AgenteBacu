@@ -567,6 +567,12 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
 .idea-val.ok { color: var(--verde); }
 .idea-val.pend { color: var(--muted); }
 .idea-val.no { color: var(--rojo); }
+
+.cliente-card-mini { background: var(--panel2); border: 1px solid var(--line); padding: 14px 16px; cursor: pointer; }
+.cliente-card-mini:hover { border-color: var(--verde); }
+.cliente-mini-nombre { font-size: 14px; font-weight: 600; line-height: 1.35; margin-bottom: 4px; }
+.cliente-mini-proyecto { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--muted); }
+.cliente-mini-nota { font-size: 12px; line-height: 1.4; color: var(--muted); margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line); }
 .col-empty, .empty-state { padding: 24px 12px; text-align: center; font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: var(--muted); line-height: 1.6; }
 .empty-state { border: 1px dashed var(--line2); }
 
@@ -776,29 +782,12 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
   .vista-select, .filtro-select { min-height: 0; padding: 8px 14px; }
 }
 
-/* ---------- clientes ---------- */
-.clientes-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 10px; gap: 12px; flex-wrap: wrap; }
-.clientes-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
-.cliente-card { background: var(--panel); border: 1px solid var(--line); padding: 20px; display: flex; flex-direction: column; gap: 12px; }
-.cliente-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
-.cliente-top select { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; padding: 8px 10px; }
-.cliente-nombre { border: none; border-bottom: 1px solid var(--line); background: none; font-family: 'Instrument Serif', serif; font-size: 22px; padding: 4px 0; width: 100%; }
-.cliente-proyecto { font-size: 13px; padding: 9px 12px; width: 100%; }
-.cliente-nota { font-size: 12.5px; line-height: 1.5; padding: 9px 12px; resize: vertical; width: 100%; }
-.cliente-grabacion { display: flex; flex-direction: column; gap: 6px; }
-.cliente-grabacion input { width: 100%; }
-.cliente-footer { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
-
-@media (min-width: 600px) {
-  .clientes-grid { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
-  .cliente-card { padding: 22px; }
-  .cliente-nombre { font-size: 24px; }
-}
-
 /* ---------- financiamiento ---------- */
 .financ-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 10px; gap: 12px; flex-wrap: wrap; }
 .financ-total-card { background: var(--panel); border: 1px solid var(--verde); padding: 20px; margin-bottom: 20px; }
+.financ-total-card.negativo { border-color: var(--rojo); }
 .financ-total-value { font-size: 40px; font-weight: 600; margin: 6px 0 10px; }
+.financ-total-card.negativo .financ-total-value { color: var(--rojo); }
 .financ-total-breakdown { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: var(--muted); line-height: 1.6; }
 
 .movimientos-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
@@ -811,10 +800,20 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
 .movimiento-monto-label.ingreso { color: var(--verde); }
 .movimiento-monto-label.gasto { color: var(--rojo); }
 
+.financ-deudas-grid { display: grid; grid-template-columns: 1fr; gap: 28px; margin-top: 28px; }
+.financ-deudas-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.deuda-card { background: var(--panel); border: 1px solid var(--line); padding: 16px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; }
+.deuda-card.pagada { opacity: 0.5; }
+.deuda-card.pagada .deuda-persona { text-decoration: line-through; }
+.deuda-persona { background: none; border: none; color: var(--text); font-size: 14px; font-weight: 600; padding: 0; width: 100%; }
+.deuda-footer { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.deuda-monto-label { font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-weight: 600; }
+
 @media (min-width: 600px) {
   .financ-total-card { padding: 26px; }
   .financ-total-value { font-size: 46px; }
   .movimientos-grid { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+  .financ-deudas-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
 /* ---------- seguimiento ---------- */

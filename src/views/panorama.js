@@ -1,7 +1,7 @@
 import { MARCAS, PREGUNTAS, PIPELINE, MESES, CATEGORIAS_META, COLORES_TAREA, ENFOQUE } from '../data/constants.js';
 import { fmtFecha, fmtNum, escapeHtml } from '../lib/format.js';
 import { hoyStr, lunesDe, sumarDias } from '../lib/idea.js';
-import { calcularTotalFinanciamiento } from '../lib/financiamiento.js';
+import { calcularFinanciamiento } from '../lib/financiamiento.js';
 
 function fmtMoney(n) {
   const v = Number(n) || 0;
@@ -57,7 +57,7 @@ export function renderPanorama(state) {
   const muestraMetricas = !state.modoCalma;
 
   const orgSemana = calcularOrganizacionSemana(ideas);
-  const finTotal = calcularTotalFinanciamiento(state.cuentasCobro, state.movimientosFinanciamiento);
+  const finTotal = calcularFinanciamiento(state.movimientosFinanciamiento, state.deudas);
 
   const tareas = state.tareas || [];
   const tareasHtml = tareas.length ? tareas.map(tareaCintaHtml).join('') : '';
@@ -248,8 +248,8 @@ export function renderPanorama(state) {
         </div>
         <div class="vital-card">
           <span class="mono-label">Tu bolsillo</span>
-          <div class="vital-value verde">${fmtMoney(finTotal.total)}</div>
-          <div class="vital-detail">Total en Financiamiento</div>
+          <div class="vital-value ${finTotal.patrimonio < 0 ? 'alto' : 'verde'}">${fmtMoney(finTotal.patrimonio)}</div>
+          <div class="vital-detail">${fmtMoney(finTotal.efectivo)} efectivo · ${fmtMoney(finTotal.teDeben)} te deben · ${fmtMoney(finTotal.debes)} debes</div>
         </div>
       </div>
 

@@ -14,6 +14,7 @@ export const state = {
   clientes: [],
   selId: null,
   guionId: null,
+  clienteSelId: null,
   filtroGuiones: 'todas',
   guionesVista: 'general',
   filtroCalendario: 'todas',
@@ -24,6 +25,7 @@ export const state = {
   cuentaCobroDraft: null,
   cuentasCobro: [],
   movimientosFinanciamiento: [],
+  deudas: [],
   metasPersonales: [],
   metasMensuales: [],
   tareas: [],
@@ -93,12 +95,13 @@ export async function initAuth() {
 }
 
 async function cargarDatos() {
-  const [ideasRes, snapsRes, clientesRes, cuentasRes, movimientosRes, metasPersonalesRes, metasMensualesRes, tareasRes] = await Promise.all([
+  const [ideasRes, snapsRes, clientesRes, cuentasRes, movimientosRes, deudasRes, metasPersonalesRes, metasMensualesRes, tareasRes] = await Promise.all([
     supabase.from('ideas').select('*').order('id'),
     supabase.from('snaps').select('*').order('fecha'),
     supabase.from('clientes').select('*').order('id'),
     supabase.from('cuentas_cobro').select('*').order('numero'),
     supabase.from('movimientos_financiamiento').select('*').order('fecha'),
+    supabase.from('deudas').select('*').order('created_at'),
     supabase.from('metas_personales').select('*').order('created_at'),
     supabase.from('metas_mensuales').select('*'),
     supabase.from('tareas').select('*').order('created_at')
@@ -108,6 +111,7 @@ async function cargarDatos() {
   state.clientes = clientesRes.data || [];
   state.cuentasCobro = cuentasRes.data || [];
   state.movimientosFinanciamiento = movimientosRes.data || [];
+  state.deudas = deudasRes.data || [];
   state.metasPersonales = metasPersonalesRes.data || [];
   state.metasMensuales = metasMensualesRes.data || [];
   state.tareas = tareasRes.data || [];
@@ -164,6 +168,16 @@ function suscribirRealtime() {
     } else {
       const existe = state.movimientosFinanciamiento.some(m => m.id === payload.new.id);
       state.movimientosFinanciamiento = existe ? state.movimientosFinanciamiento.map(m => m.id === payload.new.id ? payload.new : m) : state.movimientosFinanciamiento.concat([payload.new]);
+    }
+    notify();
+  }).subscribe();
+
+  supabase.channel('sync-deudas').on('postgres_changes', { event: '*', schema: 'public', table: 'deudas' }, payload => {
+    if (payload.eventType === 'DELETE') {
+      state.deudas = state.deudas.filter(d => d.id !== payload.old.id);
+    } else {
+      const existe = state.deudas.some(d => d.id === payload.new.id);
+      state.deudas = existe ? state.deudas.map(d => d.id === payload.new.id ? payload.new : d) : state.deudas.concat([payload.new]);
     }
     notify();
   }).subscribe();
@@ -315,7 +329,7 @@ export const actions = {
   nuevoCliente: () => {
     const c = { id: 'c' + Date.now(), nombre: '', estado: 'prospecto', proyecto: '', nota: '' };
     state.clientes = [c].concat(state.clientes);
-    setState({ view: 'clientes' });
+    setState({ view: 'clientes', clienteSelId: c.id });
     supabase.from('clientes').insert(c).then(({ error }) => marcarGuardado(!error));
   },
   updCliente: (id, patch) => {
@@ -326,9 +340,11 @@ export const actions = {
   eliminarCliente: id => {
     if (!window.confirm('¿Eliminar este cliente?')) return;
     state.clientes = state.clientes.filter(x => x.id !== id);
-    notify();
+    setState({ clienteSelId: state.clienteSelId === id ? null : state.clienteSelId });
     supabase.from('clientes').delete().eq('id', id).then(({ error }) => marcarGuardado(!error));
   },
+  abrirCliente: id => setState({ clienteSelId: id }),
+  cerrarClienteDetalle: () => setState({ clienteSelId: null }),
   exportarListadoClientes: () => generarListadoClientesPDF(state.clientes),
 
   cuentaCobroAbrir: cliente => setState({
@@ -429,6 +445,27 @@ export const actions = {
     state.movimientosFinanciamiento = state.movimientosFinanciamiento.filter(m => m.id !== id);
     notify();
     supabase.from('movimientos_financiamiento').delete().eq('id', id).then(({ error }) => marcarGuardado(!error));
+  },
+
+  deudaNueva: direccion => {
+    const d = { id: 'dd' + Date.now(), persona: '', monto: 0, direccion, nota: '', pagada: false };
+    state.deudas = [d].concat(state.deudas);
+    setState({ view: 'financiamiento' });
+    supabase.from('deudas').insert(d).then(({ error }) => marcarGuardado(!error));
+  },
+  updDeuda: (id, patch) => {
+    state.deudas = state.deudas.map(d => d.id === id ? { ...d, ...patch } : d);
+    notify();
+    supabase.from('deudas').update(patch).eq('id', id).then(({ error }) => marcarGuardado(!error));
+  },
+  toggleDeudaPagada: id => {
+    const d = state.deudas.find(x => x.id === id);
+    if (d) actions.updDeuda(id, { pagada: !d.pagada });
+  },
+  eliminarDeuda: id => {
+    state.deudas = state.deudas.filter(d => d.id !== id);
+    notify();
+    supabase.from('deudas').delete().eq('id', id).then(({ error }) => marcarGuardado(!error));
   },
 
   metaPersonalNueva: categoria => {
