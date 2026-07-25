@@ -251,7 +251,7 @@ export const actions = {
     setState({ selId: nueva.id, view: 'guiones' });
     supabase.from('ideas').insert(toDbIdea(nueva)).then(({ error }) => marcarGuardado(!error));
   },
-  rodajeRapidoAbrir: fecha => setState({ rodajeDraft: { titulo: '', marca: 'brant', fecha: fecha || hoyStr() } }),
+  rodajeRapidoAbrir: fecha => setState({ rodajeDraft: { titulo: '', marca: 'brant', fecha: fecha || hoyStr(), empresa: '', documento: '', precio: 0 } }),
   rodajeRapidoCerrar: () => setState({ rodajeDraft: null }),
   rodajeRapidoSetCampo: (campo, val) => setState({ rodajeDraft: { ...state.rodajeDraft, [campo]: val } }),
   rodajeRapidoGuardar: () => {
@@ -263,8 +263,61 @@ export const actions = {
       preguntas: [null, null, null, null], tiempo: '', grabacion: true, edicion: false, prioridad: 'Media', etapa: 0
     };
     state.ideas = [nueva].concat(state.ideas);
-    setState({ rodajeDraft: null });
     supabase.from('ideas').insert(toDbIdea(nueva)).then(({ error }) => marcarGuardado(!error));
+
+    const nombreEmpresa = (D.empresa || '').trim();
+    if (nombreEmpresa) {
+      const documento = (D.documento || '').trim();
+      // No se toca clientes.fecha_grabacion acá: ya queda cubierto por la idea de arriba (fechaRodaje) y ponerla también duplicaría la entrada en el Calendario (ver entradasDeDia en calendario.js).
+      let cliente = state.clientes.find(c => (c.nombre || '').trim().toLowerCase() === nombreEmpresa.toLowerCase());
+      if (cliente) {
+        if (documento && !cliente.documento) {
+          const clienteId = cliente.id;
+          state.clientes = state.clientes.map(c => c.id === clienteId ? { ...c, documento } : c);
+          cliente = { ...cliente, documento };
+          supabase.from('clientes').update({ documento }).eq('id', clienteId).then(({ error }) => marcarGuardado(!error));
+        }
+      } else {
+        cliente = { id: 'c' + Date.now(), nombre: nombreEmpresa, documento, estado: 'activo', proyecto: D.titulo, nota: '' };
+        state.clientes = [cliente].concat(state.clientes);
+        supabase.from('clientes').insert(cliente).then(({ error }) => marcarGuardado(!error));
+      }
+
+      const precio = Number(D.precio) || 0;
+      if (precio > 0) {
+        const fecha = hoyStr();
+        const prefijo = fecha.slice(0, 4) + fecha.slice(5, 7);
+        const delMes = state.cuentasCobro.filter(cc => cc.numero.startsWith(prefijo)).length;
+        const numero = delMes === 0 ? prefijo : `${prefijo}-${delMes + 1}`;
+        const registro = {
+          id: 'cc' + Date.now(),
+          numero,
+          fecha,
+          fecha_vencimiento: null,
+          observaciones: OBSERVACIONES_DEFAULT,
+          cliente_id: cliente.id,
+          cliente_nombre: cliente.nombre,
+          cliente_documento: cliente.documento || '',
+          items: [{ descripcion: D.titulo, cantidad: 1, valor: precio }],
+          total: precio
+        };
+        state.cuentasCobro = state.cuentasCobro.concat([registro]);
+        supabase.from('cuentas_cobro').insert(registro).then(({ error }) => marcarGuardado(!error));
+
+        generarCuentaCobroPDF({
+          numero,
+          fechaLabel: fechaALabel(fecha),
+          fechaVencimientoLabel: '',
+          cliente: cliente.nombre,
+          documento: cliente.documento || '',
+          items: registro.items,
+          total: precio,
+          observaciones: OBSERVACIONES_DEFAULT
+        });
+      }
+    }
+
+    setState({ rodajeDraft: null });
   },
 
   abrirIdea: id => setState({ selId: id }),

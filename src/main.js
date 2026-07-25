@@ -271,7 +271,7 @@ root.addEventListener('change', e => {
       case 'calma': actions.setModoCalma(value); break;
       case 'guion-campo': actions.setGuionCampo(id, campo, value); break;
       case 'guion-item-campo': actions.updGuionItem(id, Number(idx), campo, value); break;
-      case 'rodaje-rapido-campo': actions.rodajeRapidoSetCampo(campo, value); break;
+      case 'rodaje-rapido-campo': actions.rodajeRapidoSetCampo(campo, campo === 'precio' ? parseN(value) : value); break;
       case 'cc-campo': actions.cuentaCobroSetCampo(campo, value); break;
       case 'cc-item-campo': actions.cuentaCobroUpdItem(Number(idx), campo, value); break;
       case 'historial-busqueda': actions.historialSetBusqueda(value); break;

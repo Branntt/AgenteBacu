@@ -7,6 +7,8 @@ export function renderClienteDetalle(state) {
   if (!c) return '';
 
   const id = escapeHtml(c.id);
+  const cuentasCliente = (state.cuentasCobro || []).filter(cc => cc.cliente_id === c.id);
+  const totalCliente = cuentasCliente.reduce((sum, cc) => sum + (Number(cc.total) || 0), 0);
 
   return `
     <div class="drawer-overlay">
@@ -21,6 +23,8 @@ export function renderClienteDetalle(state) {
           <label class="field-label">Nombre</label>
           <input class="title-field" data-change="cliente-nombre" data-id="${id}" value="${escapeHtml(c.nombre)}" placeholder="Nombre del cliente">
         </div>
+
+        ${cuentasCliente.length ? `<div class="panel-footnote" style="margin:-8px 0 16px;">Facturado en total: $${totalCliente.toLocaleString('es-CO')} · ${cuentasCliente.length} cuenta${cuentasCliente.length === 1 ? '' : 's'} de cobro</div>` : ''}
 
         <div class="field">
           <label class="field-label">Proyecto / servicio</label>

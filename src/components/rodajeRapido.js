@@ -32,7 +32,23 @@ export function renderRodajeRapido(state) {
           </div>
         </div>
 
-        <div class="panel-footnote" style="margin-top:0;">Se crea como "Cubrimiento" en Desarrollo — sin guion, solo notas de qué no perderse. Podés completar el resto después.</div>
+        <div class="field">
+          <label class="field-label">Cliente (opcional)</label>
+          <input data-change="rodaje-rapido-campo" data-campo="empresa" value="${escapeHtml(D.empresa || '')}" placeholder="Nombre de la empresa o persona">
+        </div>
+
+        <div class="field-row-2">
+          <div class="field">
+            <label class="field-label">C.C. / NIT</label>
+            <input data-change="rodaje-rapido-campo" data-campo="documento" value="${escapeHtml(D.documento || '')}" placeholder="Opcional">
+          </div>
+          <div class="field">
+            <label class="field-label">Precio del trabajo</label>
+            <input data-change="rodaje-rapido-campo" data-campo="precio" value="${D.precio ? String(D.precio) : ''}" inputmode="numeric" placeholder="Ej. 350000">
+          </div>
+        </div>
+
+        <div class="panel-footnote" style="margin-top:0;">Se crea como "Cubrimiento" en Desarrollo — sin guion, solo notas de qué no perderse. Si pones cliente y precio, se agrega a Clientes (sumando si ya existe) y se genera la cuenta de cobro en PDF.</div>
 
         <div class="drawer-footer">
           <button class="btn-ghost" data-act="rodaje-rapido-cerrar">Cancelar</button>
