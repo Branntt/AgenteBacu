@@ -26,6 +26,7 @@ export const state = {
   cuentasCobro: [],
   movimientosFinanciamiento: [],
   deudas: [],
+  pagosMensuales: [],
   metasPersonales: [],
   metasMensuales: [],
   tareas: [],
@@ -95,13 +96,14 @@ export async function initAuth() {
 }
 
 async function cargarDatos() {
-  const [ideasRes, snapsRes, clientesRes, cuentasRes, movimientosRes, deudasRes, metasPersonalesRes, metasMensualesRes, tareasRes] = await Promise.all([
+  const [ideasRes, snapsRes, clientesRes, cuentasRes, movimientosRes, deudasRes, pagosMensualesRes, metasPersonalesRes, metasMensualesRes, tareasRes] = await Promise.all([
     supabase.from('ideas').select('*').order('id'),
     supabase.from('snaps').select('*').order('fecha'),
     supabase.from('clientes').select('*').order('id'),
     supabase.from('cuentas_cobro').select('*').order('numero'),
     supabase.from('movimientos_financiamiento').select('*').order('fecha'),
     supabase.from('deudas').select('*').order('created_at'),
+    supabase.from('pagos_mensuales').select('*').order('dia_pago'),
     supabase.from('metas_personales').select('*').order('created_at'),
     supabase.from('metas_mensuales').select('*'),
     supabase.from('tareas').select('*').order('created_at')
@@ -112,6 +114,7 @@ async function cargarDatos() {
   state.cuentasCobro = cuentasRes.data || [];
   state.movimientosFinanciamiento = movimientosRes.data || [];
   state.deudas = deudasRes.data || [];
+  state.pagosMensuales = pagosMensualesRes.data || [];
   state.metasPersonales = metasPersonalesRes.data || [];
   state.metasMensuales = metasMensualesRes.data || [];
   state.tareas = tareasRes.data || [];
@@ -178,6 +181,16 @@ function suscribirRealtime() {
     } else {
       const existe = state.deudas.some(d => d.id === payload.new.id);
       state.deudas = existe ? state.deudas.map(d => d.id === payload.new.id ? payload.new : d) : state.deudas.concat([payload.new]);
+    }
+    notify();
+  }).subscribe();
+
+  supabase.channel('sync-pagos-mensuales').on('postgres_changes', { event: '*', schema: 'public', table: 'pagos_mensuales' }, payload => {
+    if (payload.eventType === 'DELETE') {
+      state.pagosMensuales = state.pagosMensuales.filter(p => p.id !== payload.old.id);
+    } else {
+      const existe = state.pagosMensuales.some(p => p.id === payload.new.id);
+      state.pagosMensuales = existe ? state.pagosMensuales.map(p => p.id === payload.new.id ? payload.new : p) : state.pagosMensuales.concat([payload.new]);
     }
     notify();
   }).subscribe();
@@ -466,6 +479,23 @@ export const actions = {
     state.deudas = state.deudas.filter(d => d.id !== id);
     notify();
     supabase.from('deudas').delete().eq('id', id).then(({ error }) => marcarGuardado(!error));
+  },
+
+  pagoMensualNuevo: () => {
+    const p = { id: 'pm' + Date.now(), nombre: '', monto: 0, dia_pago: null };
+    state.pagosMensuales = state.pagosMensuales.concat([p]);
+    notify();
+    supabase.from('pagos_mensuales').insert(p).then(({ error }) => marcarGuardado(!error));
+  },
+  updPagoMensual: (id, patch) => {
+    state.pagosMensuales = state.pagosMensuales.map(p => p.id === id ? { ...p, ...patch } : p);
+    notify();
+    supabase.from('pagos_mensuales').update(patch).eq('id', id).then(({ error }) => marcarGuardado(!error));
+  },
+  eliminarPagoMensual: id => {
+    state.pagosMensuales = state.pagosMensuales.filter(p => p.id !== id);
+    notify();
+    supabase.from('pagos_mensuales').delete().eq('id', id).then(({ error }) => marcarGuardado(!error));
   },
 
   metaPersonalNueva: categoria => {

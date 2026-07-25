@@ -20,7 +20,7 @@ Vanilla JS puro. **Sin build, sin npm, sin bundler.** Todo son ES modules servid
 
 ## Backend: Supabase
 
-Requiere **login** (email/contraseña, Supabase Auth). Sin sesión no se ve nada. Tablas: `ideas`, `clientes`, `snaps`, `cuentas_cobro`, `movimientos_financiamiento`, `deudas`, `metas_personales`, `metas_mensuales`, `tareas` — todas con RLS "solo autenticados", y suscripción realtime (cambios de otros usuarios se reflejan solos).
+Requiere **login** (email/contraseña, Supabase Auth). Sin sesión no se ve nada. Tablas: `ideas`, `clientes`, `snaps`, `cuentas_cobro`, `movimientos_financiamiento`, `deudas`, `pagos_mensuales`, `metas_personales`, `metas_mensuales`, `tareas` — todas con RLS "solo autenticados", y suscripción realtime (cambios de otros usuarios se reflejan solos).
 
 El email de login se recuerda solo (se guarda en localStorage tras cada intento, `sistemaEditorial.ultimoEmail`, y prellena el campo). La contraseña **nunca se guarda en código** — el input ya tiene `autocomplete="current-password"`, eso basta para que el gestor de contraseñas del navegador/SO la ofrezca. No construir un guardado propio de contraseña.
 
@@ -29,9 +29,10 @@ Los scripts SQL de setup están en la raíz del repo:
 - `supabase-migracion-cuentas-cobro.sql` — agrega `clientes.documento` + tabla `cuentas_cobro` (**puede que el usuario todavía no la haya corrido** — si algo relacionado a cuentas de cobro no persiste, es probablemente por esto; no es un bug de código).
 - `supabase-migracion-cuenta-cobro-v2.sql` — agrega `fecha_vencimiento` y `observaciones` a `cuentas_cobro`.
 - `supabase-migracion-fecha-grabacion-cliente.sql` — agrega `fecha_grabacion` a `clientes`.
-- `supabase-migracion-financiamiento.sql` — tabla `movimientos_financiamiento` (**puede que el usuario todavía no la haya corrido**).
-- `supabase-migracion-panorama.sql` — tablas `metas_personales`, `metas_mensuales`, `tareas` (**puede que el usuario todavía no la haya corrido** — confirmado: al 2026-07-25 seguía sin correrla, los inserts a esas 3 tablas fallan con el banner de guardado hasta que la corra).
-- `supabase-migracion-deudas.sql` — tabla `deudas` (**puede que el usuario todavía no la haya corrido**, agregada el 2026-07-25 junto con la corrección del modelo de Financiamiento — ver abajo).
+- `supabase-migracion-financiamiento.sql` — tabla `movimientos_financiamiento`. **Corrida el 2026-07-25** (confirmado: el asistente entró al SQL Editor de Supabase con el usuario y la ejecutó).
+- `supabase-migracion-panorama.sql` — tablas `metas_personales`, `metas_mensuales`, `tareas`. **Corrida el 2026-07-25**.
+- `supabase-migracion-deudas.sql` — tabla `deudas`, junto con la corrección del modelo de Financiamiento (ver abajo). **Corrida el 2026-07-25**.
+- `supabase-migracion-pagos-mensuales.sql` — tabla `pagos_mensuales` (suscripciones/pagos recurrentes: nombre, monto, día del mes; **puede que el usuario todavía no la haya corrido** — agregada el 2026-07-25, es solo referencia, no afecta el cálculo de patrimonio).
 
 Credenciales (URL + anon key) están hardcodeadas en `src/lib/supabaseClient.js` — es intencional, la anon key es pública/segura para frontend, protegida por RLS. **Nunca pedir ni usar la `service_role` key** — es privada, el usuario no debe compartirla.
 

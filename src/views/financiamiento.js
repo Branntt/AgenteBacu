@@ -34,6 +34,22 @@ function movimientoCardHtml(m) {
   `;
 }
 
+function pagoMensualCardHtml(p) {
+  return `
+    <div class="pago-card">
+      <input class="pago-nombre" data-change="pago-mensual-nombre" data-id="${escapeHtml(p.id)}" value="${escapeHtml(p.nombre)}" placeholder="Nombre (ej. Spotify)">
+      <div class="field-row-2">
+        <input data-change="pago-mensual-monto" data-id="${escapeHtml(p.id)}" value="${p.monto ? String(p.monto) : ''}" inputmode="numeric" placeholder="Monto">
+        <input data-change="pago-mensual-dia" data-id="${escapeHtml(p.id)}" value="${p.dia_pago || ''}" inputmode="numeric" placeholder="Día del mes">
+      </div>
+      <div class="pago-footer">
+        <span class="pago-monto-label">${fmtMoney(p.monto)} · ${p.dia_pago ? 'día ' + p.dia_pago : 'día sin definir'}</span>
+        <button class="btn-text-muted" data-act="pago-mensual-eliminar" data-id="${escapeHtml(p.id)}">✕</button>
+      </div>
+    </div>
+  `;
+}
+
 function deudaCardHtml(d) {
   return `
     <div class="deuda-card ${d.pagada ? 'pagada' : ''}">
@@ -55,12 +71,17 @@ export function renderFinanciamiento(state) {
   const cuentas = state.cuentasCobro || [];
   const movimientos = state.movimientosFinanciamiento || [];
   const deudas = state.deudas || [];
+  const pagosMensuales = state.pagosMensuales || [];
 
   const { efectivo, debes, teDeben, patrimonio } = calcularFinanciamiento(movimientos, deudas);
   const facturado = calcularFacturado(cuentas);
+  const totalPagosMensuales = pagosMensuales.reduce((sum, p) => sum + (Number(p.monto) || 0), 0);
 
   const movimientosOrdenados = movimientos.slice().sort((a, b) => b.fecha.localeCompare(a.fecha));
   const tarjetasHtml = movimientosOrdenados.map(movimientoCardHtml).join('');
+
+  const pagosOrdenados = pagosMensuales.slice().sort((a, b) => (a.dia_pago || 99) - (b.dia_pago || 99));
+  const pagosHtml = pagosOrdenados.map(pagoMensualCardHtml).join('');
 
   const meDebenHtml = deudas.filter(d => d.direccion === 'me_deben');
   const yoDeboHtml = deudas.filter(d => d.direccion === 'debo');
@@ -84,7 +105,17 @@ export function renderFinanciamiento(state) {
       <div class="section-title">Efectivo real</div>
       ${movimientos.length ? `<div class="movimientos-grid">${tarjetasHtml}</div>` : `<div class="empty-state">Todavía no registraste movimientos de Bancolombia, Nequi o efectivo.</div>`}
 
-      <div class="financ-deudas-grid">
+      <div class="financ-deudas-head" style="margin-top:32px;">
+        <div class="section-title" style="margin-bottom:0;">Pagos mensuales</div>
+        <button class="btn-text-muted" data-act="pago-mensual-nuevo">+ Agregar</button>
+      </div>
+      <div class="vista-sub">Suscripciones y pagos recurrentes — solo de referencia, no afecta el patrimonio de arriba.</div>
+      ${pagosMensuales.length ? `
+        <div class="panel-footnote" style="margin-top:0;">${fmtMoney(totalPagosMensuales)} al mes en total</div>
+        <div class="movimientos-grid">${pagosHtml}</div>
+      ` : `<div class="empty-state">Todavía no registraste pagos mensuales.</div>`}
+
+      <div class="financ-deudas-grid" style="margin-top:32px;">
         <div>
           <div class="financ-deudas-head">
             <div class="section-title" style="margin-bottom:0;">Debes</div>

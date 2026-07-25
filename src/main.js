@@ -200,6 +200,8 @@ root.addEventListener('click', e => {
     case 'deuda-nueva': actions.deudaNueva(direccion); break;
     case 'deuda-toggle': actions.toggleDeudaPagada(id); break;
     case 'deuda-eliminar': actions.eliminarDeuda(id); break;
+    case 'pago-mensual-nuevo': actions.pagoMensualNuevo(); break;
+    case 'pago-mensual-eliminar': actions.eliminarPagoMensual(id); break;
     case 'meta-personal-nueva': actions.metaPersonalNueva(categoria); break;
     case 'meta-personal-eliminar': actions.eliminarMetaPersonal(id); break;
     case 'meta-personal-toggle': {
@@ -281,6 +283,9 @@ root.addEventListener('change', e => {
       case 'deuda-persona': actions.updDeuda(id, { persona: value }); break;
       case 'deuda-monto': actions.updDeuda(id, { monto: parseN(value) }); break;
       case 'deuda-nota': actions.updDeuda(id, { nota: value }); break;
+      case 'pago-mensual-nombre': actions.updPagoMensual(id, { nombre: value }); break;
+      case 'pago-mensual-monto': actions.updPagoMensual(id, { monto: parseN(value) }); break;
+      case 'pago-mensual-dia': actions.updPagoMensual(id, { dia_pago: parseN(value) || null }); break;
       case 'meta-personal-titulo': actions.updMetaPersonal(id, { titulo: value }); break;
       case 'meta-personal-fecha': actions.updMetaPersonal(id, { fecha: value || null }); break;
       case 'meta-mensual-set': actions.setMetaMensual(marca, state.month, parseN(value)); break;

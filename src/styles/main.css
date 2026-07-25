@@ -809,6 +809,11 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
 .deuda-footer { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
 .deuda-monto-label { font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-weight: 600; }
 
+.pago-card { background: var(--panel); border: 1px solid var(--line); padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+.pago-nombre { background: none; border: none; color: var(--text); font-size: 14px; font-weight: 600; padding: 0; width: 100%; }
+.pago-footer { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.pago-monto-label { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--muted); }
+
 @media (min-width: 600px) {
   .financ-total-card { padding: 26px; }
   .financ-total-value { font-size: 46px; }
