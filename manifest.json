@@ -1,0 +1,16 @@
+{
+  "name": "S.A.O BACU",
+  "short_name": "S.A.O BACU",
+  "description": "Sistema de administración y operación de Bacu Creative",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0C0E0D",
+  "theme_color": "#0C0E0D",
+  "lang": "es",
+  "icons": [
+    { "src": "./icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "./icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

@@ -100,6 +100,12 @@ subscribe(render);
 render();
 initAuth();
 
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  });
+}
+
 document.addEventListener('keydown', e => {
   const drawerAbierto = state.selId || state.guionId || state.rodajeDraft || state.cuentaCobroDraft;
   if (!drawerAbierto) return;
