@@ -36,6 +36,8 @@ Los scripts SQL de setup están en la raíz del repo:
 
 Credenciales (URL + anon key) están hardcodeadas en `src/lib/supabaseClient.js` — es intencional, la anon key es pública/segura para frontend, protegida por RLS. **Nunca pedir ni usar la `service_role` key** — es privada, el usuario no debe compartirla.
 
+**Seguridad — registro cerrado (2026-07-25)**: las 10 tablas tienen la misma política RLS ("cualquier usuario autenticado tiene acceso total", no está limitada por usuario — ver política `"authenticated full access"` en cada tabla). Eso es seguro solo porque el registro público de usuarios está **deshabilitado** en Supabase (Authentication → Sign In/Providers → "Allow new users to sign up" = OFF, desactivado en esta fecha tras auditoría de seguridad). Como el repo es público (URL + anon key visibles), si alguien reactivara el registro, cualquiera podría crear una cuenta y esa política le daría acceso total a todos los datos. **No reactivar "Allow new users to sign up" sin antes reescribir las políticas RLS para que sean por usuario** (ej. columna `user_id` + `using (auth.uid() = user_id)` en cada tabla). Solo existe una cuenta real (la del usuario); se borró una cuenta de prueba (`@mailinator.com`) que quedó de una verificación anterior. Auditoría de XSS del mismo día: todo el código escapa correctamente con `escapeHtml()`, sin huecos encontrados.
+
 ## Corriendo en local
 
 No abrir `index.html` directo (rompe por CORS de ES modules). Usar el server incluido:
