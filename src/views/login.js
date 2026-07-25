@@ -1,4 +1,8 @@
+import { loadValue } from '../lib/storage.js';
+import { escapeHtml } from '../lib/format.js';
+
 export function renderLogin(state) {
+  const ultimoEmail = loadValue('sistemaEditorial.ultimoEmail', '');
   return `
     <div class="login-screen">
       <div class="login-box">
@@ -11,7 +15,7 @@ export function renderLogin(state) {
         <form data-form="login">
           <div class="field">
             <label class="field-label">Email</label>
-            <input type="email" name="email" required autocomplete="username">
+            <input type="email" name="email" required autocomplete="username" value="${escapeHtml(ultimoEmail)}">
           </div>
           <div class="field">
             <label class="field-label">Contraseña</label>

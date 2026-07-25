@@ -5,8 +5,8 @@ const NAV = [
   ['calendario', 'Calendario', 'Calend'],
   ['clientes', 'Clientes', 'Client'],
   ['guiones', 'Guiones', 'Guion'],
-  ['panorama', 'Panorama', 'Panora'],
-  ['seguimiento', 'Seguimiento', 'Seguim']
+  ['financiamiento', 'Financiamiento', 'Financ'],
+  ['panorama', 'Panorama', 'Panora']
 ];
 
 export function renderHeader(state) {

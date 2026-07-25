@@ -4,7 +4,7 @@ import { mesActual, hoyStr, lunesDe, sumarDias } from '../lib/idea.js';
 import { supabase } from '../lib/supabaseClient.js';
 import { generarCuentaCobroPDF, OBSERVACIONES_DEFAULT } from '../lib/pdfInvoice.js';
 import { generarListadoClientesPDF } from '../lib/pdfListadoClientes.js';
-import { MESES } from '../data/constants.js';
+import { MESES, COLORES_TAREA } from '../data/constants.js';
 
 export const state = {
   view: 'calendario',
@@ -23,6 +23,10 @@ export const state = {
   rodajeDraft: null,
   cuentaCobroDraft: null,
   cuentasCobro: [],
+  movimientosFinanciamiento: [],
+  metasPersonales: [],
+  metasMensuales: [],
+  tareas: [],
   historialAbierto: false,
   historialBusqueda: '',
   tema: loadValue('sistemaEditorial.tema', 'Cine crudo'),
@@ -89,16 +93,24 @@ export async function initAuth() {
 }
 
 async function cargarDatos() {
-  const [ideasRes, snapsRes, clientesRes, cuentasRes] = await Promise.all([
+  const [ideasRes, snapsRes, clientesRes, cuentasRes, movimientosRes, metasPersonalesRes, metasMensualesRes, tareasRes] = await Promise.all([
     supabase.from('ideas').select('*').order('id'),
     supabase.from('snaps').select('*').order('fecha'),
     supabase.from('clientes').select('*').order('id'),
-    supabase.from('cuentas_cobro').select('*').order('numero')
+    supabase.from('cuentas_cobro').select('*').order('numero'),
+    supabase.from('movimientos_financiamiento').select('*').order('fecha'),
+    supabase.from('metas_personales').select('*').order('created_at'),
+    supabase.from('metas_mensuales').select('*'),
+    supabase.from('tareas').select('*').order('created_at')
   ]);
   state.ideas = (ideasRes.data || []).map(fromDbIdea);
   state.snaps = snapsRes.data || [];
   state.clientes = clientesRes.data || [];
   state.cuentasCobro = cuentasRes.data || [];
+  state.movimientosFinanciamiento = movimientosRes.data || [];
+  state.metasPersonales = metasPersonalesRes.data || [];
+  state.metasMensuales = metasMensualesRes.data || [];
+  state.tareas = tareasRes.data || [];
   state.dataReady = true;
   notify();
   suscribirRealtime();
@@ -145,6 +157,46 @@ function suscribirRealtime() {
     }
     notify();
   }).subscribe();
+
+  supabase.channel('sync-movimientos-financiamiento').on('postgres_changes', { event: '*', schema: 'public', table: 'movimientos_financiamiento' }, payload => {
+    if (payload.eventType === 'DELETE') {
+      state.movimientosFinanciamiento = state.movimientosFinanciamiento.filter(m => m.id !== payload.old.id);
+    } else {
+      const existe = state.movimientosFinanciamiento.some(m => m.id === payload.new.id);
+      state.movimientosFinanciamiento = existe ? state.movimientosFinanciamiento.map(m => m.id === payload.new.id ? payload.new : m) : state.movimientosFinanciamiento.concat([payload.new]);
+    }
+    notify();
+  }).subscribe();
+
+  supabase.channel('sync-metas-personales').on('postgres_changes', { event: '*', schema: 'public', table: 'metas_personales' }, payload => {
+    if (payload.eventType === 'DELETE') {
+      state.metasPersonales = state.metasPersonales.filter(m => m.id !== payload.old.id);
+    } else {
+      const existe = state.metasPersonales.some(m => m.id === payload.new.id);
+      state.metasPersonales = existe ? state.metasPersonales.map(m => m.id === payload.new.id ? payload.new : m) : state.metasPersonales.concat([payload.new]);
+    }
+    notify();
+  }).subscribe();
+
+  supabase.channel('sync-metas-mensuales').on('postgres_changes', { event: '*', schema: 'public', table: 'metas_mensuales' }, payload => {
+    if (payload.eventType === 'DELETE') {
+      state.metasMensuales = state.metasMensuales.filter(m => m.id !== payload.old.id);
+    } else {
+      const existe = state.metasMensuales.some(m => m.id === payload.new.id);
+      state.metasMensuales = existe ? state.metasMensuales.map(m => m.id === payload.new.id ? payload.new : m) : state.metasMensuales.concat([payload.new]);
+    }
+    notify();
+  }).subscribe();
+
+  supabase.channel('sync-tareas').on('postgres_changes', { event: '*', schema: 'public', table: 'tareas' }, payload => {
+    if (payload.eventType === 'DELETE') {
+      state.tareas = state.tareas.filter(t => t.id !== payload.old.id);
+    } else {
+      const existe = state.tareas.some(t => t.id === payload.new.id);
+      state.tareas = existe ? state.tareas.map(t => t.id === payload.new.id ? payload.new : t) : state.tareas.concat([payload.new]);
+    }
+    notify();
+  }).subscribe();
 }
 
 export const actions = {
@@ -158,6 +210,7 @@ export const actions = {
   descartarAvisoGuardado: () => setState({ saveError: false }),
 
   login: async (email, password) => {
+    persistValue('sistemaEditorial.ultimoEmail', email);
     setState({ authBusy: true, authError: null, authInfo: null });
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) setState({ authBusy: false, authError: 'No pudimos iniciar sesión. Revisá el email y la contraseña.' });
@@ -358,6 +411,73 @@ export const actions = {
       total: cc.total,
       observaciones: cc.observaciones
     });
+  },
+
+  movimientoNuevo: () => {
+    const m = { id: 'mv' + Date.now(), fecha: hoyStr(), fuente: 'bancolombia', tipo: 'ingreso', monto: 0, nota: '' };
+    state.movimientosFinanciamiento = [m].concat(state.movimientosFinanciamiento);
+    setState({ view: 'financiamiento' });
+    supabase.from('movimientos_financiamiento').insert(m).then(({ error }) => marcarGuardado(!error));
+  },
+  updMovimiento: (id, patch) => {
+    state.movimientosFinanciamiento = state.movimientosFinanciamiento.map(m => m.id === id ? { ...m, ...patch } : m);
+    notify();
+    supabase.from('movimientos_financiamiento').update(patch).eq('id', id).then(({ error }) => marcarGuardado(!error));
+  },
+  eliminarMovimiento: id => {
+    if (!window.confirm('¿Eliminar este movimiento?')) return;
+    state.movimientosFinanciamiento = state.movimientosFinanciamiento.filter(m => m.id !== id);
+    notify();
+    supabase.from('movimientos_financiamiento').delete().eq('id', id).then(({ error }) => marcarGuardado(!error));
+  },
+
+  metaPersonalNueva: categoria => {
+    const m = { id: 'mp' + Date.now(), categoria, titulo: '', fecha: null, cumplida: false };
+    state.metasPersonales = state.metasPersonales.concat([m]);
+    notify();
+    supabase.from('metas_personales').insert(m).then(({ error }) => marcarGuardado(!error));
+  },
+  updMetaPersonal: (id, patch) => {
+    state.metasPersonales = state.metasPersonales.map(m => m.id === id ? { ...m, ...patch } : m);
+    notify();
+    supabase.from('metas_personales').update(patch).eq('id', id).then(({ error }) => marcarGuardado(!error));
+  },
+  eliminarMetaPersonal: id => {
+    state.metasPersonales = state.metasPersonales.filter(m => m.id !== id);
+    notify();
+    supabase.from('metas_personales').delete().eq('id', id).then(({ error }) => marcarGuardado(!error));
+  },
+
+  setMetaMensual: (marca, mes, valor) => {
+    const id = marca + '_' + mes;
+    const registro = { id, marca, mes, meta_publicaciones: valor };
+    const existe = state.metasMensuales.some(m => m.id === id);
+    state.metasMensuales = existe ? state.metasMensuales.map(m => m.id === id ? registro : m) : state.metasMensuales.concat([registro]);
+    notify();
+    supabase.from('metas_mensuales').upsert(registro).then(({ error }) => marcarGuardado(!error));
+  },
+
+  tareaNueva: () => {
+    const colores = Object.keys(COLORES_TAREA);
+    const color = colores[state.tareas.length % colores.length];
+    const t = { id: 'tk' + Date.now(), texto: '', color, hecha: false };
+    state.tareas = state.tareas.concat([t]);
+    notify();
+    supabase.from('tareas').insert(t).then(({ error }) => marcarGuardado(!error));
+  },
+  updTarea: (id, patch) => {
+    state.tareas = state.tareas.map(t => t.id === id ? { ...t, ...patch } : t);
+    notify();
+    supabase.from('tareas').update(patch).eq('id', id).then(({ error }) => marcarGuardado(!error));
+  },
+  toggleTarea: id => {
+    const t = state.tareas.find(x => x.id === id);
+    if (t) actions.updTarea(id, { hecha: !t.hecha });
+  },
+  eliminarTarea: id => {
+    state.tareas = state.tareas.filter(t => t.id !== id);
+    notify();
+    supabase.from('tareas').delete().eq('id', id).then(({ error }) => marcarGuardado(!error));
   },
 
   snapAbre: () => {

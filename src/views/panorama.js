@@ -1,6 +1,51 @@
-import { MARCAS, PREGUNTAS, PIPELINE, MESES } from '../data/constants.js';
-import { fmtFecha, escapeHtml } from '../lib/format.js';
-import { hoyStr } from '../lib/idea.js';
+import { MARCAS, PREGUNTAS, PIPELINE, MESES, CATEGORIAS_META, COLORES_TAREA, ENFOQUE } from '../data/constants.js';
+import { fmtFecha, fmtNum, escapeHtml } from '../lib/format.js';
+import { hoyStr, lunesDe, sumarDias } from '../lib/idea.js';
+import { calcularTotalFinanciamiento } from '../lib/financiamiento.js';
+
+function fmtMoney(n) {
+  const v = Number(n) || 0;
+  return (v < 0 ? '-$' : '$') + Math.abs(v).toLocaleString('es-CO');
+}
+
+// Aproximación de "cómo va la semana": no mide estado de ánimo, mide señales de organización
+// ya presentes en los datos — cuánto hay programado y cuántas prioridades altas siguen sin fecha.
+function calcularOrganizacionSemana(ideas) {
+  const hoy = hoyStr();
+  const inicioSemana = lunesDe(hoy);
+  const finSemana = sumarDias(inicioSemana, 6);
+  const enRango = f => f && f >= inicioSemana && f <= finSemana;
+  const estaSemana = ideas.filter(i => i.estado !== 'descartada' && (enRango(i.fecha) || enRango(i.fechaRodaje))).length;
+  const prioridadSinFecha = ideas.filter(i => i.prioridad === 'Alta' && i.estado !== 'publicada' && i.estado !== 'descartada' && !i.fecha).length;
+
+  let label = 'Al día', clase = 'ok';
+  if (prioridadSinFecha >= 3) { label = 'Cargado'; clase = 'alto'; }
+  else if (prioridadSinFecha >= 1) { label = 'Con pendientes'; clase = 'medio'; }
+
+  return { estaSemana, prioridadSinFecha, label, clase };
+}
+
+function tareaCintaHtml(t) {
+  const color = COLORES_TAREA[t.color] || COLORES_TAREA.verde;
+  return `
+    <div class="tarea-cinta ${t.hecha ? 'hecha' : ''}" style="background:${color};">
+      <button class="tarea-check" data-act="tarea-toggle" data-id="${escapeHtml(t.id)}" title="${t.hecha ? 'Marcar pendiente' : 'Marcar hecha'}">${t.hecha ? '✓' : ''}</button>
+      <input class="tarea-texto" data-change="tarea-texto" data-id="${escapeHtml(t.id)}" value="${escapeHtml(t.texto)}" placeholder="¿Qué hay que hacer?">
+      <button class="tarea-quitar" data-act="tarea-eliminar" data-id="${escapeHtml(t.id)}" title="Quitar">✕</button>
+    </div>
+  `;
+}
+
+function metaPersonalHtml(m) {
+  return `
+    <div class="meta-personal ${m.cumplida ? 'cumplida' : ''}">
+      <button class="meta-check" data-act="meta-personal-toggle" data-id="${escapeHtml(m.id)}" title="${m.cumplida ? 'Marcar pendiente' : 'Marcar cumplida'}">${m.cumplida ? '✓' : ''}</button>
+      <input class="meta-titulo" data-change="meta-personal-titulo" data-id="${escapeHtml(m.id)}" value="${escapeHtml(m.titulo)}" placeholder="Nombre de la meta">
+      <input type="date" class="meta-fecha" data-change="meta-personal-fecha" data-id="${escapeHtml(m.id)}" value="${escapeHtml(m.fecha || '')}" min="2026-01-01" style="color-scheme:dark;">
+      <button class="btn-text-muted" data-act="meta-personal-eliminar" data-id="${escapeHtml(m.id)}">✕</button>
+    </div>
+  `;
+}
 
 export function renderPanorama(state) {
   const ideas = state.ideas;
@@ -11,6 +56,86 @@ export function renderPanorama(state) {
   const hoy = hoyStr();
   const muestraMetricas = !state.modoCalma;
 
+  const orgSemana = calcularOrganizacionSemana(ideas);
+  const finTotal = calcularTotalFinanciamiento(state.cuentasCobro, state.movimientosFinanciamiento);
+
+  const tareas = state.tareas || [];
+  const tareasHtml = tareas.length ? tareas.map(tareaCintaHtml).join('') : '';
+
+  const metasHtml = CATEGORIAS_META.map(([cat, label]) => {
+    const items = (state.metasPersonales || []).filter(m => m.categoria === cat);
+    return `
+      <div class="metas-columna">
+        <div class="metas-columna-head">
+          <span class="mono-label" style="margin-bottom:0;">${label}</span>
+          <button class="btn-text-muted" data-act="meta-personal-nueva" data-categoria="${cat}">+ Agregar</button>
+        </div>
+        <div class="metas-lista">${items.length ? items.map(metaPersonalHtml).join('') : '<div class="empty-note">Nada por aquí todavía.</div>'}</div>
+      </div>
+    `;
+  }).join('');
+
+  // ---- seguimiento: registros de seguidores/alcance, fusionado desde la vieja pestaña Seguimiento ----
+  const snapsOrdenados = (state.snaps || []).slice().sort((a, b) => a.fecha < b.fecha ? -1 : 1);
+  const ultimoSnap = snapsOrdenados[snapsOrdenados.length - 1];
+  const penultimoSnap = snapsOrdenados[snapsOrdenados.length - 2];
+  const D = state.snapDraft;
+
+  const snapFormHtml = D ? `
+    <div class="snap-form">
+      <div class="snap-form-head">
+        <span>Nuevo registro — copia los números de Instagram</span>
+        <input type="date" data-change="snap-fecha" value="${escapeHtml(D.fecha)}" min="2026-01-01">
+      </div>
+      <div class="snap-fields">
+        ${Object.keys(MARCAS).map(k => `
+          <div class="snap-field">
+            <span class="snap-field-label">${MARCAS[k].handle}</span>
+            <input data-change="snap-campo" data-key="${k}Seg" value="${escapeHtml(D[k + 'Seg'])}" placeholder="Seguidores" inputmode="numeric">
+            <input data-change="snap-campo" data-key="${k}Vis" value="${escapeHtml(D[k + 'Vis'])}" placeholder="Visualizaciones 30 días" inputmode="numeric">
+          </div>
+        `).join('')}
+      </div>
+      <div class="snap-actions">
+        <button class="btn-primary" data-act="snap-guarda">Guardar</button>
+        <button class="btn-ghost" data-act="snap-cierra">Cancelar</button>
+      </div>
+    </div>
+  ` : '';
+
+  const enfoqueHtml = ENFOQUE.length ? ENFOQUE.map(ef => `
+    <div class="enfoque-row">
+      <span class="enfoque-num">0${ef.n}</span>
+      <div>
+        <div class="enfoque-title">${escapeHtml(ef.titulo)}</div>
+        <div class="enfoque-text">${escapeHtml(ef.texto)}</div>
+      </div>
+    </div>
+  `).join('') : `<div class="empty-note">Todavía no hay suficientes registros para sacar conclusiones. Cargá seguidores y alcance seguido y esto se va a ir llenando solo.</div>`;
+
+  const mesActualLabel = MESES[new Date().getMonth()].charAt(0).toUpperCase() + MESES[new Date().getMonth()].slice(1) + ' ' + new Date().getFullYear();
+
+  const snapRowsHtml = snapsOrdenados.slice().reverse().map(s => {
+    const resumen = ['brant', 'bacu', 'novena'].map(k => (s[k] ? fmtNum(s[k].seg) : '—')).join(' / ');
+    return `<div class="historial-row"><span class="fecha">${fmtFecha(s.fecha, MESES)}</span><span>${resumen}</span></div>`;
+  }).join('');
+
+  const publicadas = ideas.filter(i => i.estado === 'publicada');
+  const topPubsHtml = publicadas.length ? publicadas.map(i => {
+    const m = i.metricas || {};
+    const parts = [];
+    if (m.alcance) parts.push(m.alcance + ' alcance');
+    if (m.guardados) parts.push(m.guardados + ' guardados');
+    if (m.seguidores) parts.push('+' + m.seguidores + ' seg');
+    const meta = MARCAS[i.marca].nombre + ' · ' + (parts.length ? parts.join(' · ') : 'sin resultados registrados');
+    return `
+      <div class="top-pub" data-act="idea-abrir" data-id="${escapeHtml(i.id)}">
+        <div class="top-pub-title">${escapeHtml(i.titulo)}</div>
+        <div class="top-pub-meta">${escapeHtml(meta)}</div>
+      </div>
+    `;
+  }).join('') : `<div class="empty-note">Cuando publiques, registra alcance, guardados y seguidores nuevos en cada idea publicada. Aquí verás qué repite y qué no.</div>`;
+
   const marcasHtml = Object.keys(MARCAS).map(k => {
     const M = MARCAS[k];
     const propias = ideas.filter(i => i.marca === k || i.colab === k);
@@ -19,6 +144,22 @@ export function renderPanorama(state) {
     const nProgramadas = propias.filter(i => i.fecha && i.estado === 'lista').length;
     const prox = propias.filter(i => i.fecha && i.fecha >= hoy && i.estado !== 'descartada' && i.estado !== 'publicada').sort((a, b) => a.fecha < b.fecha ? -1 : 1)[0];
     const proxima = prox ? `${fmtFecha(prox.fecha, MESES)} · ${escapeHtml(prox.titulo)}` : 'nada programado — está bien';
+
+    const metaMes = (state.metasMensuales || []).find(m => m.marca === k && m.mes === state.month);
+    const metaValor = metaMes ? Number(metaMes.meta_publicaciones) || 0 : 0;
+    const publicadasMes = propias.filter(i => i.fecha && i.fecha.startsWith(state.month) && i.estado !== 'descartada').length;
+    const progresoPct = metaValor > 0 ? Math.min(100, Math.round((publicadasMes / metaValor) * 100)) : 0;
+
+    const curSnap = ultimoSnap && ultimoSnap[k] ? ultimoSnap[k] : null;
+    const antesSnap = penultimoSnap && penultimoSnap[k] ? penultimoSnap[k] : null;
+    const deltaSeg = curSnap && antesSnap ? curSnap.seg - antesSnap.seg : null;
+    const maxSeg = Math.max(1, ...snapsOrdenados.map(s => (s[k] && s[k].seg) || 0));
+    const deltaClass = deltaSeg == null ? 'na' : (deltaSeg >= 0 ? 'up' : 'down');
+    const deltaTxt = deltaSeg == null ? 'primer registro' : (deltaSeg >= 0 ? '+' + fmtNum(deltaSeg) : fmtNum(deltaSeg));
+    const barsHtml = snapsOrdenados.map(s => {
+      const h = Math.max(3, Math.round(((s[k] && s[k].seg) || 0) / maxSeg * 24));
+      return `<span class="bar" style="background:${M.color};height:${h}px"></span>`;
+    }).join('');
 
     return `
       <div class="marca-card" data-act="marca-abrir" data-marca="${k}">
@@ -36,6 +177,24 @@ export function renderPanorama(state) {
           <div><div class="marca-metric-value verde">${nProgramadas}</div><div class="marca-metric-label">programadas</div></div>
         </div>` : ''}
         <div class="marca-next"><span class="mono-label" style="display:inline;margin-bottom:0;">Próxima → </span>${proxima}</div>
+        <div class="marca-seguimiento">
+          <div class="cuenta-nums">
+            <span class="cuenta-value">${curSnap ? fmtNum(curSnap.seg) : '—'}</span>
+            <span class="cuenta-delta ${deltaClass}">${deltaTxt}</span>
+          </div>
+          <div class="cuenta-meta">seguidores · ${curSnap ? fmtNum(curSnap.vis) : '—'} vis/30d</div>
+          <div class="cuenta-bars">${barsHtml}</div>
+        </div>
+        <div class="marca-objetivo" data-no-nav>
+          <div class="marca-objetivo-head">
+            <span class="mono-label" style="margin-bottom:0;">Meta este mes</span>
+            <input class="marca-objetivo-input" inputmode="numeric" data-change="meta-mensual-set" data-marca="${k}" value="${metaValor || ''}" placeholder="0">
+          </div>
+          ${metaValor > 0 ? `
+            <div class="progreso-bar"><div class="progreso-fill" style="width:${progresoPct}%;background:${M.color}"></div></div>
+            <div class="progreso-label">${publicadasMes} / ${metaValor} publicaciones</div>
+          ` : `<div class="progreso-label muted">Ponle un número para ver tu avance</div>`}
+        </div>
       </div>
     `;
   }).join('');
@@ -81,8 +240,53 @@ export function renderPanorama(state) {
         </div>
       </div>
 
-      <div class="section-title">Las marcas</div>
+      <div class="vitales-grid">
+        <div class="vital-card">
+          <span class="mono-label">Esta semana</span>
+          <div class="vital-value ${orgSemana.clase}">${orgSemana.label}</div>
+          <div class="vital-detail">${orgSemana.estaSemana} programada${orgSemana.estaSemana === 1 ? '' : 's'} · ${orgSemana.prioridadSinFecha} prioridad alta sin fecha</div>
+        </div>
+        <div class="vital-card">
+          <span class="mono-label">Tu bolsillo</span>
+          <div class="vital-value verde">${fmtMoney(finTotal.total)}</div>
+          <div class="vital-detail">Total en Financiamiento</div>
+        </div>
+      </div>
+
+      <div class="section-title">Tareas</div>
+      <div class="vista-sub">Tu sistema de cintas en la pared, pero digital. Tócalas para marcarlas hechas.</div>
+      <div class="tareas-pared">
+        ${tareasHtml}
+        <button class="tarea-agregar" data-act="tarea-nueva">+ Tarea</button>
+      </div>
+
+      <div class="section-title">Metas personales</div>
+      <div class="metas-grid">${metasHtml}</div>
+
+      <div class="seg-head">
+        <div class="section-title" style="margin-bottom:0;">Las marcas — pipeline y seguimiento</div>
+        <button class="btn-primary" data-act="snap-abre">+ Registro</button>
+      </div>
+      <div class="vista-sub">Dónde va cada marca: en producción, seguidores, alcance y meta del mes.</div>
+      ${snapFormHtml}
       <div class="marcas-grid">${marcasHtml}</div>
+
+      <div class="seg-bottom">
+        <div class="panel">
+          <div class="section-title">Enfoque de crecimiento — ${mesActualLabel}</div>
+          <div style="display:flex; flex-direction:column; gap:16px;">${enfoqueHtml}</div>
+        </div>
+        <div class="side-col">
+          <div class="panel">
+            <div class="section-title">Historial de seguidores</div>
+            <div style="display:flex; flex-direction:column; gap:10px;">${snapRowsHtml || '<div class="empty-note">Sin registros todavía.</div>'}</div>
+          </div>
+          <div class="panel">
+            <div class="section-title">Qué funcionó — publicadas</div>
+            <div style="display:flex; flex-direction:column; gap:12px;">${topPubsHtml}</div>
+          </div>
+        </div>
+      </div>
 
       <div class="rules-grid">
         <div class="panel">

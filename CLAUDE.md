@@ -20,11 +20,17 @@ Vanilla JS puro. **Sin build, sin npm, sin bundler.** Todo son ES modules servid
 
 ## Backend: Supabase
 
-Requiere **login** (email/contraseña, Supabase Auth). Sin sesión no se ve nada. Tablas: `ideas`, `clientes`, `snaps`, `cuentas_cobro` — todas con RLS "solo autenticados", y suscripción realtime (cambios de otros usuarios se reflejan solos).
+Requiere **login** (email/contraseña, Supabase Auth). Sin sesión no se ve nada. Tablas: `ideas`, `clientes`, `snaps`, `cuentas_cobro`, `movimientos_financiamiento`, `metas_personales`, `metas_mensuales`, `tareas` — todas con RLS "solo autenticados", y suscripción realtime (cambios de otros usuarios se reflejan solos).
+
+El email de login se recuerda solo (se guarda en localStorage tras cada intento, `sistemaEditorial.ultimoEmail`, y prellena el campo). La contraseña **nunca se guarda en código** — el input ya tiene `autocomplete="current-password"`, eso basta para que el gestor de contraseñas del navegador/SO la ofrezca. No construir un guardado propio de contraseña.
 
 Los scripts SQL de setup están en la raíz del repo:
 - `supabase-schema.sql` — esquema inicial (ya corrido).
 - `supabase-migracion-cuentas-cobro.sql` — agrega `clientes.documento` + tabla `cuentas_cobro` (**puede que el usuario todavía no la haya corrido** — si algo relacionado a cuentas de cobro no persiste, es probablemente por esto; no es un bug de código).
+- `supabase-migracion-cuenta-cobro-v2.sql` — agrega `fecha_vencimiento` y `observaciones` a `cuentas_cobro`.
+- `supabase-migracion-fecha-grabacion-cliente.sql` — agrega `fecha_grabacion` a `clientes`.
+- `supabase-migracion-financiamiento.sql` — tabla `movimientos_financiamiento` (**puede que el usuario todavía no la haya corrido**).
+- `supabase-migracion-panorama.sql` — tablas `metas_personales`, `metas_mensuales`, `tareas` (**puede que el usuario todavía no la haya corrido** — confirmado: al 2026-07-25 seguía sin correrla, los inserts a esas 3 tablas fallan con el banner de guardado hasta que la corra).
 
 Credenciales (URL + anon key) están hardcodeadas en `src/lib/supabaseClient.js` — es intencional, la anon key es pública/segura para frontend, protegida por RLS. **Nunca pedir ni usar la `service_role` key** — es privada, el usuario no debe compartirla.
 
@@ -44,7 +50,13 @@ Tema oscuro "Cine crudo" (negro puro) o claro "Galería clara", variables CSS en
 
 ## Features ya construidas
 
-Calendario (vistas Mes/Semana/Agenda, fechas de publicación y de rodaje separadas, rodaje rápido con un clic en el día, y las fechas de grabación cargadas desde Clientes), Guiones (fusión de lo que antes eran "Banco" y "Desarrollo" — un selector alterna entre "Vista general", kanban por estado, y "Por tipo de guion", columnas por familia solo para ideas en desarrollo; incluye "Cubrimiento" sin guion, solo notas), Clientes (con cuentas de cobro generables en PDF, historial de cuentas, y fecha de grabación que alimenta el Calendario), Seguimiento (métricas de redes), Panorama (overview).
+Calendario (vistas Mes/Semana/Agenda, fechas de publicación y de rodaje separadas, rodaje rápido con un clic en el día, y las fechas de grabación cargadas desde Clientes), Guiones (fusión de lo que antes eran "Banco" y "Desarrollo" — un selector alterna entre "Vista general", kanban por estado, y "Por tipo de guion", columnas por familia solo para ideas en desarrollo; incluye "Cubrimiento" sin guion, solo notas), Clientes (con cuentas de cobro generables en PDF, historial de cuentas, y fecha de grabación que alimenta el Calendario), Financiamiento (total acumulado "de bolsillo": suma automática de todas las `cuentas_cobro.total` más movimientos manuales de Bancolombia/Nequi/efectivo que el usuario registra a mano — ver nota de Gmail abajo), Panorama (dashboard personal — ver detalle abajo, incluye lo que antes era la pestaña Seguimiento).
+
+**Financiamiento y Gmail**: el usuario pidió que las transacciones de Bancolombia/Nequi salieran de leer su Gmail. Esto **no está automatizado** — la app es estática (sin backend), no puede autenticarse contra Gmail por su cuenta. Lo que sí puede pasar: en una sesión de chat donde el usuario conecte Gmail como conector de Claude, el asistente puede leer correos puntuales de esos bancos y cargar los montos a mano en la pestaña. Si se retoma este proyecto, no asumir que existe una sincronización real — confirmar con el usuario antes de construir un pipeline OAuth con Gmail (proyecto grande aparte: backend, Google Cloud, parseo de correos).
+
+**Panorama** es un dashboard de "cómo voy" en general, no solo de las marcas: "Esta semana" (etiqueta Al día/Con pendientes/Cargado — calculada contando ideas de prioridad alta sin fecha, NO es un dato de ánimo real, es un proxy de organización que el usuario aceptó como aproximación), "Tu bolsillo" (mismo total que Financiamiento), Tareas (checklist visual estilo "cintas de colores en la pared" — el usuario literalmente tiene un sistema físico de cintas de colores para pendientes; `tarea.color` rota entre `COLORES_TAREA` en `constants.js` al crear, no es editable después), Metas personales (tres columnas fijas: objeto/logro/destreza — el usuario quería incluir metas de vida como graduarse, separadas de lo laboral), y Objetivo mensual por marca (input numérico dentro de cada `.marca-card`; ese input vive dentro de un contenedor `[data-act="marca-abrir"]`, así que usa `data-no-nav` para que escribir ahí no dispare la navegación — cualquier control interactivo nuevo dentro de una marca-card necesita el mismo tratamiento).
+
+**Seguimiento se fusionó dentro de Panorama** (2026-07-25, `src/views/seguimiento.js` fue eliminado). Ya no existe como pestaña ni entrada de `VIEWS`/nav. Su contenido quedó repartido en `panorama.js`: los registros de seguidores/alcance por marca (`state.snaps`, botón "+ Registro", `snap-abre`/`snap-guarda`) ahora viven dentro de cada `.marca-card` (bloque `.marca-seguimiento`, reusa las clases CSS `.cuenta-*` que antes eran solo de Seguimiento) junto al objetivo mensual; "Enfoque de crecimiento", "Historial de seguidores" y "Qué funcionó" quedaron como sección propia (`.seg-bottom`) debajo de "Las marcas". Todas las acciones (`snap-*`) siguen intactas en `store.js`/`main.js`, solo cambió desde qué vista se disparan.
 
 ## Deploy
 

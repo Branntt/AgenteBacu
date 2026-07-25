@@ -1,5 +1,6 @@
 import { state, actions, subscribe, initAuth } from './state/store.js';
 import { TEMA_MAP } from './data/constants.js';
+import { parseN } from './lib/format.js';
 import { renderHeader } from './components/header.js';
 import { renderDetalle } from './components/detalle.js';
 import { renderGuion } from './components/guion.js';
@@ -11,14 +12,14 @@ import { renderPanorama } from './views/panorama.js';
 import { renderGuiones } from './views/guiones.js';
 import { renderCalendario } from './views/calendario.js';
 import { renderClientes } from './views/clientes.js';
-import { renderSeguimiento } from './views/seguimiento.js';
+import { renderFinanciamiento } from './views/financiamiento.js';
 
 const VIEWS = {
   panorama: renderPanorama,
   guiones: renderGuiones,
   calendario: renderCalendario,
   clientes: renderClientes,
-  seguimiento: renderSeguimiento
+  financiamiento: renderFinanciamiento
 };
 
 const root = document.getElementById('app');
@@ -132,7 +133,9 @@ document.addEventListener('keydown', e => {
 root.addEventListener('click', e => {
   const el = e.target.closest('[data-act]');
   if (!el) return;
-  const { act, id, view, marca, idx, value, fecha } = el.dataset;
+  const noNav = e.target.closest('[data-no-nav]');
+  if (noNav && !noNav.contains(el)) return;
+  const { act, id, view, marca, idx, value, fecha, categoria } = el.dataset;
 
   switch (act) {
     case 'nav-go': actions.setView(view); break;
@@ -187,6 +190,18 @@ root.addEventListener('click', e => {
     case 'cc-item-agregar': actions.cuentaCobroAddItem(); break;
     case 'cc-item-quitar': actions.cuentaCobroRemoveItem(Number(idx)); break;
     case 'cc-item-concepto': actions.cuentaCobroUpdItem(Number(idx), 'descripcion', value); break;
+    case 'movimiento-nuevo': actions.movimientoNuevo(); break;
+    case 'movimiento-eliminar': actions.eliminarMovimiento(id); break;
+    case 'meta-personal-nueva': actions.metaPersonalNueva(categoria); break;
+    case 'meta-personal-eliminar': actions.eliminarMetaPersonal(id); break;
+    case 'meta-personal-toggle': {
+      const meta = state.metasPersonales.find(m => m.id === id);
+      if (meta) actions.updMetaPersonal(id, { cumplida: !meta.cumplida });
+      break;
+    }
+    case 'tarea-nueva': actions.tareaNueva(); break;
+    case 'tarea-toggle': actions.toggleTarea(id); break;
+    case 'tarea-eliminar': actions.eliminarTarea(id); break;
     case 'historial-abrir': actions.historialAbrir(); break;
     case 'historial-cerrar': actions.historialCerrar(); break;
     case 'cc-historial-descargar': {
@@ -209,7 +224,7 @@ root.addEventListener('submit', e => {
 root.addEventListener('change', e => {
   const el = e.target.closest('[data-change]');
   if (el) {
-    const { change, id, campo, key, idx } = el.dataset;
+    const { change, id, campo, key, idx, marca } = el.dataset;
     const value = el.type === 'checkbox' ? el.checked : el.value;
 
     switch (change) {
@@ -250,6 +265,15 @@ root.addEventListener('change', e => {
       case 'cc-campo': actions.cuentaCobroSetCampo(campo, value); break;
       case 'cc-item-campo': actions.cuentaCobroUpdItem(Number(idx), campo, value); break;
       case 'historial-busqueda': actions.historialSetBusqueda(value); break;
+      case 'movimiento-fuente': actions.updMovimiento(id, { fuente: value }); break;
+      case 'movimiento-tipo': actions.updMovimiento(id, { tipo: value }); break;
+      case 'movimiento-fecha': actions.updMovimiento(id, { fecha: value }); break;
+      case 'movimiento-monto': actions.updMovimiento(id, { monto: parseN(value) }); break;
+      case 'movimiento-nota': actions.updMovimiento(id, { nota: value }); break;
+      case 'meta-personal-titulo': actions.updMetaPersonal(id, { titulo: value }); break;
+      case 'meta-personal-fecha': actions.updMetaPersonal(id, { fecha: value || null }); break;
+      case 'meta-mensual-set': actions.setMetaMensual(marca, state.month, parseN(value)); break;
+      case 'tarea-texto': actions.updTarea(id, { texto: value }); break;
       case 'cal-vista-set': actions.setCalVista(value); break;
       case 'filtro-calendario-set': actions.setFiltroCalendario(value); break;
       case 'filtro-guiones-set': actions.setFiltroGuiones(value); break;

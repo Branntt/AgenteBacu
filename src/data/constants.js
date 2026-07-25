@@ -59,6 +59,10 @@ export const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'ju
 
 export const ENFOQUE = [];
 
+export const CATEGORIAS_META = [['objeto', 'Objetos materiales'], ['logro', 'Logros'], ['destreza', 'Destrezas']];
+
+export const COLORES_TAREA = { verde: 'var(--verde)', brant: 'var(--brant)', novena: 'var(--novena)', rojo: 'var(--rojo)', muted: 'var(--muted)' };
+
 export const TEMA_MAP = { 'Cine crudo': 'cine', 'Galería clara': 'galeria' };
 export const TEMA_OPTIONS = ['Cine crudo', 'Galería clara'];
 
