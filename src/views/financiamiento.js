@@ -67,18 +67,13 @@ export function renderFinanciamiento(state) {
         <p style="margin:8px 0 0 0;font-size:14px;opacity:0.7;">Tu situación financiera actual</p>
       </div>
 
-      <!-- 0️⃣ REGISTRO DE FINANZAS -->
-      <div class="finanzas-seccion" style="margin-bottom:24px;">
-        ${renderTablaFinanzas(movimientos)}
-      </div>
-
-      <!-- 1️⃣ SITUACIÓN HOY -->
+      <!-- 1️⃣ SITUACIÓN HOY — lo primero que ven los ojos -->
       <div class="finanzas-seccion" style="margin-bottom:24px;">
         <div class="seccion-titulo">📊 Tu Situación Hoy</div>
 
-        <div style="background:var(--panel2);border:1px solid var(--line);padding:32px;border-radius:8px;text-align:center;margin-bottom:16px;">
-          <div style="font-size:13px;opacity:0.7;margin-bottom:10px;">Patrimonio Neto</div>
-          <div style="font-size:52px;font-weight:bold;margin-bottom:28px;color:${patrimonio >= 0 ? 'var(--verde)' : 'var(--rojo)'};">${fmtMoney(patrimonio)}</div>
+        <div style="background:var(--panel2);border:2px solid ${patrimonio >= 0 ? 'var(--verde)' : 'var(--rojo)'};box-shadow:0 0 24px ${patrimonio >= 0 ? 'rgba(31,175,116,0.25)' : 'rgba(217,54,46,0.25)'};padding:40px 32px;border-radius:12px;text-align:center;margin-bottom:16px;">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;opacity:0.7;margin-bottom:12px;">Patrimonio Neto</div>
+          <div style="font-size:64px;font-weight:bold;margin-bottom:32px;line-height:1;color:${patrimonio >= 0 ? 'var(--verde)' : 'var(--rojo)'};">${fmtMoney(patrimonio)}</div>
 
           <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;font-size:13px;">
             ${card('var(--verde)', `
@@ -121,7 +116,12 @@ export function renderFinanciamiento(state) {
         </div>
       </div>
 
-      <!-- 2️⃣ GASTOS MENSUALES RECURRENTES -->
+      <!-- 2️⃣ REGISTRO DE FINANZAS -->
+      <div class="finanzas-seccion" style="margin-bottom:24px;">
+        ${renderTablaFinanzas(movimientos)}
+      </div>
+
+      <!-- 3️⃣ GASTOS MENSUALES RECURRENTES -->
       <div class="finanzas-seccion" style="margin-bottom:24px;">
         <div class="seccion-titulo">💰 Gastos Mensuales Recurrentes</div>
         <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));gap:10px;margin-bottom:12px;">
