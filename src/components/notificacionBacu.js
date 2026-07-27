@@ -1,99 +1,93 @@
+import { escapeHtml, fmtFecha } from '../lib/format.js';
+import { MESES, MARCAS } from '../data/constants.js';
+
 export function renderNotificacionBacu(state) {
   if (!state.notificacionBacu) return '';
 
-  const esRespuesta = state.notificacionBacu === 'grabé' || state.notificacionBacu === 'procrastiné';
-
-  if (esRespuesta) {
-    const mensaje = state.notificacionBacu === 'grabé'
-      ? '✅ ¡Excelente! Sigue así 🔥'
-      : '⏰ Está bien, mañana es un nuevo día. ¡Tú puedes! 💪';
-
+  // Feedback tras responder
+  if (state.notificacionBacu === 'grabé' || state.notificacionBacu === 'procrastiné') {
+    const grabo = state.notificacionBacu === 'grabé';
     return `
-      <div style="
-        position: fixed;
-        top: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: ${state.notificacionBacu === 'grabé' ? 'var(--verde)' : 'var(--naranja)'};
-        color: white;
-        padding: 16px 32px;
-        border-radius: 8px;
-        font-size: 14px;
-        font-weight: bold;
-        z-index: 10000;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-        animation: slideDown 0.3s ease-out;
-      ">
-        ${mensaje}
+      <div class="bacu-noti" style="border-color:${grabo ? 'var(--verde)' : 'var(--naranja)'};">
+        <div class="bacu-noti-titulo">BACU</div>
+        <div style="font-size:14px;font-weight:bold;text-align:center;padding:6px 0;">
+          ${grabo ? '✅ ¡Grabaste! Pasa a Por editar 🔥' : '⏰ Procrastinaste. Sigue en Por grabar 💪'}
+        </div>
       </div>
-      <style>
-        @keyframes slideDown {
-          from { transform: translateX(-50%) translateY(-20px); opacity: 0; }
-          to { transform: translateX(-50%) translateY(0); opacity: 1; }
-        }
-      </style>
+      ${estiloNoti()}
     `;
   }
 
+  // Pregunta por la primera idea pendiente
+  const idea = (state.revisionIdeasPendientes || [])[0];
+  if (!idea) return '';
+
+  const M = MARCAS[idea.marca];
+  const fecha = idea.fechaRodaje || idea.fecha;
+  const total = state.revisionIdeasPendientes.length;
+
   return `
-    <div style="
-      position: fixed;
-      top: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: linear-gradient(135deg, var(--azul), var(--verde));
-      color: white;
-      padding: 20px 32px;
-      border-radius: 12px;
-      font-size: 15px;
-      font-weight: bold;
-      z-index: 10000;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.3);
-      animation: slideDown 0.3s ease-out;
-    ">
-      <div style="margin-bottom: 14px; text-align: center; font-size: 16px;">🎬 ¿GRABÉ O PROCRASTINÉ?</div>
-      <div style="display: flex; gap: 12px; justify-content: center;">
-        <button
-          data-act="grabe-bacu"
-          style="
-            padding: 10px 24px;
-            background: rgba(255,255,255,0.3);
-            border: 2px solid white;
-            color: white;
-            border-radius: 6px;
-            font-weight: bold;
-            cursor: pointer;
-            font-size: 13px;
-            transition: all 0.2s;
-          "
-          onmouseover="this.style.background='rgba(255,255,255,0.5)';"
-          onmouseout="this.style.background='rgba(255,255,255,0.3)';"
-        >
+    <div class="bacu-noti">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div class="bacu-noti-titulo">BACU</div>
+        <button data-act="cerrar-notificacion-bacu" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;padding:4px 8px;">✕</button>
+      </div>
+      <div style="font-size:15px;font-weight:bold;margin:6px 0 2px;">🎬 ¿Grabaste o procrastinaste?</div>
+      <div style="font-size:12px;opacity:0.85;margin-bottom:12px;">
+        <span class="dot" style="width:8px;height:8px;background:${M ? M.color : 'var(--verde)'};margin-right:6px;"></span>
+        ${escapeHtml(idea.titulo || 'Sin título')} · era para el ${escapeHtml(fmtFecha(fecha, MESES))}${total > 1 ? ` · ${total} pendientes` : ''}
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button data-act="grabe-bacu" data-id="${escapeHtml(idea.id)}" class="bacu-noti-btn" style="border-color:var(--verde);color:var(--verde);">
           ✅ Grabé
         </button>
-        <button
-          data-act="procrastine-bacu"
-          style="
-            padding: 10px 24px;
-            background: rgba(255,255,255,0.3);
-            border: 2px solid white;
-            color: white;
-            border-radius: 6px;
-            font-weight: bold;
-            cursor: pointer;
-            font-size: 13px;
-            transition: all 0.2s;
-          "
-          onmouseover="this.style.background='rgba(255,255,255,0.5)';"
-          onmouseout="this.style.background='rgba(255,255,255,0.3)';"
-        >
+        <button data-act="procrastine-bacu" data-id="${escapeHtml(idea.id)}" class="bacu-noti-btn" style="border-color:var(--naranja);color:var(--naranja);">
           ⏰ Procrastiné
         </button>
       </div>
     </div>
+    ${estiloNoti()}
+  `;
+}
+
+function estiloNoti() {
+  return `
     <style>
-      @keyframes slideDown {
-        from { transform: translateX(-50%) translateY(-20px); opacity: 0; }
+      .bacu-noti {
+        position: fixed;
+        top: 16px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: min(430px, calc(100vw - 24px));
+        background: var(--panel);
+        color: var(--text);
+        border: 1px solid var(--line2);
+        border-left: 4px solid var(--verde);
+        border-radius: 10px;
+        padding: 14px 16px;
+        z-index: 10000;
+        box-shadow: 0 6px 24px rgba(0,0,0,0.45);
+        animation: bacuSlide .3s ease-out;
+      }
+      .bacu-noti-titulo {
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 10px;
+        letter-spacing: 2.5px;
+        color: var(--verde);
+      }
+      .bacu-noti-btn {
+        flex: 1;
+        padding: 12px;
+        background: none;
+        border: 1.5px solid;
+        border-radius: 8px;
+        font-weight: bold;
+        font-size: 13px;
+        cursor: pointer;
+        min-height: 44px;
+      }
+      @keyframes bacuSlide {
+        from { transform: translateX(-50%) translateY(-16px); opacity: 0; }
         to { transform: translateX(-50%) translateY(0); opacity: 1; }
       }
     </style>

@@ -183,26 +183,17 @@ async function cargarDatos() {
 
 function verificarIdeasPorFecha() {
   const hoy = hoyStr();
-  const revisadasEnSesion = JSON.parse(sessionStorage.getItem('ideas_revisadas') || '[]');
+  const revisadas = loadValue('bacu.ideasRevisadas', []);
+  const estadosFinales = ['edicion', 'entrega', 'publicada', 'descartada'];
 
-  const ideasViejas = state.ideas.filter(idea =>
-    idea.fecha && idea.fecha < hoy && !revisadasEnSesion.includes(idea.id)
-  );
+  // Ideas cuya fecha (de rodaje o publicación) ya pasó y aún no se han revisado
+  const pendientes = state.ideas.filter(idea => {
+    const f = idea.fechaRodaje || idea.fecha;
+    return f && f < hoy && !estadosFinales.includes(idea.estado) && !revisadas.includes(idea.id);
+  });
 
-  if (ideasViejas.length > 0) {
-    // Abrir modal de revisión automáticamente
-    setTimeout(() => {
-      actions.abrirRevisionIdeas(ideasViejas);
-    }, 500);
-  }
-
-  // Mostrar notificación de Bacu solo si es una recarga (no primera vez en la sesión)
-  const yaNotificada = sessionStorage.getItem('bacu_notificada');
-  if (!yaNotificada && ideasViejas.length === 0) {
-    sessionStorage.setItem('bacu_notificada', 'true');
-    setTimeout(() => {
-      actions.abrirNotificacionBacu();
-    }, 800);
+  if (pendientes.length > 0) {
+    setState({ revisionIdeasPendientes: pendientes, notificacionBacu: 'pregunta' });
   }
 }
 
@@ -732,15 +723,27 @@ export const actions = {
   abrirRevisionIdeas: (ideas) => setState({ revisionIdeasModal: true, revisionIdeasPendientes: ideas }),
   cerrarRevisionIdeas: () => setState({ revisionIdeasModal: false, revisionIdeasPendientes: [] }),
 
-  abrirNotificacionBacu: () => setState({ notificacionBacu: true }),
   cerrarNotificacionBacu: () => setState({ notificacionBacu: null }),
-  grabeBacu: () => {
-    setState({ notificacionBacu: 'grabé' });
-    setTimeout(() => setState({ notificacionBacu: null }), 3000);
-  },
-  procrastineBacu: () => {
-    setState({ notificacionBacu: 'procrastiné' });
-    setTimeout(() => setState({ notificacionBacu: null }), 3000);
+  bacuResponder: (ideaId, grabo) => {
+    // Grabé → pasa a "Por editar" · Procrastiné → queda en "Por grabar"
+    actions.updIdea(ideaId, { estado: grabo ? 'edicion' : 'grabar' });
+
+    // No volver a preguntar por esta idea
+    const revisadas = loadValue('bacu.ideasRevisadas', []);
+    if (!revisadas.includes(ideaId)) {
+      revisadas.push(ideaId);
+      persistValue('bacu.ideasRevisadas', revisadas);
+    }
+
+    const pendientes = state.revisionIdeasPendientes.filter(i => i.id !== ideaId);
+    setState({
+      revisionIdeasPendientes: pendientes,
+      notificacionBacu: grabo ? 'grabé' : 'procrastiné'
+    });
+    // Tras el mensaje de feedback, pasa a la siguiente idea o cierra
+    setTimeout(() => {
+      setState({ notificacionBacu: state.revisionIdeasPendientes.length ? 'pregunta' : null });
+    }, 2200);
   },
   actualizarEstadoIdea: (ideaId, nuevoEstado) => {
     const idea = state.ideas.find(i => i.id === ideaId);

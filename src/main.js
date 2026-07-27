@@ -279,8 +279,9 @@ root.addEventListener('click', e => {
       }
       break;
     }
-    case 'grabe-bacu': actions.grabeBacu(); break;
-    case 'procrastine-bacu': actions.procrastineBacu(); break;
+    case 'grabe-bacu': actions.bacuResponder(id, true); break;
+    case 'procrastine-bacu': actions.bacuResponder(id, false); break;
+    case 'cerrar-notificacion-bacu': actions.cerrarNotificacionBacu(); break;
   }
 });
 
