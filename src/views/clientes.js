@@ -8,8 +8,8 @@ const ESTADO_COLORS = {
   proyecto_edicion: '#EFC94C',       // amarillo
   confirmar_entrega: '#F08A2E',      // naranja
   por_pagar: '#E0312E',              // rojo (plata pendiente)
-  ya_pagos: '#1FAF74',               // verde
-  entregado: '#8E5BE8',              // violeta (archivado)
+  ya_pagos: '#1FAF74',               // verde (cerrado)
+  entregado: '#1FAF74',              // verde (estado viejo, cae en la misma columna)
   descartado: 'var(--muted)'         // gris
 };
 const COLUMNAS = [
@@ -19,10 +19,15 @@ const COLUMNAS = [
   ['proyecto_edicion', 'Proyecto por editar', 'En edición'],
   ['confirmar_entrega', 'Proyecto por confirmar entrega', 'Esperando visto bueno'],
   ['por_pagar', 'Por pagar', 'Pendiente de cobro'],
-  ['ya_pagos', 'Ya pagos', 'Pagos recibidos'],
-  ['entregado', 'Entregados', 'Proyectos cerrados'],
+  ['ya_pagos', 'Ya pagos / Entregados', 'Pagados y cerrados'],
   ['descartado', 'Descartado', 'No avanzó']
 ];
+
+// La columna "Ya pagos / Entregados" agrupa ambos estados (entregado es el nombre viejo)
+function enColumna(c, estado) {
+  if (estado === 'ya_pagos') return c.estado === 'ya_pagos' || c.estado === 'entregado';
+  return c.estado === estado;
+}
 
 function fmtMoney(n) {
   const v = Number(n) || 0;
@@ -47,10 +52,10 @@ export function renderClientes(state) {
   const clientes = state.clientes || [];
   const cuentasCobro = state.cuentasCobro || [];
 
-  const statsHtml = COLUMNAS.map(([estado, label]) => `${clientes.filter(c => c.estado === estado).length} ${label.toLowerCase()}`).join(' · ');
+  const statsHtml = COLUMNAS.map(([estado, label]) => `${clientes.filter(c => enColumna(c, estado)).length} ${label.toLowerCase()}`).join(' · ');
 
   const colsHtml = COLUMNAS.map(([estado, titulo, sub]) => {
-    const items = clientes.filter(c => c.estado === estado);
+    const items = clientes.filter(c => enColumna(c, estado));
     const itemsHtml = items.length
       ? items.map(c => {
         const cuentasCliente = cuentasCobro.filter(cc => cc.cliente_id === c.id);

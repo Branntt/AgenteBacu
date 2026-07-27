@@ -17,8 +17,7 @@ const PIPELINE_CLIENTE = [
   ['proyecto_edicion', 'Proyecto por editar'],
   ['confirmar_entrega', 'Por confirmar entrega'],
   ['por_pagar', 'Por pagar'],
-  ['ya_pagos', 'Ya pagó'],
-  ['entregado', 'Entregado']
+  ['ya_pagos', 'Ya pagó / Entregado']
 ];
 
 function opcionesDelanteras(item) {

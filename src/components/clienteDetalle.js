@@ -60,8 +60,7 @@ export function renderClienteDetalle(state) {
             <option value="proyecto_edicion" ${c.estado === 'proyecto_edicion' ? 'selected' : ''}>Proyecto por editar</option>
             <option value="confirmar_entrega" ${c.estado === 'confirmar_entrega' ? 'selected' : ''}>Proyecto por confirmar entrega</option>
             <option value="por_pagar" ${c.estado === 'por_pagar' ? 'selected' : ''}>Por pagar</option>
-            <option value="ya_pagos" ${c.estado === 'ya_pagos' ? 'selected' : ''}>Ya pagos</option>
-            <option value="entregado" ${c.estado === 'entregado' ? 'selected' : ''}>Entregados</option>
+            <option value="ya_pagos" ${c.estado === 'ya_pagos' || c.estado === 'entregado' ? 'selected' : ''}>Ya pagos / Entregados</option>
             <option value="descartado" ${c.estado === 'descartado' ? 'selected' : ''}>Descartado</option>
           </select>
           <button class="btn-ghost" data-act="cc-abrir" data-id="${id}">Cuenta de cobro</button>
