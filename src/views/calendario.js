@@ -87,7 +87,8 @@ function entradasDeDia(ideas, clientes, tareas, fs) {
   const grabaciones = clientesDeDia(clientes, fs).map(entryClienteHtml);
   const clases = clasesDeDia(fs).map(entryClaseHtml);
   const entregas = tareasDeDia(tareas, fs).map(entryTareaHtml);
-  return entregas.concat(clases, grabaciones, rodaje, publicacion);
+  // Orden del día: entregas → grabaciones → rodajes → publicaciones, y las clases (atenuadas) al final
+  return entregas.concat(grabaciones, rodaje, publicacion, clases);
 }
 
 function tieneEntradas(ideas, clientes, tareas, fs) {
