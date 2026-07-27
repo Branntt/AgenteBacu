@@ -208,27 +208,86 @@ export function renderFinanciamiento(state) {
       <div class="finanzas-seccion" style="background:linear-gradient(135deg, rgba(255,107,107,0.1), rgba(255,149,0,0.1));border-left:4px solid var(--rojo);">
         <div class="seccion-titulo">🎯 Simulación: Si vivieras solo</div>
 
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:16px;">
-          <!-- Stack 1: Gastos Básicos -->
-          <div style="background:linear-gradient(135deg, rgba(76,175,80,0.2), rgba(56,142,60,0.2));padding:24px;border-radius:12px;border-left:4px solid var(--verde);text-align:center;">
-            <div style="font-size:32px;margin-bottom:8px;">🏠</div>
-            <div style="font-size:13px;opacity:0.8;margin-bottom:12px;">Gastos Básicos</div>
-            <div style="font-size:28px;font-weight:bold;color:var(--verde);">${fmtMoney(2150000)}</div>
-            <div style="font-size:11px;opacity:0.6;margin-top:8px;">Arriendo, servicios, comida, transporte</div>
+        <!-- GASTOS BÁSICOS -->
+        <div style="margin-bottom:24px;">
+          <div style="font-size:14px;font-weight:bold;margin-bottom:12px;color:var(--verde);display:flex;align-items:center;gap:8px;">
+            <span>🏠</span> GASTOS BÁSICOS
           </div>
-
-          <!-- Stack 2: Gastos Reales Actuales -->
-          <div style="background:linear-gradient(135deg, rgba(33,150,243,0.2), rgba(13,71,161,0.2));padding:24px;border-radius:12px;border-left:4px solid var(--azul);text-align:center;">
-            <div style="font-size:32px;margin-bottom:8px;">💼</div>
-            <div style="font-size:13px;opacity:0.8;margin-bottom:12px;">Gastos Reales Actuales</div>
-            <div style="font-size:28px;font-weight:bold;color:var(--azul);">${fmtMoney(493706)}</div>
-            <div style="font-size:11px;opacity:0.6;margin-top:8px;">Recurrentes + Aseo personal</div>
+          <div style="background:rgba(76,175,80,0.1);border-radius:8px;padding:16px;border-left:3px solid var(--verde);">
+            ${[1,2,3,8,9,10,6,7].map(idx => {
+              const g = state.gastosVivirSolo.find(x => x.id === `g${idx}`);
+              if (!g) return '';
+              return `
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;font-size:13px;border-bottom:1px solid rgba(255,255,255,0.1);">
+                  <span>${g.emoji} ${escapeHtml(g.nombre)}</span>
+                  <span style="font-weight:bold;color:var(--verde);">${fmtMoney(g.monto)}</span>
+                </div>
+              `;
+            }).join('')}
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;font-weight:bold;color:var(--verde);border-top:2px solid rgba(76,175,80,0.3);">
+              <span>Subtotal Básicos:</span>
+              <span>${fmtMoney(700000+450000+150000+50000+80000+50000+120000+100000)}</span>
+            </div>
           </div>
         </div>
 
-        <div style="background:rgba(0,0,0,0.3);padding:16px;border-radius:8px;font-size:14px;text-align:center;">
-          <div style="opacity:0.8;margin-bottom:8px;">TOTAL MENSUAL SI VIVIERAS SOLO:</div>
-          <div style="font-size:32px;font-weight:bold;color:var(--rojo);">${fmtMoney(2643706)}</div>
+        <!-- GASTOS RECURRENTES -->
+        <div style="margin-bottom:24px;">
+          <div style="font-size:14px;font-weight:bold;margin-bottom:12px;color:var(--azul);display:flex;align-items:center;gap:8px;">
+            <span>💼</span> GASTOS RECURRENTES
+          </div>
+          <div style="background:rgba(33,150,243,0.1);border-radius:8px;padding:16px;border-left:3px solid var(--azul);">
+            ${state.gastosRecurrentes.map(g => `
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;font-size:13px;border-bottom:1px solid rgba(255,255,255,0.1);">
+                <span>${g.emoji} ${escapeHtml(g.nombre)}</span>
+                <span style="font-weight:bold;color:var(--azul);">${fmtMoney(g.monto)}</span>
+              </div>
+            `).join('')}
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;font-weight:bold;color:var(--azul);border-top:2px solid rgba(33,150,243,0.3);">
+              <span>Subtotal Recurrentes:</span>
+              <span>${fmtMoney(state.gastosRecurrentes.reduce((sum, g) => sum + g.monto, 0))}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ASEO PERSONAL -->
+        <div style="margin-bottom:24px;">
+          <div style="font-size:14px;font-weight:bold;margin-bottom:12px;color:var(--naranja);display:flex;align-items:center;gap:8px;">
+            <span>🧴</span> ASEO PERSONAL
+          </div>
+          <div style="background:rgba(255,152,0,0.1);border-radius:8px;padding:16px;border-left:3px solid var(--naranja);">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;font-size:13px;border-bottom:1px solid rgba(255,255,255,0.1);">
+              <span>🧴 Contorno de ojos</span>
+              <span style="font-weight:bold;color:var(--naranja);">$80.000</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;font-size:13px;border-bottom:1px solid rgba(255,255,255,0.1);">
+              <span>🧴 Jabón para la cara</span>
+              <span style="font-weight:bold;color:var(--naranja);">$45.000</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;font-size:13px;border-bottom:1px solid rgba(255,255,255,0.1);">
+              <span>🧴 Shampú</span>
+              <span style="font-weight:bold;color:var(--naranja);">$15.000</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;font-size:13px;border-bottom:1px solid rgba(255,255,255,0.1);">
+              <span>🧴 Desodorante</span>
+              <span style="font-weight:bold;color:var(--naranja);">$50.000</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;font-size:13px;">
+              <span>🧴 Cuchillas</span>
+              <span style="font-weight:bold;color:var(--naranja);">$9.000</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;font-weight:bold;color:var(--naranja);border-top:2px solid rgba(255,152,0,0.3);">
+              <span>Subtotal Aseo:</span>
+              <span>$199.000</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- TOTAL FINAL -->
+        <div style="background:linear-gradient(135deg, rgba(255,107,107,0.2), rgba(255,149,0,0.2));padding:20px;border-radius:8px;font-size:14px;text-align:center;border:2px solid var(--rojo);">
+          <div style="opacity:0.8;margin-bottom:12px;font-weight:bold;">TOTAL MENSUAL SI VIVIERAS SOLO:</div>
+          <div style="font-size:36px;font-weight:bold;color:var(--rojo);">${fmtMoney(2643706)}</div>
+          <div style="font-size:12px;opacity:0.7;margin-top:8px;">Básicos + Recurrentes + Aseo Personal</div>
         </div>
       </div>
 
