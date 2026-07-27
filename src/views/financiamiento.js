@@ -1,6 +1,7 @@
 import { escapeHtml } from '../lib/format.js';
 import { calcularFinanciamiento } from '../lib/financiamiento.js';
 import { renderTablaFinanzas } from '../components/tablaFinanzas.js';
+import { hoyStr } from '../lib/idea.js';
 
 function fmtMoney(n) {
   const v = Number(n) || 0;
@@ -58,7 +59,7 @@ export function renderFinanciamiento(state) {
         <div style="display:grid;grid-template-columns:120px 200px 120px 120px auto;gap:12px;align-items:end;">
           <div>
             <label style="font-size:12px;opacity:0.7;">Fecha</label>
-            <input type="date" data-change="mov-fecha" style="width:100%;padding:8px;border-radius:6px;border:1px solid rgba(255,255,255,0.2);background:rgba(0,0,0,0.3);color:inherit;font-family:inherit;" />
+            <input type="date" data-change="mov-fecha" value="${hoyStr()}" style="width:100%;padding:8px;border-radius:6px;border:1px solid rgba(255,255,255,0.2);background:rgba(0,0,0,0.3);color:inherit;font-family:inherit;" />
           </div>
           <div>
             <label style="font-size:12px;opacity:0.7;">Concepto</label>
