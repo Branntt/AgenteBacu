@@ -53,7 +53,7 @@ export function renderFinanciamiento(state) {
                 <div style="font-size:20px;color:var(--azul);font-weight:bold;">${fmtMoney(teDeben)}</div>
               </div>
               <div>
-                <div class="mono-label" style="color:var(--rojo);">Debes</div>
+                <div class="mono-label" style="color:var(--rojo);">Debes (real)</div>
                 <div style="font-size:20px;color:var(--rojo);font-weight:bold;">${fmtMoney(debes)}</div>
               </div>
             </div>
