@@ -5,7 +5,8 @@ import { renderTablaFinanzas } from '../components/tablaFinanzas.js';
 
 function fmtMoney(n) {
   const v = Number(n) || 0;
-  return '$' + Math.abs(v).toLocaleString('es-CO');
+  const sign = v < 0 ? '-' : '';
+  return sign + '$' + Math.abs(v).toLocaleString('es-CO');
 }
 
 function deudaRowHtml(d) {
@@ -69,10 +70,6 @@ export function renderFinanciamiento(state) {
                 <div class="mono-label" style="color:var(--rojo);">Debes (real)</div>
                 <div style="font-size:20px;color:var(--rojo);font-weight:bold;">${fmtMoney(debes)}</div>
               </div>
-            </div>
-
-            <div style="background:rgba(0,0,0,0.2);padding:12px;border-radius:8px;font-size:12px;">
-              <div class="mono-label">${efectivo} + ${teDeben} - ${debes} = ${patrimonio}</div>
             </div>
           </div>
         </div>
