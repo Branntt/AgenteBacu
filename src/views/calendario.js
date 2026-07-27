@@ -180,9 +180,10 @@ function renderAgenda(state, ideas, clientes, tareas) {
   }
 
   const mesLabel = MESES[mesNum - 1];
+  const DIAS_SEMANA = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
   return `<div class="cal-agenda">${dias.map(d => `
     <div class="cal-agenda-day ${d.esHoy ? 'today' : ''}">
-      <div class="cal-agenda-date">${d.dnum} ${mesLabel.slice(0, 3)}${d.esHoy ? ' <span class="today-mark">· hoy</span>' : ''}</div>
+      <div class="cal-agenda-date">${DIAS_SEMANA[new Date(anio, mesNum - 1, d.dnum).getDay()]} ${d.dnum} de ${mesLabel}${d.esHoy ? ' <span class="today-mark">· hoy</span>' : ''}</div>
       ${d.entries.join('')}
     </div>
   `).join('')}</div>`;
