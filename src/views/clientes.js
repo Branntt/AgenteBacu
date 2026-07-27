@@ -8,8 +8,8 @@ const ESTADO_COLORS = {
   proyecto_edicion: '#EFC94C',       // amarillo
   confirmar_entrega: '#F08A2E',      // naranja
   por_pagar: '#E0312E',              // rojo (plata pendiente)
-  ya_pagos: '#1FAF74',               // verde (cerrado)
-  entregado: '#1FAF74',              // verde (estado viejo, cae en la misma columna)
+  ya_pagos: 'var(--verde)',          // verde Bacu (cerrado)
+  entregado: 'var(--verde)',         // verde Bacu (estado viejo, cae en la misma columna)
   descartado: 'var(--muted)'         // gris
 };
 const COLUMNAS = [
