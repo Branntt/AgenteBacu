@@ -182,8 +182,10 @@ async function cargarDatos() {
 
 function verificarIdeasPorFecha() {
   const hoy = hoyStr();
+  const revisadasEnSesion = JSON.parse(sessionStorage.getItem('ideas_revisadas') || '[]');
+
   const ideasViejas = state.ideas.filter(idea =>
-    idea.fecha && idea.fecha < hoy && !idea.revisada
+    idea.fecha && idea.fecha < hoy && !revisadasEnSesion.includes(idea.id)
   );
 
   if (ideasViejas.length > 0) {
@@ -722,10 +724,21 @@ export const actions = {
   actualizarEstadoIdea: (ideaId, nuevoEstado) => {
     const idea = state.ideas.find(i => i.id === ideaId);
     if (!idea) return;
-    const updated = { ...idea, estado: nuevoEstado, revisada: true };
+
+    // Actualizar estado localmente
+    const updated = { ...idea, estado: nuevoEstado };
     const idx = state.ideas.indexOf(idea);
     state.ideas[idx] = updated;
-    supabase.from('ideas').update({ estado: nuevoEstado, revisada: true }).eq('id', ideaId).then(() => notify());
+
+    // Guardar en Supabase
+    supabase.from('ideas').update({ estado: nuevoEstado }).eq('id', ideaId).then(() => notify());
+
+    // Marcar como revisada en sessionStorage
+    const revisadas = JSON.parse(sessionStorage.getItem('ideas_revisadas') || '[]');
+    if (!revisadas.includes(ideaId)) {
+      revisadas.push(ideaId);
+      sessionStorage.setItem('ideas_revisadas', JSON.stringify(revisadas));
+    }
   },
   iaSetCampo: (campo, val) => setState({ iaDraft: { ...state.iaDraft, [campo]: val } }),
 
