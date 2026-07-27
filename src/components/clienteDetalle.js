@@ -58,8 +58,8 @@ export function renderClienteDetalle(state) {
             <option value="conversacion" ${c.estado === 'conversacion' ? 'selected' : ''}>En conversación para contratación</option>
             <option value="grabacion" ${c.estado === 'grabacion' ? 'selected' : ''}>Grabación</option>
             <option value="proyecto_edicion" ${c.estado === 'proyecto_edicion' ? 'selected' : ''}>Proyecto por editar</option>
-            <option value="confirmar_entrega" ${c.estado === 'confirmar_entrega' ? 'selected' : ''}>Proyecto por confirmar entrega</option>
-            <option value="por_pagar" ${c.estado === 'por_pagar' ? 'selected' : ''}>Por pagar</option>
+            <option value="confirmar_entrega" ${c.estado === 'confirmar_entrega' ? 'selected' : ''}>Por confirmar entrega</option>
+            <option value="por_pagar" ${c.estado === 'por_pagar' ? 'selected' : ''}>Por pagar / Por entregar</option>
             <option value="ya_pagos" ${c.estado === 'ya_pagos' || c.estado === 'entregado' ? 'selected' : ''}>Ya pagos / Entregados</option>
             <option value="descartado" ${c.estado === 'descartado' ? 'selected' : ''}>Descartado</option>
           </select>

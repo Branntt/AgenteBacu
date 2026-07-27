@@ -17,8 +17,8 @@ const COLUMNAS = [
   ['conversacion', 'En conversación para contratación', 'En negociación'],
   ['grabacion', 'Grabación', 'Por grabar o en grabación'],
   ['proyecto_edicion', 'Proyecto por editar', 'En edición'],
-  ['confirmar_entrega', 'Proyecto por confirmar entrega', 'Esperando visto bueno'],
-  ['por_pagar', 'Por pagar', 'Pendiente de cobro'],
+  ['confirmar_entrega', 'Por confirmar entrega', 'Esperando visto bueno'],
+  ['por_pagar', 'Por pagar / Por entregar', 'Pendiente de cobro'],
   ['ya_pagos', 'Ya pagos / Entregados', 'Pagados y cerrados'],
   ['descartado', 'Descartado', 'No avanzó']
 ];

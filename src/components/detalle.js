@@ -5,11 +5,11 @@ import { valida } from '../lib/idea.js';
 const ESTADO_LABELS = {
   prospecto: 'Prospecto',
   desarrollo: 'En desarrollo',
-  grabar: 'Por grabar',
-  edicion: 'Por editar',
+  grabar: 'Grabación',
+  edicion: 'Proyecto por editar',
   entrega: 'Por confirmar entrega',
-  por_pagar: 'Por pagar',
-  ya_pago: 'Ya pagó',
+  por_pagar: 'Por pagar / Por entregar',
+  ya_pago: 'Ya pagos / Entregados',
   descartada: 'Descartada',
   // estados viejos que aún pueden existir en ideas antiguas
   produccion: 'Por producirse',
@@ -185,11 +185,11 @@ export function renderDetalle(state) {
           <select data-change="idea-estado" data-id="${id}">
             <option value="prospecto" ${selIdea.estado === 'prospecto' ? 'selected' : ''}>Prospecto</option>
             <option value="desarrollo" ${selIdea.estado === 'desarrollo' || selIdea.estado === 'lista' ? 'selected' : ''}>En desarrollo</option>
-            <option value="grabar" ${selIdea.estado === 'grabar' || selIdea.estado === 'produccion' ? 'selected' : ''}>Por grabar</option>
-            <option value="edicion" ${selIdea.estado === 'edicion' ? 'selected' : ''}>Por editar</option>
+            <option value="grabar" ${selIdea.estado === 'grabar' || selIdea.estado === 'produccion' ? 'selected' : ''}>Grabación</option>
+            <option value="edicion" ${selIdea.estado === 'edicion' ? 'selected' : ''}>Proyecto por editar</option>
             <option value="entrega" ${selIdea.estado === 'entrega' ? 'selected' : ''}>Por confirmar entrega</option>
-            <option value="por_pagar" ${selIdea.estado === 'por_pagar' ? 'selected' : ''}>Por pagar</option>
-            <option value="ya_pago" ${selIdea.estado === 'ya_pago' || selIdea.estado === 'publicada' ? 'selected' : ''}>Ya pagó</option>
+            <option value="por_pagar" ${selIdea.estado === 'por_pagar' ? 'selected' : ''}>Por pagar / Por entregar</option>
+            <option value="ya_pago" ${selIdea.estado === 'ya_pago' || selIdea.estado === 'publicada' ? 'selected' : ''}>Ya pagos / Entregados</option>
             <option value="descartada" ${selIdea.estado === 'descartada' ? 'selected' : ''}>Descartada</option>
           </select>
           <button class="btn-delete" data-act="idea-eliminar" data-id="${id}">Eliminar</button>

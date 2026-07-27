@@ -7,11 +7,11 @@ const VISTAS = [['general', 'Vista general'], ['tipo', 'Por tipo de guion']];
 const COLUMNAS = [
   ['prospecto', 'Prospecto'],
   ['desarrollo', 'En desarrollo'],
-  ['grabar', 'Por grabar'],
-  ['edicion', 'Por editar'],
+  ['grabar', 'Grabación'],
+  ['edicion', 'Proyecto por editar'],
   ['entrega', 'Por confirmar entrega'],
-  ['por_pagar', 'Por pagar'],
-  ['ya_pago', 'Ya pagó'],
+  ['por_pagar', 'Por pagar / Por entregar'],
+  ['ya_pago', 'Ya pagos / Entregados'],
   ['descartada', 'Descartada']
 ];
 

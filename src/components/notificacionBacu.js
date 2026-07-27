@@ -5,11 +5,11 @@ import { MESES, MARCAS } from '../data/constants.js';
 const PIPELINE_IDEA = [
   ['prospecto', 'Prospecto'],
   ['desarrollo', 'En desarrollo'],
-  ['grabar', 'Por grabar'],
-  ['edicion', 'Por editar'],
+  ['grabar', 'Grabación'],
+  ['edicion', 'Proyecto por editar'],
   ['entrega', 'Por confirmar entrega'],
-  ['por_pagar', 'Por pagar'],
-  ['ya_pago', 'Ya pagó']
+  ['por_pagar', 'Por pagar / Por entregar'],
+  ['ya_pago', 'Ya pagos / Entregados']
 ];
 const PIPELINE_CLIENTE = [
   ['prospecto', 'Prospecto'],
@@ -17,8 +17,8 @@ const PIPELINE_CLIENTE = [
   ['grabacion', 'Grabación'],
   ['proyecto_edicion', 'Proyecto por editar'],
   ['confirmar_entrega', 'Por confirmar entrega'],
-  ['por_pagar', 'Por pagar'],
-  ['ya_pagos', 'Ya pagó / Entregado']
+  ['por_pagar', 'Por pagar / Por entregar'],
+  ['ya_pagos', 'Ya pagos / Entregados']
 ];
 
 function opcionesDelanteras(item) {
