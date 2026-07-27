@@ -125,20 +125,20 @@ export function renderFinanciamiento(state) {
       <div class="finanzas-seccion" style="margin-bottom:24px;">
         <div class="seccion-titulo">💰 Gastos Mensuales Recurrentes</div>
         <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));gap:10px;margin-bottom:12px;">
-          ${gastosRecurrentes.map(g => card('var(--rojo)', `
+          ${gastosRecurrentes.map(g => card('#E8641B', `
             <div style="display:flex;justify-content:space-between;align-items:center;">
               <div>
                 <div style="font-size:13px;font-weight:bold;">${g.emoji} ${escapeHtml(g.nombre)}</div>
                 <div style="font-size:10px;opacity:0.55;margin-top:4px;">Día ${g.dia_vencimiento}</div>
               </div>
-              <div style="font-size:14px;font-weight:bold;color:var(--rojo);">${fmtMoney(g.monto)}</div>
+              <div style="font-size:14px;font-weight:bold;color:#E8641B;">${fmtMoney(g.monto)}</div>
             </div>
           `, 'padding:12px;')).join('')}
         </div>
-        ${card('var(--rojo)', `
+        ${card('#E8641B', `
           <div style="text-align:center;">
             <span style="opacity:0.7;font-size:13px;">Total recurrentes del mes: </span>
-            <span style="font-size:18px;font-weight:bold;color:var(--rojo);">${fmtMoney(gastosRecurrentesTotal)}</span>
+            <span style="font-size:18px;font-weight:bold;color:#E8641B;">${fmtMoney(gastosRecurrentesTotal)}</span>
           </div>
         `)}
       </div>
@@ -153,16 +153,16 @@ export function renderFinanciamiento(state) {
             ['🧼 Jabón cara', '$90k cada 2 meses', '$45k/mes', false],
             ['🧴 Shampú', 'Aún dura', '$15k/mes', true],
             ['🪒 Cuchillas', '$18k cada 2 meses', '$9k/mes', false]
-          ].map(([nombre, nota, precio, agotado]) => card('var(--azul)', `
+          ].map(([nombre, nota, precio, agotado]) => card('#8E5BE8', `
             <div style="font-size:13px;font-weight:bold;">${nombre}</div>
             <div style="font-size:11px;opacity:0.6;margin-top:4px;">${nota}</div>
-            <div style="font-size:14px;font-weight:bold;color:var(--azul);margin-top:6px;">${precio}</div>
+            <div style="font-size:14px;font-weight:bold;color:#8E5BE8;margin-top:6px;">${precio}</div>
           `, `padding:12px;${agotado ? 'opacity:0.35;' : ''}`)).join('')}
         </div>
-        ${card('var(--azul)', `
+        ${card('#8E5BE8', `
           <div style="text-align:center;">
             <span style="opacity:0.7;font-size:13px;">Promedio mensual de aseo: </span>
-            <span style="font-size:18px;font-weight:bold;color:var(--azul);">$199.000</span>
+            <span style="font-size:18px;font-weight:bold;color:#8E5BE8;">$199.000</span>
             <span style="opacity:0.5;font-size:11px;"> · se reinicia cada 28</span>
           </div>
         `)}
@@ -182,14 +182,14 @@ export function renderFinanciamiento(state) {
 
         <!-- GASTOS BÁSICOS -->
         <div style="margin-bottom:20px;">
-          <div style="font-size:13px;font-weight:bold;margin-bottom:10px;color:var(--azul);">🏠 GASTOS BÁSICOS</div>
-          ${card('var(--azul)', `
+          <div style="font-size:13px;font-weight:bold;margin-bottom:10px;color:#EFC94C;">🏠 GASTOS BÁSICOS</div>
+          ${card('#EFC94C', `
             ${[1,2,3,8,9,10,6,7].map(idx => {
               const g = gastosVivirSolo.find(x => x.id === `g${idx}`);
               if (!g) return '';
               return filaMonto(`${g.emoji} ${escapeHtml(g.nombre)}`, fmtMoney(g.monto), 'var(--text)');
             }).join('')}
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0 2px;font-weight:bold;color:var(--azul);">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0 2px;font-weight:bold;color:#EFC94C;">
               <span>Subtotal Básicos</span>
               <span>${fmtMoney(700000+450000+150000+50000+80000+50000+120000+100000)}</span>
             </div>
@@ -198,10 +198,10 @@ export function renderFinanciamiento(state) {
 
         <!-- GASTOS RECURRENTES -->
         <div style="margin-bottom:20px;">
-          <div style="font-size:13px;font-weight:bold;margin-bottom:10px;color:var(--azul);">💼 GASTOS RECURRENTES</div>
-          ${card('var(--azul)', `
+          <div style="font-size:13px;font-weight:bold;margin-bottom:10px;color:#E8641B;">💼 GASTOS RECURRENTES</div>
+          ${card('#E8641B', `
             ${gastosRecurrentes.map(g => filaMonto(`${g.emoji} ${escapeHtml(g.nombre)}`, fmtMoney(g.monto), 'var(--text)')).join('')}
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0 2px;font-weight:bold;color:var(--azul);">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0 2px;font-weight:bold;color:#E8641B;">
               <span>Subtotal Recurrentes</span>
               <span>${fmtMoney(gastosRecurrentesTotal)}</span>
             </div>
@@ -210,8 +210,8 @@ export function renderFinanciamiento(state) {
 
         <!-- ASEO PERSONAL -->
         <div style="margin-bottom:20px;">
-          <div style="font-size:13px;font-weight:bold;margin-bottom:10px;color:var(--azul);">🧴 ASEO PERSONAL</div>
-          ${card('var(--azul)', `
+          <div style="font-size:13px;font-weight:bold;margin-bottom:10px;color:#8E5BE8;">🧴 ASEO PERSONAL</div>
+          ${card('#8E5BE8', `
             ${[
               ['🧴 Contorno de ojos', '$80.000'],
               ['🧼 Jabón para la cara', '$45.000'],
@@ -219,7 +219,7 @@ export function renderFinanciamiento(state) {
               ['🧴 Desodorante', '$50.000'],
               ['🪒 Cuchillas', '$9.000']
             ].map(([nombre, precio]) => filaMonto(nombre, precio, 'var(--text)')).join('')}
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0 2px;font-weight:bold;color:var(--azul);">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0 2px;font-weight:bold;color:#8E5BE8;">
               <span>Subtotal Aseo</span>
               <span>$199.000</span>
             </div>
@@ -247,11 +247,13 @@ export function renderFinanciamiento(state) {
               mensaje = '❌ NO PUEDES VIVIR SOLO: Tienes un déficit actual de ' + fmtMoney(Math.abs(efectivoActual)) + '. Necesitas primero generar ingresos.';
             } else if (mesesPosibles === 0) {
               mensaje = '⚠️ CRÍTICO: Tu efectivo actual (' + fmtMoney(efectivoActual) + ') no alcanza ni para un mes completo viviendo solo.';
+              color = '#E8641B';
             } else if (mesesPosibles < 3) {
               mensaje = '⚠️ LIMITADO: Tu efectivo actual (' + fmtMoney(efectivoActual) + ') te alcanza para ' + mesesPosibles + ' mes(es) viviendo solo. Necesitas incrementar ingresos.';
+              color = '#E8641B';
             } else if (mesesPosibles < 6) {
-              mensaje = '🔵 POSIBLE A CORTO PLAZO: Tu efectivo actual (' + fmtMoney(efectivoActual) + ') te alcanza para ' + mesesPosibles + ' meses viviendo solo. Necesitas un plan de ingresos.';
-              color = 'var(--azul)';
+              mensaje = '🟡 POSIBLE A CORTO PLAZO: Tu efectivo actual (' + fmtMoney(efectivoActual) + ') te alcanza para ' + mesesPosibles + ' meses viviendo solo. Necesitas un plan de ingresos.';
+              color = '#EFC94C';
             } else if (mesesPosibles < 12) {
               mensaje = '🟢 POSIBLE 6+ MESES: Tu efectivo actual (' + fmtMoney(efectivoActual) + ') te alcanza para ' + mesesPosibles + ' meses viviendo solo. Buen respaldo.';
               color = 'var(--verde)';
