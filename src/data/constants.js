@@ -3,7 +3,7 @@ export const MARCAS = {
     nombre: 'Brant',
     handle: '@branntt._',
     rol: 'Marca personal',
-    color: 'var(--azul)',
+    color: 'var(--naranja)',
     esencia: 'No vende servicios: construye reputación. Dirección creativa, filosofía, procesos y visión. Que te sigan por cómo piensas.'
   },
   bacu: {

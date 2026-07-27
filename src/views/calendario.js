@@ -13,7 +13,7 @@ function entryHtml(i, tipo) {
   const prioridadAlta = i.prioridad === 'Alta' && i.estado !== 'publicada' && i.estado !== 'descartada';
   const flags = (ok ? '<span class="cal-flag ok" title="Validada">✓</span>' : '')
     + (prioridadAlta ? '<span class="cal-flag alta" title="Prioridad alta">⚠</span>' : '');
-  const tag = tipo === 'rodaje' ? `<span class="cal-entry-tag" style="color:${M.color}">Rodaje</span>` : '';
+  const tag = tipo === 'rodaje' ? `<span class="cal-entry-tag" style="color:${M.color};border-color:${M.color}">Rodaje</span>` : '';
   const icono = tipo === 'rodaje' ? '🎬' : '📢';
 
   return `
@@ -35,7 +35,7 @@ function entryClienteHtml(c) {
     <div class="cal-entry is-rodaje" style="border-color:var(--verde)" data-act="nav-go" data-view="clientes" title="Editar en la pestaña Clientes">
       <span class="cal-entry-bar" style="background:var(--verde)"></span>
       <span class="cal-entry-icon" aria-hidden="true">🎥</span>
-      <div class="cal-entry-title"><span class="cal-entry-title-icon" aria-hidden="true">🎥</span><span class="cal-entry-tag" style="color:var(--verde)">Grabación</span>${escapeHtml(c.nombre || 'Cliente')}</div>
+      <div class="cal-entry-title"><span class="cal-entry-title-icon" aria-hidden="true">🎥</span><span class="cal-entry-tag" style="color:var(--verde);border-color:var(--verde)">Grabación</span>${escapeHtml(c.nombre || 'Cliente')}</div>
       <div class="cal-entry-meta"><span class="cal-entry-meta-text">${escapeHtml(c.proyecto || 'Proyecto sin definir')}</span></div>
     </div>
   `;

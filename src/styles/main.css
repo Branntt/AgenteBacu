@@ -747,7 +747,7 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
 .cal-flag.ok { color: var(--verde); }
 .cal-flag.alta { color: var(--rojo); }
 
-.cal-entry.is-rodaje { border: 1px dashed var(--novena); }
+.cal-entry.is-rodaje { border: 1px dashed var(--line2); } /* el color real lo pone cada entrada según su marca */
 /* Clases: atenuadas — el usuario ya sabe qué son, solo marcan el día/hora ocupados */
 .cal-entry.is-clase { border: 1px dashed var(--line); cursor: default; opacity: .45; }
 .cal-entry.is-clase:hover { background: var(--panel2); opacity: 1; }
@@ -773,8 +773,8 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
   font-size: 8px;
   letter-spacing: 1px;
   text-transform: uppercase;
-  color: var(--novena);
-  border: 1px solid var(--novena);
+  color: var(--muted);
+  border: 1px solid var(--line2);
   padding: 1px 4px;
   margin-right: 6px;
   vertical-align: middle;
