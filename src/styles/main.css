@@ -698,15 +698,13 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
 }
 .cal-cell {
   min-height: 112px;
-  max-height: 190px;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  padding: 8px;
+  /* sin max-height ni scroll interno: la celda crece y todo el texto cabe a la vista */
+  padding: 6px;
   border-right: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 }
 .cal-cell.clickable, .cal-week-body.clickable { cursor: pointer; }
 .cal-cell.clickable:hover, .cal-week-body.clickable:hover { background: var(--panel); }
@@ -757,6 +755,13 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
 .cal-entry.is-clase .cal-entry-bar { background: var(--muted) !important; }
 /* En la vista de mes solo se ve hora + materia (sin profesor/salón) */
 .cal-grid .cal-entry.is-clase .cal-entry-meta { display: none; }
+
+/* Mes: entradas compactas — texto pequeño que cabe en la celda, sin scroll */
+.cal-grid .cal-entry { padding: 4px 6px; min-height: 0; gap: 2px; }
+.cal-grid .cal-entry-title { font-size: 10px; line-height: 1.25; }
+.cal-grid .cal-entry-title-icon { font-size: 10px; margin-right: 3px; }
+.cal-grid .cal-entry-meta { font-size: 8px; letter-spacing: .5px; }
+.cal-grid .cal-entry-tag { font-size: 7.5px; letter-spacing: .5px; }
 .cal-entry.is-tarea { border: 1px dashed var(--rojo); }
 .cal-entry-tag {
   display: inline-block;
