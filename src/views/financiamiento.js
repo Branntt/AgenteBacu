@@ -1,5 +1,6 @@
 import { escapeHtml } from '../lib/format.js';
 import { calcularFinanciamiento, calcularFacturado } from '../lib/financiamiento.js';
+import { renderSimuladorPresupuesto } from '../components/simuladorPresupuesto.js';
 
 const FUENTES = [['bancolombia', 'Bancolombia'], ['nequi', 'Nequi'], ['efectivo', 'Efectivo'], ['otro', 'Otro']];
 
@@ -145,6 +146,8 @@ export function renderFinanciamiento(state) {
           ${meDebenHtml.length ? meDebenHtml.map(deudaCardHtml).join('') : '<div class="empty-note">Nadie te debe nada registrado.</div>'}
         </div>
       </div>
+
+      ${renderSimuladorPresupuesto(state.presupuesto)}
     </main>
   `;
 }

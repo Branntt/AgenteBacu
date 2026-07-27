@@ -35,6 +35,18 @@ export const state = {
   metasPersonales: [],
   metasMensuales: [],
   tareas: [],
+  presupuesto: {
+    arriendo: 700000,
+    servicios: 200000,
+    comida: 450000,
+    transporte: 120000,
+    personales: 100000,
+    entretenimiento: 80000,
+    telefono: 50000,
+    salud: 100000,
+    ahorro: 200000,
+    ingresosMensuales: 0
+  },
   historialAbierto: false,
   historialBusqueda: '',
   tema: loadValue('sistemaEditorial.tema', 'Cine crudo'),
@@ -686,5 +698,10 @@ export const actions = {
     nuevas.forEach((idea) => {
       supabase.from('ideas').insert(toDbIdea(idea)).then(({ error }) => marcarGuardado(!error));
     });
+  },
+
+  updPresupuesto: (campo, valor) => {
+    state.presupuesto = { ...state.presupuesto, [campo]: parseN(valor) };
+    notify();
   }
 };

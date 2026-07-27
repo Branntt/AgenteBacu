@@ -298,6 +298,16 @@ root.addEventListener('change', e => {
       case 'meta-personal-fecha': actions.updMetaPersonal(id, { fecha: value || null }); break;
       case 'meta-mensual-set': actions.setMetaMensual(marca, state.month, parseN(value)); break;
       case 'tarea-texto': actions.updTarea(id, { texto: value }); break;
+      case 'presupuesto-ingresos': actions.updPresupuesto('ingresosMensuales', value); break;
+      case 'presupuesto-arriendo': actions.updPresupuesto('arriendo', value); break;
+      case 'presupuesto-servicios': actions.updPresupuesto('servicios', value); break;
+      case 'presupuesto-comida': actions.updPresupuesto('comida', value); break;
+      case 'presupuesto-transporte': actions.updPresupuesto('transporte', value); break;
+      case 'presupuesto-personales': actions.updPresupuesto('personales', value); break;
+      case 'presupuesto-entretenimiento': actions.updPresupuesto('entretenimiento', value); break;
+      case 'presupuesto-telefono': actions.updPresupuesto('telefono', value); break;
+      case 'presupuesto-salud': actions.updPresupuesto('salud', value); break;
+      case 'presupuesto-ahorro': actions.updPresupuesto('ahorro', value); break;
       case 'tarea-fecha': actions.updTarea(id, { fecha: value || null }); break;
       case 'cal-vista-set': actions.setCalVista(value); break;
       case 'filtro-calendario-set': actions.setFiltroCalendario(value); break;
