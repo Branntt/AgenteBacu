@@ -100,21 +100,31 @@ function render() {
   drawerAbiertoAntes = drawerAbiertoAhora;
 }
 
-// Guardar scroll justo antes de recargar/cerrar
+// Guardar scroll cada 2 segundos
+setInterval(() => {
+  const y = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || 0;
+  try { localStorage.setItem('app.scroll', y.toString()); } catch (e) {}
+});
+
+// Guardar también justo antes de recargar
 window.addEventListener('beforeunload', () => {
   const y = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || 0;
-  persistValue('app.scroll', y);
+  try { localStorage.setItem('app.scroll', y.toString()); } catch (e) {}
 });
 
 let yaRestoramos = false;
 const restaurarScrollAlCargar = () => {
   if (state.dataReady && state.session && !yaRestoramos) {
     yaRestoramos = true;
-    const scrollGuardado = loadValue('app.scroll', 0);
-    // Restaurar en el siguiente frame después de que el DOM esté completamente renderizado
-    requestAnimationFrame(() => {
-      window.scrollTo(0, scrollGuardado);
-    });
+    try {
+      const scrollStr = localStorage.getItem('app.scroll');
+      const scroll = scrollStr ? parseInt(scrollStr, 10) : 0;
+      if (scroll > 0) {
+        setTimeout(() => {
+          window.scrollTo(0, scroll);
+        }, 500);
+      }
+    } catch (e) {}
   }
 };
 
