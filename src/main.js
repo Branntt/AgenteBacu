@@ -100,12 +100,10 @@ function render() {
   drawerAbiertoAntes = drawerAbiertoAhora;
 }
 
-// Guardar scroll cada segundo
+// Guardar scroll en sessionStorage cada segundo
 setInterval(() => {
-  const y = document.documentElement.scrollTop || document.body.scrollTop || window.scrollY || 0;
-  if (y > 0) {
-    try { localStorage.setItem('__scroll_pos__', y.toString()); } catch (e) {}
-  }
+  const y = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || 0;
+  try { sessionStorage.setItem('scroll', Math.round(y).toString()); } catch (e) {}
 });
 
 let yaRestoramos = false;
@@ -113,21 +111,12 @@ const restaurarScrollAlCargar = () => {
   if (state.dataReady && state.session && !yaRestoramos) {
     yaRestoramos = true;
     try {
-      const scrollStr = localStorage.getItem('__scroll_pos__');
-      const scroll = scrollStr ? parseInt(scrollStr, 10) : 0;
-
+      const scroll = parseInt(sessionStorage.getItem('scroll') || '0', 10);
       if (scroll > 0) {
-        // Restaurar en múltiples intentos
-        const restaurar = () => {
-          document.documentElement.scrollTop = scroll;
-          document.body.scrollTop = scroll;
-          window.scrollTo(0, scroll);
-        };
-
+        const restaurar = () => window.scrollTo(0, scroll);
         restaurar();
-        setTimeout(restaurar, 100);
-        setTimeout(restaurar, 300);
-        setTimeout(restaurar, 600);
+        setTimeout(restaurar, 200);
+        setTimeout(restaurar, 500);
       }
     } catch (e) {}
   }
