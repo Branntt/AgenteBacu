@@ -211,8 +211,14 @@ export function renderFinanciamiento(state) {
           ${gastosVivirSolo.map(g => `
             <div style="background:rgba(255,255,255,0.05);padding:12px;border-radius:8px;font-size:13px;">
               <div style="display:flex;justify-content:space-between;align-items:center;">
-                <span>${escapeHtml(g.concepto || 'Gasto')}</span>
-                <span style="font-weight:bold;color:var(--rojo);">${fmtMoney(g.monto)}</span>
+                <div style="display:flex;align-items:center;gap:6px;">
+                  <span style="font-size:16px;">${g.emoji}</span>
+                  <span style="font-weight:bold;">${escapeHtml(g.nombre)}</span>
+                </div>
+                <div style="text-align:right;">
+                  <div style="font-weight:bold;color:var(--rojo);">${fmtMoney(g.monto)}</div>
+                  <div style="font-size:11px;opacity:0.6;">Día ${g.dia_vencimiento}</div>
+                </div>
               </div>
             </div>
           `).join('')}
