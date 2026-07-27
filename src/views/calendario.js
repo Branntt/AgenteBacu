@@ -20,7 +20,7 @@ function entryHtml(i, tipo) {
     <div class="cal-entry ${tipo === 'rodaje' ? 'is-rodaje' : ''}" data-act="idea-abrir" data-id="${escapeHtml(i.id)}">
       <span class="cal-entry-bar" style="background:${M.color}"></span>
       <span class="cal-entry-icon" aria-hidden="true">${icono}</span>
-      <div class="cal-entry-title">${tag}${escapeHtml(i.titulo)}</div>
+      <div class="cal-entry-title"><span class="cal-entry-title-icon" aria-hidden="true">${icono}</span>${tag}${escapeHtml(i.titulo)}</div>
       <div class="cal-entry-meta">
         <span class="cal-entry-meta-text">${escapeHtml(i.formato)} · ${escapeHtml(marcaTxt)}</span>
         ${flags ? `<span class="cal-entry-flags">${flags}</span>` : ''}
@@ -35,7 +35,7 @@ function entryClienteHtml(c) {
     <div class="cal-entry is-rodaje" data-act="nav-go" data-view="clientes" title="Editar en la pestaña Clientes">
       <span class="cal-entry-bar" style="background:var(--verde)"></span>
       <span class="cal-entry-icon" aria-hidden="true">🎥</span>
-      <div class="cal-entry-title"><span class="cal-entry-tag">Grabación</span>${escapeHtml(c.nombre || 'Cliente')}</div>
+      <div class="cal-entry-title"><span class="cal-entry-title-icon" aria-hidden="true">🎥</span><span class="cal-entry-tag">Grabación</span>${escapeHtml(c.nombre || 'Cliente')}</div>
       <div class="cal-entry-meta"><span class="cal-entry-meta-text">${escapeHtml(c.proyecto || 'Proyecto sin definir')}</span></div>
     </div>
   `;
@@ -51,7 +51,7 @@ function entryTareaHtml(t) {
     <div class="cal-entry is-tarea" data-act="nav-go" data-view="panorama" title="Editar en Panorama">
       <span class="cal-entry-bar" style="background:var(--rojo)"></span>
       <span class="cal-entry-icon" aria-hidden="true">📌</span>
-      <div class="cal-entry-title"><span class="cal-entry-tag entrega">Entrega</span>${escapeHtml(t.texto || 'Tarea')}</div>
+      <div class="cal-entry-title"><span class="cal-entry-title-icon" aria-hidden="true">📌</span><span class="cal-entry-tag entrega">Entrega</span>${escapeHtml(t.texto || 'Tarea')}</div>
     </div>
   `;
 }
@@ -66,8 +66,9 @@ function entryClaseHtml(clase) {
     <div class="cal-entry is-clase" data-act="clase-info" title="Horario fijo de clase">
       <span class="cal-entry-bar" style="background:var(--azul)"></span>
       <span class="cal-entry-icon" aria-hidden="true">🎓</span>
-      <div class="cal-entry-title"><span class="cal-entry-tag clase">${escapeHtml(clase.horaInicio)}–${escapeHtml(clase.horaFin)}</span>${escapeHtml(clase.materia)}</div>
-      <div class="cal-entry-meta"><span class="cal-entry-meta-text">${escapeHtml(clase.profesor)} · Salón ${escapeHtml(clase.salon)}</span></div>
+      <div class="cal-entry-title"><span class="cal-entry-title-icon" aria-hidden="true">🎓</span><span class="cal-entry-tag clase">${escapeHtml(clase.horaInicio)}–${escapeHtml(clase.horaFin)}</span>${escapeHtml(clase.materia)}</div>
+      <div class="cal-entry-meta"><span class="cal-entry-meta-text">${escapeHtml(clase.profesor)}</span></div>
+      <div class="cal-entry-meta"><span class="cal-entry-meta-text wrap">📍 Salón ${escapeHtml(clase.salon)} · ${escapeHtml(clase.lugar)}</span></div>
     </div>
   `;
 }
