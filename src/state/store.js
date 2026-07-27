@@ -59,7 +59,18 @@ export const state = {
     { id: 'g8', nombre: 'Luz (CRÍTICO)', emoji: '💡', monto: 150000, dia_vencimiento: 12 },
     { id: 'g9', nombre: 'Agua (CRÍTICO)', emoji: '💧', monto: 50000, dia_vencimiento: 12 },
     { id: 'g10', nombre: 'Teléfono', emoji: '📱', monto: 50000, dia_vencimiento: 15 },
-    { id: 'g11', nombre: 'Ropa', emoji: '👕', monto: 150000, dia_vencimiento: 15 }
+    { id: 'g11', nombre: 'Ropa', emoji: '👕', monto: 150000, dia_vencimiento: 15 },
+    { id: 'g12', nombre: 'Mango (gato)', emoji: '🐱', monto: 140000, dia_vencimiento: 1 },
+    { id: 'g13', nombre: 'Gym', emoji: '💪', monto: 100000, dia_vencimiento: 1 },
+    { id: 'g14', nombre: 'CapCut', emoji: '✂️', monto: 29866, dia_vencimiento: 1 },
+    { id: 'g15', nombre: 'Claude (suscripción)', emoji: '🤖', monto: 99888, dia_vencimiento: 2 },
+    { id: 'g16', nombre: 'Lightroom', emoji: '🖼️', monto: 8515, dia_vencimiento: 6 },
+    { id: 'g17', nombre: 'Apple.com', emoji: '🍎', monto: 9022, dia_vencimiento: 15 },
+    { id: 'g18', nombre: 'Gmail', emoji: '📧', monto: 2015, dia_vencimiento: 16 },
+    { id: 'g19', nombre: 'Google Play', emoji: '🎮', monto: 8900, dia_vencimiento: 21 },
+    { id: 'g20', nombre: 'Manejo tarjeta', emoji: '💳', monto: 11000, dia_vencimiento: 11 },
+    { id: 'g21', nombre: 'Spotify (÷6)', emoji: '🎵', monto: 5000, dia_vencimiento: 12 },
+    { id: 'g22', nombre: 'Aseo Personal (Shampú 15k/2m + Jabón 45k/2m + Cuchillas 9k/2m + Desodorante 50k + Contorno 80k)', emoji: '🧴', monto: 199000, dia_vencimiento: 28 }
   ],
   gastosRecurrentes: [
     { id: 'gr1', nombre: 'Mango (gato - comida + arena)', emoji: '🐱', monto: 140000, dia_vencimiento: 1 },
