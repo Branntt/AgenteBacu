@@ -47,6 +47,15 @@ export const state = {
     ahorro: 200000,
     ingresosMensuales: 0
   },
+  gastosVivirSolo: [
+    { id: 'g1', nombre: 'Arriendo', emoji: '🏠', monto: 700000, dia_vencimiento: 5 },
+    { id: 'g2', nombre: 'Luz', emoji: '💡', monto: 150000, dia_vencimiento: 12 },
+    { id: 'g3', nombre: 'Agua', emoji: '💧', monto: 50000, dia_vencimiento: 12 },
+    { id: 'g4', nombre: 'Internet', emoji: '📡', monto: 80000, dia_vencimiento: 8 },
+    { id: 'g5', nombre: 'Teléfono', emoji: '📱', monto: 50000, dia_vencimiento: 15 },
+    { id: 'g6', nombre: 'Comida', emoji: '🍽️', monto: 450000, dia_vencimiento: 1 },
+    { id: 'g7', nombre: 'Transporte', emoji: '🚌', monto: 120000, dia_vencimiento: 1 }
+  ],
   historialAbierto: false,
   historialBusqueda: '',
   tema: loadValue('sistemaEditorial.tema', 'Cine crudo'),
@@ -703,5 +712,26 @@ export const actions = {
   updPresupuesto: (campo, valor) => {
     state.presupuesto = { ...state.presupuesto, [campo]: parseN(valor) };
     notify();
+  },
+
+  gastoNuevo: () => {
+    const id = 'g' + Date.now();
+    state.gastosVivirSolo = state.gastosVivirSolo.concat([
+      { id, nombre: 'Nuevo gasto', emoji: '💰', monto: 0, dia_vencimiento: 1 }
+    ]);
+    notify();
+  },
+
+  eliminarGasto: (id) => {
+    state.gastosVivirSolo = state.gastosVivirSolo.filter(g => g.id !== id);
+    notify();
+  },
+
+  updGasto: (id, campo, valor) => {
+    const gasto = state.gastosVivirSolo.find(g => g.id === id);
+    if (gasto) {
+      gasto[campo] = campo === 'monto' || campo === 'dia_vencimiento' ? parseN(valor) : valor;
+      notify();
+    }
   }
 };
