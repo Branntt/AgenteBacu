@@ -184,13 +184,24 @@ async function cargarDatos() {
 function verificarIdeasPorFecha() {
   const hoy = hoyStr();
   const revisadas = loadValue('bacu.ideasRevisadas', []);
-  const estadosFinales = ['edicion', 'entrega', 'publicada', 'descartada'];
 
-  // Ideas cuya fecha (de rodaje o publicación) ya pasó y aún no se han revisado
-  const pendientes = state.ideas.filter(idea => {
-    const f = idea.fechaRodaje || idea.fecha;
-    return f && f < hoy && !estadosFinales.includes(idea.estado) && !revisadas.includes(idea.id);
-  });
+  // Ideas cuya fecha (rodaje o publicación) ya pasó y no están en un estado final
+  const estadosFinalesIdea = ['edicion', 'entrega', 'publicada', 'descartada'];
+  const ideasVencidas = state.ideas
+    .filter(i => {
+      const f = i.fechaRodaje || i.fecha;
+      return f && f < hoy && !estadosFinalesIdea.includes(i.estado) && !revisadas.includes(i.id);
+    })
+    .map(i => ({ tipo: 'idea', id: i.id, titulo: i.titulo, marca: i.marca, fecha: i.fechaRodaje || i.fecha }));
+
+  // Grabaciones de clientes con fecha pasada que siguen sin pasar a edición
+  const estadosYaGrabados = ['conversacion', 'proyecto_edicion', 'entregado', 'por_pagar', 'ya_pagos'];
+  const grabacionesVencidas = state.clientes
+    .filter(c => c.fecha_grabacion && c.fecha_grabacion < hoy && !estadosYaGrabados.includes(c.estado) && !revisadas.includes(c.id))
+    .map(c => ({ tipo: 'cliente', id: c.id, titulo: c.nombre + (c.proyecto ? ' — ' + c.proyecto : ''), marca: null, fecha: c.fecha_grabacion }));
+
+  const pendientes = ideasVencidas.concat(grabacionesVencidas);
+  console.log('[BACU] pendientes por revisar:', pendientes.length, pendientes);
 
   if (pendientes.length > 0) {
     setState({ revisionIdeasPendientes: pendientes, notificacionBacu: 'pregunta' });
@@ -724,23 +735,39 @@ export const actions = {
   cerrarRevisionIdeas: () => setState({ revisionIdeasModal: false, revisionIdeasPendientes: [] }),
 
   cerrarNotificacionBacu: () => setState({ notificacionBacu: null }),
-  bacuResponder: (ideaId, grabo) => {
-    // Grabé → pasa a "Por editar" · Procrastiné → queda en "Por grabar"
-    actions.updIdea(ideaId, { estado: grabo ? 'edicion' : 'grabar' });
+  bacuResponder: (itemId, grabo) => {
+    const hoy = hoyStr();
+    const item = state.revisionIdeasPendientes.find(p => p.id === itemId);
 
-    // No volver a preguntar por esta idea
+    if (item && item.tipo === 'cliente') {
+      // Grabé → el proyecto pasa a edición · Procrastiné → se libera la fecha para reagendar
+      actions.updCliente(itemId, grabo ? { estado: 'proyecto_edicion' } : { fecha_grabacion: null });
+    } else {
+      // Grabé → "Por editar" · Procrastiné → "Por grabar" y se limpia la fecha vencida
+      const idea = state.ideas.find(i => i.id === itemId);
+      if (grabo) {
+        actions.updIdea(itemId, { estado: 'edicion', grabacion: true });
+      } else {
+        const patch = { estado: 'grabar' };
+        if (idea && idea.fechaRodaje && idea.fechaRodaje < hoy) patch.fechaRodaje = null;
+        if (idea && idea.fecha && idea.fecha < hoy) patch.fecha = null;
+        actions.updIdea(itemId, patch);
+      }
+    }
+
+    // No volver a preguntar por este item
     const revisadas = loadValue('bacu.ideasRevisadas', []);
-    if (!revisadas.includes(ideaId)) {
-      revisadas.push(ideaId);
+    if (!revisadas.includes(itemId)) {
+      revisadas.push(itemId);
       persistValue('bacu.ideasRevisadas', revisadas);
     }
 
-    const pendientes = state.revisionIdeasPendientes.filter(i => i.id !== ideaId);
+    const pendientes = state.revisionIdeasPendientes.filter(i => i.id !== itemId);
     setState({
       revisionIdeasPendientes: pendientes,
       notificacionBacu: grabo ? 'grabé' : 'procrastiné'
     });
-    // Tras el mensaje de feedback, pasa a la siguiente idea o cierra
+    // Tras el mensaje de feedback, pasa al siguiente item o cierra
     setTimeout(() => {
       setState({ notificacionBacu: state.revisionIdeasPendientes.length ? 'pregunta' : null });
     }, 2200);

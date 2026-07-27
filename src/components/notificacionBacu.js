@@ -8,40 +8,40 @@ export function renderNotificacionBacu(state) {
   if (state.notificacionBacu === 'grabé' || state.notificacionBacu === 'procrastiné') {
     const grabo = state.notificacionBacu === 'grabé';
     return `
-      <div class="bacu-noti" style="border-color:${grabo ? 'var(--verde)' : 'var(--naranja)'};">
+      <div class="bacu-noti" style="border-left-color:${grabo ? 'var(--verde)' : 'var(--naranja)'};">
         <div class="bacu-noti-titulo">BACU</div>
         <div style="font-size:14px;font-weight:bold;text-align:center;padding:6px 0;">
-          ${grabo ? '✅ ¡Grabaste! Pasa a Por editar 🔥' : '⏰ Procrastinaste. Sigue en Por grabar 💪'}
+          ${grabo ? '✅ ¡Grabaste! Pasa a edición 🔥' : '⏰ Quedó pendiente. Fecha liberada para reagendar 💪'}
         </div>
       </div>
       ${estiloNoti()}
     `;
   }
 
-  // Pregunta por la primera idea pendiente
-  const idea = (state.revisionIdeasPendientes || [])[0];
-  if (!idea) return '';
+  // Pregunta por el primer item pendiente (idea o grabación de cliente)
+  const item = (state.revisionIdeasPendientes || [])[0];
+  if (!item) return '';
 
-  const M = MARCAS[idea.marca];
-  const fecha = idea.fechaRodaje || idea.fecha;
+  const M = item.marca ? MARCAS[item.marca] : null;
   const total = state.revisionIdeasPendientes.length;
+  const tipoLabel = item.tipo === 'cliente' ? 'GRABACIÓN CLIENTE' : 'IDEA';
 
   return `
     <div class="bacu-noti">
       <div style="display:flex;justify-content:space-between;align-items:center;">
-        <div class="bacu-noti-titulo">BACU</div>
+        <div class="bacu-noti-titulo">BACU · ${tipoLabel}</div>
         <button data-act="cerrar-notificacion-bacu" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;padding:4px 8px;">✕</button>
       </div>
       <div style="font-size:15px;font-weight:bold;margin:6px 0 2px;">🎬 ¿Grabaste o procrastinaste?</div>
       <div style="font-size:12px;opacity:0.85;margin-bottom:12px;">
-        <span class="dot" style="width:8px;height:8px;background:${M ? M.color : 'var(--verde)'};margin-right:6px;"></span>
-        ${escapeHtml(idea.titulo || 'Sin título')} · era para el ${escapeHtml(fmtFecha(fecha, MESES))}${total > 1 ? ` · ${total} pendientes` : ''}
+        ${M ? `<span class="dot" style="width:8px;height:8px;background:${M.color};margin-right:6px;"></span>` : '🎥 '}
+        ${escapeHtml(item.titulo || 'Sin título')} · era para el ${escapeHtml(fmtFecha(item.fecha, MESES))}${total > 1 ? ` · ${total} pendientes` : ''}
       </div>
       <div style="display:flex;gap:10px;">
-        <button data-act="grabe-bacu" data-id="${escapeHtml(idea.id)}" class="bacu-noti-btn" style="border-color:var(--verde);color:var(--verde);">
+        <button data-act="grabe-bacu" data-id="${escapeHtml(item.id)}" class="bacu-noti-btn" style="border-color:var(--verde);color:var(--verde);">
           ✅ Grabé
         </button>
-        <button data-act="procrastine-bacu" data-id="${escapeHtml(idea.id)}" class="bacu-noti-btn" style="border-color:var(--naranja);color:var(--naranja);">
+        <button data-act="procrastine-bacu" data-id="${escapeHtml(item.id)}" class="bacu-noti-btn" style="border-color:var(--naranja);color:var(--naranja);">
           ⏰ Procrastiné
         </button>
       </div>
