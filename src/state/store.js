@@ -4,7 +4,8 @@ import { mesActual, hoyStr, lunesDe, sumarDias } from '../lib/idea.js';
 import { supabase } from '../lib/supabaseClient.js';
 import { generarCuentaCobroPDF, OBSERVACIONES_DEFAULT } from '../lib/pdfInvoice.js';
 import { generarListadoClientesPDF } from '../lib/pdfListadoClientes.js';
-import { MESES, COLORES_TAREA } from '../data/constants.js';
+import { MESES, COLORES_TAREA, familiaDeFormato } from '../data/constants.js';
+import { generarIdea } from '../lib/ia.js';
 
 export const state = {
   view: 'calendario',
@@ -23,6 +24,10 @@ export const state = {
   snapDraft: null,
   rodajeDraft: null,
   cuentaCobroDraft: null,
+  iaDraft: null,
+  iaBusy: false,
+  iaError: null,
+  iaResultado: null,
   cuentasCobro: [],
   movimientosFinanciamiento: [],
   deudas: [],
@@ -630,5 +635,56 @@ export const actions = {
       setState({ snapDraft: null });
       supabase.from('snaps').insert(nuevo).then(({ error }) => marcarGuardado(!error));
     }
+  },
+
+  iaAbrir: () => setState({
+    iaDraft: { marca: state.filtroGuiones !== 'todas' ? state.filtroGuiones : 'brant', tema: '', modo: 'idea', formato: '' },
+    iaResultado: null,
+    iaError: null
+  }),
+  iaCerrar: () => setState({ iaDraft: null, iaResultado: null, iaError: null }),
+  iaSetCampo: (campo, val) => setState({ iaDraft: { ...state.iaDraft, [campo]: val } }),
+
+  iaGenerar: async () => {
+    const D = state.iaDraft;
+    if (!D) return;
+    setState({ iaBusy: true, iaError: null });
+    try {
+      const ideas = await generarIdea(D);
+      setState({ iaBusy: false, iaResultado: ideas });
+    } catch (e) {
+      setState({ iaBusy: false, iaError: 'No se pudo generar. Intenta de nuevo.' });
+    }
+  },
+
+  iaConfirmar: () => {
+    const D = state.iaDraft;
+    const ideas = state.iaResultado;
+    if (!D || !ideas || !ideas.length) return;
+    const nuevas = ideas.map((idea, i) => ({
+      id: 'u' + Date.now() + '_' + i,
+      marca: D.marca,
+      colab: '',
+      titulo: idea.titulo,
+      nota: '',
+      gancho: '',
+      objetivos: idea.objetivos || [],
+      formato: idea.formato,
+      estado: 'desarrollo',
+      fecha: null,
+      fechaRodaje: null,
+      preguntas: [null, null, null, null],
+      tiempo: '',
+      grabacion: false,
+      edicion: false,
+      prioridad: 'Media',
+      etapa: 0,
+      guion: idea.guion
+    }));
+    state.ideas = nuevas.concat(state.ideas);
+    setState({ iaDraft: null, iaResultado: null, view: 'guiones', filtroGuiones: D.marca });
+    nuevas.forEach((idea) => {
+      supabase.from('ideas').insert(toDbIdea(idea)).then(({ error }) => marcarGuardado(!error));
+    });
   }
 };

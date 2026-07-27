@@ -14,6 +14,7 @@ import { renderGuiones } from './views/guiones.js';
 import { renderCalendario } from './views/calendario.js';
 import { renderClientes } from './views/clientes.js';
 import { renderFinanciamiento } from './views/financiamiento.js';
+import { renderIAModal } from './views/iaModal.js';
 
 const VIEWS = {
   panorama: renderPanorama,
@@ -85,12 +86,13 @@ function render() {
       ${renderRodajeRapido(state)}
       ${renderCuentaCobro(state)}
       ${renderHistorialCuentas(state)}
+      ${renderIAModal(state)}
     </div>
   `;
   root.scrollTop = scroll;
   restaurarFoco(foco);
 
-  const drawerAbiertoAhora = !!(state.selId || state.clienteSelId || state.guionId || state.rodajeDraft || state.cuentaCobroDraft || state.historialAbierto);
+  const drawerAbiertoAhora = !!(state.selId || state.clienteSelId || state.guionId || state.rodajeDraft || state.cuentaCobroDraft || state.historialAbierto || state.iaDraft);
   if (drawerAbiertoAhora && !drawerAbiertoAntes) {
     const drawer = root.querySelector('.drawer');
     const primero = drawer && drawer.querySelector(FOCUSABLE);
@@ -110,7 +112,7 @@ if ('serviceWorker' in navigator) {
 }
 
 document.addEventListener('keydown', e => {
-  const drawerAbierto = state.selId || state.clienteSelId || state.guionId || state.rodajeDraft || state.cuentaCobroDraft;
+  const drawerAbierto = state.selId || state.clienteSelId || state.guionId || state.rodajeDraft || state.cuentaCobroDraft || state.iaDraft;
   if (!drawerAbierto) return;
 
   if (e.key === 'Escape') {
@@ -119,6 +121,7 @@ document.addEventListener('keydown', e => {
     if (state.guionId) actions.cerrarGuion();
     if (state.rodajeDraft) actions.rodajeRapidoCerrar();
     if (state.cuentaCobroDraft) actions.cuentaCobroCerrar();
+    if (state.iaDraft) actions.iaCerrar();
     return;
   }
 
@@ -219,6 +222,10 @@ root.addEventListener('click', e => {
       if (cc) actions.cuentaCobroDescargar(cc);
       break;
     }
+    case 'ia-abrir': actions.iaAbrir(); break;
+    case 'ia-cerrar': actions.iaCerrar(); break;
+    case 'ia-generar': actions.iaGenerar(); break;
+    case 'ia-confirmar': actions.iaConfirmar(); break;
   }
 });
 
@@ -295,6 +302,10 @@ root.addEventListener('change', e => {
       case 'filtro-calendario-set': actions.setFiltroCalendario(value); break;
       case 'filtro-guiones-set': actions.setFiltroGuiones(value); break;
       case 'guiones-vista-set': actions.setGuionesVista(value); break;
+      case 'ia-set-marca': actions.iaSetCampo('marca', value); break;
+      case 'ia-set-modo': actions.iaSetCampo('modo', value); break;
+      case 'ia-set-tema': actions.iaSetCampo('tema', value); break;
+      case 'ia-set-formato': actions.iaSetCampo('formato', value); break;
     }
     return;
   }
