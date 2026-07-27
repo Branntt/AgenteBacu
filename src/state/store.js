@@ -65,7 +65,7 @@ export const state = {
     { id: 'gr5', nombre: 'Google Play', emoji: '🎮', monto: 8900, dia_vencimiento: 23 },
     { id: 'gr6', nombre: 'CapCut', emoji: '✂️', monto: 29866, dia_vencimiento: 1 },
     { id: 'gr7', nombre: 'Claude (suscripción)', emoji: '🤖', monto: 99888, dia_vencimiento: 2 },
-    { id: 'gr8', nombre: 'Manejo tarjeta', emoji: '💳', monto: 50000, dia_vencimiento: 20 },
+    { id: 'gr8', nombre: 'Manejo tarjeta', emoji: '💳', monto: 11000, dia_vencimiento: 11 },
     { id: 'gr9', nombre: 'Spotify (plan familiar ÷6)', emoji: '🎵', monto: 5000, dia_vencimiento: 12 },
     { id: 'gr10', nombre: 'Apple.com', emoji: '🍎', monto: 9022, dia_vencimiento: 15 }
   ],
