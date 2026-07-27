@@ -16,6 +16,7 @@ import { renderCalendario } from './views/calendario.js';
 import { renderClientes } from './views/clientes.js';
 import { renderFinanciamiento } from './views/financiamiento.js';
 import { renderIAModal } from './views/iaModal.js';
+import { renderRevisionIdeasModal } from './components/revisionIdeasModal.js';
 
 const VIEWS = {
   panorama: renderPanorama,
@@ -87,6 +88,7 @@ function render() {
       ${renderCuentaCobro(state)}
       ${renderHistorialCuentas(state)}
       ${renderIAModal(state)}
+      ${renderRevisionIdeasModal(state)}
     </div>
   `;
   restaurarFoco(foco);
@@ -263,6 +265,18 @@ root.addEventListener('click', e => {
     case 'ia-cerrar': actions.iaCerrar(); break;
     case 'ia-generar': actions.iaGenerar(); break;
     case 'ia-confirmar': actions.iaConfirmar(); break;
+    case 'cerrar-revision-ideas': actions.cerrarRevisionIdeas(); break;
+    case 'actualizar-estado-idea': {
+      const { id, estado } = el.dataset;
+      actions.actualizarEstadoIdea(id, estado);
+      const pendientes = state.revisionIdeasPendientes.filter(i => i.id !== id);
+      if (pendientes.length > 0) {
+        actions.abrirRevisionIdeas(pendientes);
+      } else {
+        actions.cerrarRevisionIdeas();
+      }
+      break;
+    }
   }
 });
 

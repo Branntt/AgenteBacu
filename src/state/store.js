@@ -177,6 +177,21 @@ async function cargarDatos() {
   state.dataReady = true;
   notify();
   suscribirRealtime();
+  verificarIdeasPorFecha();
+}
+
+function verificarIdeasPorFecha() {
+  const hoy = hoyStr();
+  const ideasViejas = state.ideas.filter(idea =>
+    idea.fecha && idea.fecha < hoy && !idea.revisada
+  );
+
+  if (ideasViejas.length > 0) {
+    // Abrir modal de revisión automáticamente
+    setTimeout(() => {
+      actions.abrirRevisionIdeas(ideasViejas);
+    }, 500);
+  }
 }
 
 function suscribirRealtime() {
