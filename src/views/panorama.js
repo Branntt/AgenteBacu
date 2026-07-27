@@ -105,6 +105,27 @@ export function renderPanorama(state) {
 
   // Seguimiento de hábitos: las cintas de tareas cumplidas
   const tareasHechas = tareas.filter(t => t.hecha).length;
+
+  // Calendario: qué hay este mes
+  const rodajesMes = ideas.filter(i => i.fechaRodaje && i.fechaRodaje.startsWith(state.month) && i.estado !== 'descartada').length;
+  const grabClientesMes = cls.filter(c => c.fecha_grabacion && c.fecha_grabacion.startsWith(state.month)).length;
+  const entregasPendientes = tareas.filter(t => t.fecha && !t.hecha).length;
+
+  // Estrategia por módulo (estados viejos mapeados al equivalente)
+  const cuentaIdeas = estados => ideasActivas.filter(i => estados.includes(i.estado)).length;
+  // Clientes por módulo
+  const cuentaCls = estados => cls.filter(c => estados.includes(c.estado)).length;
+
+  // Gastos recurrentes del mes
+  const recurrentesTotal = (state.gastosRecurrentes || []).reduce((s, g) => s + (Number(g.monto) || 0), 0);
+
+  // Fila de estadística compacta para el centro de stats
+  const statRow = (label, valor, color) => `
+    <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:5px 0;border-bottom:1px solid var(--line);">
+      <span style="opacity:0.65;">${label}</span>
+      <span style="font-weight:600;${color ? `color:${color};` : ''}">${valor}</span>
+    </div>
+  `;
   const D = state.snapDraft;
 
   const snapFormHtml = D ? `
@@ -252,50 +273,78 @@ export function renderPanorama(state) {
 
   return `
     <main class="panorama">
-      <div class="hero-grid">
-        <h1 class="hero-title serif">Un calendario dice qué publicar.<br>Un sistema decide <em>qué merece existir</em>.</h1>
-        <div class="hero-stats">
-          <div>
-            <div class="stat-value">${enMes.length}</div>
-            <div class="mono-label">publicaciones en ${MESES[mesNum - 1]}</div>
-          </div>
-          <div>
-            <div class="stat-value muted">${diasMes - diasConPub}</div>
-            <div class="mono-label">días en silencio — a propósito</div>
-          </div>
-        </div>
-      </div>
+      <div class="section-title" style="margin-top:8px;">Centro de estadísticas</div>
+      <div class="vista-sub">El resumen de todo lo importante, pestaña por pestaña. Toca una tarjeta para ir allá.</div>
 
-      <div class="vitales-grid">
-        <div class="vital-card">
-          <span class="mono-label">Esta semana</span>
-          <div class="vital-value ${orgSemana.clase}">${orgSemana.label}</div>
-          <div class="vital-detail">${orgSemana.estaSemana} programada${orgSemana.estaSemana === 1 ? '' : 's'} · ${orgSemana.prioridadSinFecha} prioridad alta sin fecha</div>
+      <div class="stats-centro">
+        <!-- FINANZAS -->
+        <div class="panel" data-act="nav-go" data-view="financiamiento" style="cursor:pointer;">
+          <span class="mono-label">💰 Finanzas</span>
+          <div class="vital-value ${finTotal.patrimonio < 0 ? 'alto' : 'verde'}" style="margin-bottom:10px;">${fmtMoney(finTotal.patrimonio)}</div>
+          ${statRow('En bolsillo', fmtMoney(finTotal.efectivo), 'var(--verde)')}
+          ${statRow('Te deben', fmtMoney(finTotal.teDeben), 'var(--azul)')}
+          ${statRow('Debes', fmtMoney(finTotal.debes), 'var(--rojo)')}
+          ${statRow('Recurrentes/mes', fmtMoney(recurrentesTotal), 'var(--rojo)')}
         </div>
-        <div class="vital-card">
-          <span class="mono-label">Finanzas — tu bolsillo</span>
-          <div class="vital-value ${finTotal.patrimonio < 0 ? 'alto' : 'verde'}">${fmtMoney(finTotal.patrimonio)}</div>
-          <div class="vital-detail">${fmtMoney(finTotal.efectivo)} efectivo · ${fmtMoney(finTotal.teDeben)} te deben · ${fmtMoney(finTotal.debes)} debes</div>
+
+        <!-- ESTRATEGIA -->
+        <div class="panel" data-act="nav-go" data-view="guiones" style="cursor:pointer;">
+          <span class="mono-label">🎬 Estrategia</span>
+          <div class="vital-value" style="margin-bottom:10px;">${ideasActivas.length} idea${ideasActivas.length === 1 ? '' : 's'}</div>
+          ${statRow('Prospecto', cuentaIdeas(['prospecto']))}
+          ${statRow('En desarrollo', cuentaIdeas(['desarrollo', 'lista']))}
+          ${statRow('Grabación', cuentaIdeas(['grabar', 'produccion']), '#1FB6CE')}
+          ${statRow('Por editar', cuentaIdeas(['edicion']), '#EFC94C')}
+          ${statRow('Por confirmar entrega', cuentaIdeas(['entrega']), '#E8641B')}
+          ${statRow('Por pagar', cuentaIdeas(['por_pagar']), 'var(--rojo)')}
+          ${statRow('Ya pagó', cuentaIdeas(['ya_pago', 'publicada']), 'var(--verde)')}
         </div>
-        <div class="vital-card">
-          <span class="mono-label">Estrategia</span>
-          <div class="vital-value">${ideasActivas.length} idea${ideasActivas.length === 1 ? '' : 's'} activa${ideasActivas.length === 1 ? '' : 's'}</div>
-          <div class="vital-detail">${resEstrategia.desarrollo} en desarrollo · ${resEstrategia.grabar} grabación · ${resEstrategia.edicion} edición · ${resEstrategia.porCerrar} por cerrar</div>
+
+        <!-- CLIENTES -->
+        <div class="panel" data-act="nav-go" data-view="clientes" style="cursor:pointer;">
+          <span class="mono-label">👥 Clientes</span>
+          <div class="vital-value" style="margin-bottom:10px;">${clientesActivos.length} activo${clientesActivos.length === 1 ? '' : 's'}</div>
+          ${statRow('Prospecto', cuentaCls(['prospecto']))}
+          ${statRow('En conversación', cuentaCls(['conversacion']))}
+          ${statRow('Grabación', cuentaCls(['grabacion']), '#1FB6CE')}
+          ${statRow('Por editar', cuentaCls(['proyecto_edicion']), '#EFC94C')}
+          ${statRow('Por confirmar entrega', cuentaCls(['confirmar_entrega']), '#E8641B')}
+          ${statRow('Por pagar', cuentaCls(['por_pagar']) + ' · ' + fmtMoney(porCobrarTotal), 'var(--rojo)')}
+          ${statRow('Cerrados', cuentaCls(['ya_pagos', 'entregado']), 'var(--verde)')}
         </div>
-        <div class="vital-card">
-          <span class="mono-label">Clientes</span>
-          <div class="vital-value">${clientesActivos.length} activo${clientesActivos.length === 1 ? '' : 's'}</div>
-          <div class="vital-detail">${clientesProspectos} prospecto${clientesProspectos === 1 ? '' : 's'} · ${fmtMoney(porCobrarTotal)} por cobrar</div>
+
+        <!-- CALENDARIO -->
+        <div class="panel" data-act="nav-go" data-view="calendario" style="cursor:pointer;">
+          <span class="mono-label">📅 Calendario — ${MESES[mesNum - 1]}</span>
+          <div class="vital-value" style="margin-bottom:10px;">${enMes.length} publicación${enMes.length === 1 ? '' : 'es'}</div>
+          ${statRow('Rodajes este mes', rodajesMes)}
+          ${statRow('Grabaciones de clientes', grabClientesMes, '#1FB6CE')}
+          ${statRow('Entregas pendientes', entregasPendientes, entregasPendientes > 0 ? 'var(--rojo)' : 'var(--verde)')}
+          ${statRow('Días sin publicar', diasMes - diasConPub)}
         </div>
-        <div class="vital-card">
-          <span class="mono-label">Seguidores — las 3 marcas</span>
-          <div class="vital-value verde">${totalSeg != null ? fmtNum(totalSeg) : '—'}</div>
-          <div class="vital-detail">${deltaTotalSeg != null ? (deltaTotalSeg >= 0 ? '+' : '') + fmtNum(deltaTotalSeg) + ' desde el último registro' : 'carga un registro para ver el cambio'}</div>
+
+        <!-- SEGUIDORES -->
+        <div class="panel">
+          <span class="mono-label">📈 Seguidores — total</span>
+          <div class="vital-value verde" style="margin-bottom:10px;">${totalSeg != null ? fmtNum(totalSeg) : '—'}</div>
+          ${['brant', 'bacu', 'novena'].map(k => {
+            const cur = ultimoSnap && ultimoSnap[k] ? ultimoSnap[k].seg : null;
+            const antes = penultimoSnap && penultimoSnap[k] ? penultimoSnap[k].seg : null;
+            const d = cur != null && antes != null ? cur - antes : null;
+            const deltaTxt = d != null ? ` (${d >= 0 ? '+' : ''}${fmtNum(d)})` : '';
+            return statRow(MARCAS[k].nombre, (cur != null ? fmtNum(cur) : '—') + deltaTxt, MARCAS[k].color);
+          }).join('')}
+          ${statRow('Cambio total', deltaTotalSeg != null ? (deltaTotalSeg >= 0 ? '+' : '') + fmtNum(deltaTotalSeg) : '—', deltaTotalSeg != null && deltaTotalSeg < 0 ? 'var(--rojo)' : 'var(--verde)')}
         </div>
-        <div class="vital-card">
-          <span class="mono-label">Hábitos — tareas</span>
-          <div class="vital-value ${tareas.length && tareasHechas === tareas.length ? 'ok' : ''}">${tareasHechas} / ${tareas.length}</div>
-          <div class="vital-detail">cintas cumplidas en la pared</div>
+
+        <!-- SEMANA Y HÁBITOS -->
+        <div class="panel">
+          <span class="mono-label">✅ Semana y hábitos</span>
+          <div class="vital-value ${orgSemana.clase}" style="margin-bottom:10px;">${orgSemana.label}</div>
+          ${statRow('Programadas esta semana', orgSemana.estaSemana)}
+          ${statRow('Prioridad alta sin fecha', orgSemana.prioridadSinFecha, orgSemana.prioridadSinFecha > 0 ? 'var(--rojo)' : 'var(--verde)')}
+          ${statRow('Tareas cumplidas', tareasHechas + ' / ' + tareas.length, tareas.length && tareasHechas === tareas.length ? 'var(--verde)' : undefined)}
+          ${statRow('Metas cumplidas', (state.metasPersonales || []).filter(m => m.cumplida).length + ' / ' + (state.metasPersonales || []).length)}
         </div>
       </div>
 

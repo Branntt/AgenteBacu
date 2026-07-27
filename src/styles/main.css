@@ -389,6 +389,16 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
   .vitales-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
+/* Centro de estadísticas — un panel por pestaña */
+.stats-centro { display: grid; grid-template-columns: 1fr; gap: 16px; margin-bottom: 40px; }
+.stats-centro .panel:hover { border-color: var(--line2); }
+@media (min-width: 600px) {
+  .stats-centro { grid-template-columns: repeat(2, 1fr); }
+}
+@media (min-width: 1200px) {
+  .stats-centro { grid-template-columns: repeat(3, 1fr); }
+}
+
 /* tareas — "cintas" de colores, como la pared, pero digital */
 .tareas-pared { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 32px; }
 .tarea-cinta {
