@@ -4,7 +4,7 @@ import { hoyStr, sumarDias, valida } from '../lib/idea.js';
 
 const DIAS_SEMANA = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 const VISTAS = [['mes', 'Mes'], ['semana', 'Semana'], ['agenda', 'Agenda']];
-const FILTROS = [['todas', 'Todas'], ['brant', 'Brant'], ['bacu', 'Bacu'], ['novena', 'Novena']];
+const FILTROS = [['todas', 'Todas'], ['brant', 'Brant'], ['bacu', 'Bacu'], ['novena', 'Novena'], ['universidad', 'Universidad']];
 
 // Filtro de marca activo (se fija en renderCalendario) — con una marca elegida, clases/tareas se ocultan
 let filtroActivo = 'todas';
@@ -67,7 +67,7 @@ function tareasDeDia(tareas, fs) {
 function entryClaseHtml(clase) {
   return `
     <div class="cal-entry is-clase" data-act="clase-info" title="Horario fijo de clase">
-      <span class="cal-entry-bar" style="background:var(--naranja)"></span>
+      <span class="cal-entry-bar" style="background:var(--azul)"></span>
       <span class="cal-entry-icon" aria-hidden="true">🎓</span>
       <div class="cal-entry-title"><span class="cal-entry-title-icon" aria-hidden="true">🎓</span><span class="cal-entry-tag clase">${escapeHtml(clase.horaInicio)}–${escapeHtml(clase.horaFin)}</span>${escapeHtml(clase.materia)}</div>
       <div class="cal-entry-meta"><span class="cal-entry-meta-text">${escapeHtml(clase.profesor)}</span></div>
@@ -77,8 +77,8 @@ function entryClaseHtml(clase) {
 }
 
 function clasesDeDia(fs) {
-  // Las clases son de Brant: se ven en "Todas" y en el filtro "Brant"
-  if (filtroActivo !== 'todas' && filtroActivo !== 'brant') return [];
+  // Las clases se ven en "Todas", "Brant" y "Universidad"
+  if (filtroActivo !== 'todas' && filtroActivo !== 'brant' && filtroActivo !== 'universidad') return [];
   if (fs < HORARIO_CLASES.inicio || fs > HORARIO_CLASES.fin) return [];
   const [anio, mes, dia] = fs.split('-').map(Number);
   const dow = new Date(anio, mes - 1, dia).getDay();
@@ -197,9 +197,10 @@ function renderAgenda(state, ideas, clientes, tareas) {
 export function renderCalendario(state) {
   filtroActivo = state.filtroCalendario;
   const ideas = state.ideas.filter(i => filtroActivo === 'todas' || i.marca === filtroActivo || i.colab === filtroActivo);
-  // Grabaciones de clientes son trabajo Bacu: solo se ven en "Todas" o "Bacu". Tareas y clases, solo en "Todas".
+  // Grabaciones de clientes son trabajo Bacu: solo se ven en "Todas" o "Bacu".
+  // "Universidad" muestra clases + entregas (tareas con fecha).
   const clientes = (filtroActivo === 'todas' || filtroActivo === 'bacu') ? (state.clientes || []) : [];
-  const tareas = filtroActivo === 'todas' ? (state.tareas || []) : [];
+  const tareas = (filtroActivo === 'todas' || filtroActivo === 'universidad') ? (state.tareas || []) : [];
 
   let titulo, contenido, fechasPeriodo, diasPeriodo, statsLabel;
   const mesLabel = MESES[Number(state.month.split('-')[1]) - 1];

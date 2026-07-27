@@ -748,8 +748,8 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
 .cal-flag.alta { color: var(--rojo); }
 
 .cal-entry.is-rodaje { border: 1px dashed var(--line2); } /* el color real lo pone cada entrada según su marca */
-/* Clases: naranjas (Brant) pero atenuadas — solo marcan el día/hora ocupados */
-.cal-entry.is-clase { border: 1px dashed var(--naranja); cursor: default; opacity: .45; }
+/* Clases: azules y atenuadas — solo marcan el día/hora ocupados */
+.cal-entry.is-clase { border: 1px dashed var(--azul); cursor: default; opacity: .45; }
 .cal-entry.is-clase:hover { background: var(--panel2); opacity: 1; }
 /* Mes: las clases solo muestran hora + materia (en semana va la info completa) */
 .cal-grid .cal-entry.is-clase .cal-entry-meta { display: none; }
@@ -778,7 +778,7 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
   margin-right: 6px;
   vertical-align: middle;
 }
-.cal-entry-tag.clase { color: var(--naranja); border-color: var(--naranja); }
+.cal-entry-tag.clase { color: var(--azul); border-color: var(--azul); }
 .cal-entry-tag.entrega { color: var(--rojo); border-color: var(--rojo); }
 
 /* Mes/Semana on phones: show the whole grid at once instead of scrolling sideways for it —
