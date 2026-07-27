@@ -253,12 +253,40 @@ export function renderPanorama(state) {
     </div>
   `).join('');
 
-  const flujoHtml = PIPELINE.map((label, i) => `
+  // Flujo de trabajo: los módulos reales de Estrategia y Clientes, con su color
+  const FLUJO_ESTRATEGIA = [
+    ['Prospecto', 'var(--text)'],
+    ['En conversación para desarrollo', '#2E55E0'],
+    ['Grabación', '#1FB6CE'],
+    ['Proyecto por editar', '#EFC94C'],
+    ['Por confirmar entrega', '#E8641B'],
+    ['Por pagar / Por entregar', '#E0312E'],
+    ['Ya pagos / Entregados', 'var(--verde)'],
+    ['Descartada', 'var(--muted)']
+  ];
+  const FLUJO_CLIENTES = [
+    ['Prospecto', 'var(--text)'],
+    ['En conversación para contratación', '#2E55E0'],
+    ['Grabación', '#1FB6CE'],
+    ['Proyecto por editar', '#EFC94C'],
+    ['Por confirmar entrega', '#E8641B'],
+    ['Por pagar / Por entregar', '#E0312E'],
+    ['Ya pagos / Entregados', 'var(--verde)'],
+    ['Descartada', 'var(--muted)']
+  ];
+  const flujoLista = flujo => flujo.map(([label, color], i) => `
     <div class="flujo-row">
       <span class="flujo-num">${String(i + 1).padStart(2, '0')}</span>
+      <span class="dot" style="width:8px;height:8px;background:${color};margin-right:8px;"></span>
       <span class="flujo-label">${escapeHtml(label)}</span>
     </div>
   `).join('');
+  const flujoHtml = `
+    <div class="mono-label" style="margin-bottom:8px;">Estrategia</div>
+    ${flujoLista(FLUJO_ESTRATEGIA)}
+    <div class="mono-label" style="margin:16px 0 8px;">Clientes</div>
+    ${flujoLista(FLUJO_CLIENTES)}
+  `;
 
   const pares = [['brant', 'bacu', 'Brant + Bacu'], ['bacu', 'novena', 'Bacu + Novena'], ['brant', 'novena', 'Brant + Novena']];
   const colabsHtml = pares.map(([a, b, par]) => {
@@ -390,7 +418,7 @@ export function renderPanorama(state) {
           <div class="rule-footnote">Si una regla se rompe, el sistema deja de decir la verdad.</div>
         </div>
         <div class="panel">
-          <div class="section-title">Flujo de producción</div>
+          <div class="section-title">Flujo de trabajo</div>
           <div style="display:flex; flex-direction:column; gap:7px;">${flujoHtml}</div>
         </div>
         <div class="panel" style="display:flex; flex-direction:column;">
