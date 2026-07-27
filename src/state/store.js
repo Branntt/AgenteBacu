@@ -192,13 +192,13 @@ function verificarIdeasPorFecha() {
       const f = i.fechaRodaje || i.fecha;
       return f && f < hoy && !estadosFinalesIdea.includes(i.estado) && !revisadas.includes(i.id);
     })
-    .map(i => ({ tipo: 'idea', id: i.id, titulo: i.titulo, marca: i.marca, fecha: i.fechaRodaje || i.fecha }));
+    .map(i => ({ tipo: 'idea', id: i.id, titulo: i.titulo, marca: i.marca, estado: i.estado, fecha: i.fechaRodaje || i.fecha }));
 
   // Grabaciones de clientes con fecha pasada que siguen sin pasar a edición
   const estadosYaGrabados = ['conversacion', 'proyecto_edicion', 'entregado', 'por_pagar', 'ya_pagos'];
   const grabacionesVencidas = state.clientes
     .filter(c => c.fecha_grabacion && c.fecha_grabacion < hoy && !estadosYaGrabados.includes(c.estado) && !revisadas.includes(c.id))
-    .map(c => ({ tipo: 'cliente', id: c.id, titulo: c.nombre + (c.proyecto ? ' — ' + c.proyecto : ''), marca: null, fecha: c.fecha_grabacion }));
+    .map(c => ({ tipo: 'cliente', id: c.id, titulo: c.nombre + (c.proyecto ? ' — ' + c.proyecto : ''), marca: null, estado: c.estado, fecha: c.fecha_grabacion }));
 
   const pendientes = ideasVencidas.concat(grabacionesVencidas);
   console.log('[BACU] pendientes por revisar:', pendientes.length, pendientes);
@@ -735,42 +735,45 @@ export const actions = {
   cerrarRevisionIdeas: () => setState({ revisionIdeasModal: false, revisionIdeasPendientes: [] }),
 
   cerrarNotificacionBacu: () => setState({ notificacionBacu: null }),
-  bacuResponder: (itemId, grabo) => {
-    const hoy = hoyStr();
-    const item = state.revisionIdeasPendientes.find(p => p.id === itemId);
-
-    if (item && item.tipo === 'cliente') {
-      // Grabé → el proyecto pasa a edición · Procrastiné → se libera la fecha para reagendar
-      actions.updCliente(itemId, grabo ? { estado: 'proyecto_edicion' } : { fecha_grabacion: null });
-    } else {
-      // Grabé → "Por editar" · Procrastiné → "Por grabar" y se limpia la fecha vencida
-      const idea = state.ideas.find(i => i.id === itemId);
-      if (grabo) {
-        actions.updIdea(itemId, { estado: 'edicion', grabacion: true });
-      } else {
-        const patch = { estado: 'grabar' };
-        if (idea && idea.fechaRodaje && idea.fechaRodaje < hoy) patch.fechaRodaje = null;
-        if (idea && idea.fecha && idea.fecha < hoy) patch.fecha = null;
-        actions.updIdea(itemId, patch);
-      }
-    }
-
-    // No volver a preguntar por este item
+  // Marca el item como revisado, lo saca de la cola y muestra feedback breve
+  _bacuAvanzarCola: (itemId, feedback) => {
     const revisadas = loadValue('bacu.ideasRevisadas', []);
     if (!revisadas.includes(itemId)) {
       revisadas.push(itemId);
       persistValue('bacu.ideasRevisadas', revisadas);
     }
-
     const pendientes = state.revisionIdeasPendientes.filter(i => i.id !== itemId);
-    setState({
-      revisionIdeasPendientes: pendientes,
-      notificacionBacu: grabo ? 'grabé' : 'procrastiné'
-    });
-    // Tras el mensaje de feedback, pasa al siguiente item o cierra
+    setState({ revisionIdeasPendientes: pendientes, notificacionBacu: feedback });
     setTimeout(() => {
       setState({ notificacionBacu: state.revisionIdeasPendientes.length ? 'pregunta' : null });
-    }, 2200);
+    }, 1800);
+  },
+
+  // El usuario elige directamente el módulo destino
+  bacuSetEstado: (itemId, nuevoEstado, label) => {
+    const item = state.revisionIdeasPendientes.find(p => p.id === itemId);
+    if (item && item.tipo === 'cliente') {
+      actions.updCliente(itemId, { estado: nuevoEstado });
+    } else {
+      actions.updIdea(itemId, { estado: nuevoEstado });
+    }
+    actions._bacuAvanzarCola(itemId, 'ok:' + (label || nuevoEstado));
+  },
+
+  // No se hizo: libera la fecha vencida para reagendar, sin cambiar el estado
+  bacuPosponer: (itemId) => {
+    const hoy = hoyStr();
+    const item = state.revisionIdeasPendientes.find(p => p.id === itemId);
+    if (item && item.tipo === 'cliente') {
+      actions.updCliente(itemId, { fecha_grabacion: null });
+    } else {
+      const idea = state.ideas.find(i => i.id === itemId);
+      const patch = {};
+      if (idea && idea.fechaRodaje && idea.fechaRodaje < hoy) patch.fechaRodaje = null;
+      if (idea && idea.fecha && idea.fecha < hoy) patch.fecha = null;
+      if (Object.keys(patch).length) actions.updIdea(itemId, patch);
+    }
+    actions._bacuAvanzarCola(itemId, 'pospuesto');
   },
   actualizarEstadoIdea: (ideaId, nuevoEstado) => {
     const idea = state.ideas.find(i => i.id === ideaId);

@@ -1,18 +1,44 @@
 import { escapeHtml, fmtFecha } from '../lib/format.js';
 import { MESES, MARCAS } from '../data/constants.js';
 
+// Orden de los módulos por tipo — las opciones son los que van adelante del actual
+const PIPELINE_IDEA = [
+  ['prospecto', 'Prospecto'],
+  ['desarrollo', 'En desarrollo'],
+  ['produccion', 'Por producirse'],
+  ['grabar', 'Por grabar'],
+  ['edicion', 'Por editar'],
+  ['entrega', 'Por confirmar entrega']
+];
+const PIPELINE_CLIENTE = [
+  ['prospecto', 'Prospecto'],
+  ['conversacion', 'En conversación'],
+  ['proyecto_edicion', 'Proyecto por editar'],
+  ['entregado', 'Entregado'],
+  ['por_pagar', 'Por pagar'],
+  ['ya_pagos', 'Ya pagó']
+];
+
+function opcionesDelanteras(item) {
+  const pipeline = item.tipo === 'cliente' ? PIPELINE_CLIENTE : PIPELINE_IDEA;
+  const idx = pipeline.findIndex(([e]) => e === item.estado);
+  // Si el estado actual no está en el pipeline (estados viejos), ofrece todos
+  return idx === -1 ? pipeline : pipeline.slice(idx + 1);
+}
+
 export function renderNotificacionBacu(state) {
   if (!state.notificacionBacu) return '';
 
   // Feedback tras responder
-  if (state.notificacionBacu === 'grabé' || state.notificacionBacu === 'procrastiné') {
-    const grabo = state.notificacionBacu === 'grabé';
+  if (typeof state.notificacionBacu === 'string' && state.notificacionBacu !== 'pregunta') {
+    const ok = state.notificacionBacu.startsWith('ok:');
+    const mensaje = ok
+      ? `✅ Movido a ${escapeHtml(state.notificacionBacu.slice(3))} 🔥`
+      : '⏰ Fecha liberada para reagendar 💪';
     return `
-      <div class="bacu-noti" style="border-left-color:${grabo ? 'var(--verde)' : 'var(--naranja)'};">
+      <div class="bacu-noti" style="border-left-color:${ok ? 'var(--verde)' : 'var(--naranja)'};">
         <div class="bacu-noti-titulo">BACU</div>
-        <div style="font-size:14px;font-weight:bold;text-align:center;padding:6px 0;">
-          ${grabo ? '✅ ¡Grabaste! Pasa a edición 🔥' : '⏰ Quedó pendiente. Fecha liberada para reagendar 💪'}
-        </div>
+        <div style="font-size:14px;font-weight:bold;text-align:center;padding:6px 0;">${mensaje}</div>
       </div>
       ${estiloNoti()}
     `;
@@ -25,6 +51,9 @@ export function renderNotificacionBacu(state) {
   const M = item.marca ? MARCAS[item.marca] : null;
   const total = state.revisionIdeasPendientes.length;
   const tipoLabel = item.tipo === 'cliente' ? 'GRABACIÓN CLIENTE' : 'IDEA';
+  const pipeline = item.tipo === 'cliente' ? PIPELINE_CLIENTE : PIPELINE_IDEA;
+  const actualLabel = (pipeline.find(([e]) => e === item.estado) || [])[1] || item.estado || 'sin estado';
+  const opciones = opcionesDelanteras(item);
 
   return `
     <div class="bacu-noti">
@@ -32,17 +61,19 @@ export function renderNotificacionBacu(state) {
         <div class="bacu-noti-titulo">BACU · ${tipoLabel}</div>
         <button data-act="cerrar-notificacion-bacu" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;padding:4px 8px;">✕</button>
       </div>
-      <div style="font-size:15px;font-weight:bold;margin:6px 0 2px;">🎬 ¿Grabaste o procrastinaste?</div>
+      <div style="font-size:15px;font-weight:bold;margin:6px 0 2px;">🎬 ¿En qué quedó esto?</div>
       <div style="font-size:12px;opacity:0.85;margin-bottom:12px;">
         ${M ? `<span class="dot" style="width:8px;height:8px;background:${M.color};margin-right:6px;"></span>` : '🎥 '}
-        ${escapeHtml(item.titulo || 'Sin título')} · era para el ${escapeHtml(fmtFecha(item.fecha, MESES))}${total > 1 ? ` · ${total} pendientes` : ''}
+        ${escapeHtml(item.titulo || 'Sin título')} · era para el ${escapeHtml(fmtFecha(item.fecha, MESES))} · está en <strong>${escapeHtml(actualLabel)}</strong>${total > 1 ? ` · ${total} pendientes` : ''}
       </div>
-      <div style="display:flex;gap:10px;">
-        <button data-act="grabe-bacu" data-id="${escapeHtml(item.id)}" class="bacu-noti-btn" style="border-color:var(--verde);color:var(--verde);">
-          ✅ Grabé
-        </button>
-        <button data-act="procrastine-bacu" data-id="${escapeHtml(item.id)}" class="bacu-noti-btn" style="border-color:var(--naranja);color:var(--naranja);">
-          ⏰ Procrastiné
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        ${opciones.map(([estado, label]) => `
+          <button data-act="bacu-set-estado" data-id="${escapeHtml(item.id)}" data-estado="${estado}" data-label="${escapeHtml(label)}" class="bacu-noti-btn" style="border-color:var(--verde);color:var(--verde);text-align:left;">
+            → ${label}
+          </button>
+        `).join('')}
+        <button data-act="bacu-posponer" data-id="${escapeHtml(item.id)}" class="bacu-noti-btn" style="border-color:var(--naranja);color:var(--naranja);text-align:left;">
+          ⏰ No se hizo · liberar fecha
         </button>
       </div>
     </div>
@@ -68,6 +99,8 @@ function estiloNoti() {
         z-index: 10000;
         box-shadow: 0 6px 24px rgba(0,0,0,0.45);
         animation: bacuSlide .3s ease-out;
+        max-height: calc(100vh - 32px);
+        overflow-y: auto;
       }
       .bacu-noti-titulo {
         font-family: 'IBM Plex Mono', monospace;
@@ -76,8 +109,7 @@ function estiloNoti() {
         color: var(--verde);
       }
       .bacu-noti-btn {
-        flex: 1;
-        padding: 12px;
+        padding: 11px 14px;
         background: none;
         border: 1.5px solid;
         border-radius: 8px;
