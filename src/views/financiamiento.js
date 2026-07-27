@@ -89,15 +89,29 @@ export function renderFinanciamiento(state) {
   return `
     <main class="financiamiento">
       <div class="financ-head">
-        <h2 class="serif" style="margin:0;font-size:32px;">Financiamiento</h2>
-        <button class="btn-primary" data-act="movimiento-nuevo">+ Movimiento</button>
+        <h2 class="serif" style="margin:0;font-size:32px;">Finanzas</h2>
+        <button class="btn-primary" data-act="movimiento-nuevo">+ Agregar dinero</button>
       </div>
-      <div class="vista-sub">Lo real: lo que tienes en Bancolombia/Nequi/efectivo, más lo que te deben, menos lo que debes. Lo facturado se muestra aparte — facturar no es cobrar.</div>
 
       <div class="financ-total-card ${patrimonio < 0 ? 'negativo' : ''}">
-        <span class="mono-label">Patrimonio neto estimado</span>
-        <div class="financ-total-value">${fmtMoney(patrimonio)}</div>
-        <div class="financ-total-breakdown">${fmtMoney(efectivo)} efectivo · ${fmtMoney(teDeben)} te deben · ${fmtMoney(debes)} debes</div>
+        <div style="text-align:center;">
+          <span class="mono-label" style="display:block;margin-bottom:12px;">Tu dinero hoy</span>
+          <div class="financ-total-value" style="font-size:48px;margin-bottom:16px;">${fmtMoney(patrimonio)}</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;font-size:14px;">
+            <div>
+              <div class="mono-label" style="color:var(--verde);">En bolsillo</div>
+              <div style="font-size:20px;color:var(--verde);">${fmtMoney(efectivo)}</div>
+            </div>
+            <div>
+              <div class="mono-label" style="color:var(--azul);">Te deben</div>
+              <div style="font-size:20px;color:var(--azul);">${fmtMoney(teDeben)}</div>
+            </div>
+            <div>
+              <div class="mono-label" style="color:var(--rojo);">Debes</div>
+              <div style="font-size:20px;color:var(--rojo);">${fmtMoney(debes)}</div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div class="panel-footnote" style="margin:-8px 0 24px;">Facturado en total: ${fmtMoney(facturado)} (${cuentas.length} cuenta${cuentas.length === 1 ? '' : 's'} de cobro) — no cuenta como tuyo hasta que te paguen.</div>
