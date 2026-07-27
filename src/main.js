@@ -290,6 +290,7 @@ root.addEventListener('change', e => {
       case 'meta-personal-fecha': actions.updMetaPersonal(id, { fecha: value || null }); break;
       case 'meta-mensual-set': actions.setMetaMensual(marca, state.month, parseN(value)); break;
       case 'tarea-texto': actions.updTarea(id, { texto: value }); break;
+      case 'tarea-fecha': actions.updTarea(id, { fecha: value || null }); break;
       case 'cal-vista-set': actions.setCalVista(value); break;
       case 'filtro-calendario-set': actions.setFiltroCalendario(value); break;
       case 'filtro-guiones-set': actions.setFiltroGuiones(value); break;

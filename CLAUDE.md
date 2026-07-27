@@ -5,6 +5,8 @@ App de gestión de contenido/producción para un estudio audiovisual (marcas: **
 - **Producción**: https://branntt.github.io/AgenteBacu/
 - **Repo**: https://github.com/Branntt/AgenteBacu (público, rama `main`)
 
+**⚠️ Ojo con clones duplicados del repo**: en esta máquina llegó a existir más de una copia local de este repo en rutas distintas (una quedó desactualizada mientras la otra siguió recibiendo commits reales). Antes de editar, confirmar con `git log --oneline -5` y `git remote -v` que la carpeta donde se está parado tiene el commit más reciente y coincide con lo que corre el `devserver.py` activo (revisar qué proceso tiene el puerto local ocupado si hay dudas) — si el nav de la app muestra pestañas que no aparecen en el código que se está leyendo, es la señal de que se está en la copia equivocada.
+
 ## Stack
 
 Vanilla JS puro. **Sin build, sin npm, sin bundler.** Todo son ES modules servidos tal cual. Dependencias externas (Supabase, jsPDF) se cargan vía `import` directo desde `esm.sh` en el navegador — no hay `node_modules`.
@@ -33,6 +35,7 @@ Los scripts SQL de setup están en la raíz del repo:
 - `supabase-migracion-panorama.sql` — tablas `metas_personales`, `metas_mensuales`, `tareas`. **Corrida el 2026-07-25**.
 - `supabase-migracion-deudas.sql` — tabla `deudas`, junto con la corrección del modelo de Financiamiento (ver abajo). **Corrida el 2026-07-25**.
 - `supabase-migracion-pagos-mensuales.sql` — tabla `pagos_mensuales` (suscripciones/pagos recurrentes: nombre, monto, día del mes; **puede que el usuario todavía no la haya corrido** — agregada el 2026-07-25, es solo referencia, no afecta el cálculo de patrimonio).
+- `supabase-migracion-tareas-fecha.sql` — agrega `fecha` (date, opcional) a `tareas`.
 
 Credenciales (URL + anon key) están hardcodeadas en `src/lib/supabaseClient.js` — es intencional, la anon key es pública/segura para frontend, protegida por RLS. **Nunca pedir ni usar la `service_role` key** — es privada, el usuario no debe compartirla.
 
@@ -67,6 +70,10 @@ Calendario (vistas Mes/Semana/Agenda, fechas de publicación y de rodaje separad
 **Rodaje rápido con cliente + cuenta de cobro automática** (2026-07-25): el drawer de rodaje rápido (`src/components/rodajeRapido.js`) tiene 3 campos opcionales — cliente, C.C./NIT, precio — además de los originales (qué se graba, marca, fecha). Al guardar (`rodajeRapidoGuardar` en `store.js`), si hay nombre de cliente: busca un cliente existente por nombre (case-insensitive, trim) y si no existe lo crea con `estado: 'activo'`; si hay precio > 0, genera una cuenta de cobro igual que el flujo manual de Clientes (mismo numerado por mes, mismo PDF). Repetir el mismo nombre de cliente en varios rodajes no duplica el cliente — cada trabajo queda como una cuenta de cobro más ligada al mismo `cliente_id`, y el total facturado (ver arriba) los va sumando solo. **Importante**: el cliente creado desde acá NO recibe `fecha_grabacion` — esa fecha ya la cubre la idea/rodaje que se crea en paralelo (`fechaRodaje`), y `entradasDeDia` en `calendario.js` mezcla ambas fuentes; ponerle `fecha_grabacion` también duplicaría la entrada en el Calendario ese día.
 
 **Seguimiento se fusionó dentro de Panorama** (2026-07-25, `src/views/seguimiento.js` fue eliminado). Ya no existe como pestaña ni entrada de `VIEWS`/nav. Su contenido quedó repartido en `panorama.js`: los registros de seguidores/alcance por marca (`state.snaps`, botón "+ Registro", `snap-abre`/`snap-guarda`) ahora viven dentro de cada `.marca-card` (bloque `.marca-seguimiento`, reusa las clases CSS `.cuenta-*` que antes eran solo de Seguimiento) junto al objetivo mensual; "Enfoque de crecimiento", "Historial de seguidores" y "Qué funcionó" quedaron como sección propia (`.seg-bottom`) debajo de "Las marcas". Todas las acciones (`snap-*`) siguen intactas en `store.js`/`main.js`, solo cambió desde qué vista se disparan.
+
+**Horario de clases en el Calendario** (agregado): `HORARIO_CLASES` en `constants.js` es un horario semanal fijo hardcodeado (día ISO 1-7, hora inicio/fin, materia, profesor, salón) con un rango de fechas de semestre (`inicio`/`fin`); no vive en Supabase porque es un dato de un solo semestre que el usuario pasó una vez, no algo que edite seguido. `calendario.js` lo repite cada semana dentro del rango y lo mezcla en `entradasDeDia` junto con ideas/grabaciones, con su propio color (`--azul`, token nuevo en `tokens.css`) y clase `.is-clase` (borde punteado, sin acción al tocar). Si el usuario cambia de semestre, hay que reemplazar el array a mano.
+
+**Tareas con fecha de entrega → Calendario** (agregado): `tareas.fecha` (opcional, columna nueva vía `supabase-migracion-tareas-fecha.sql`) — si una tarea de Panorama tiene fecha y no está marcada `hecha`, aparece también en el Calendario ese día con tag "ENTREGA" y color `--rojo` (`.is-tarea`), y desaparece del Calendario sola al marcarla hecha (sigue viva en Panorama). Pensado para que el celular muestre de un vistazo, en el mini-mes compacto (barras de color sin texto en <600px), qué hay que entregar sin entrar a Panorama.
 
 ## Deploy
 

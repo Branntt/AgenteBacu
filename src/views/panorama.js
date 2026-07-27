@@ -31,6 +31,7 @@ function tareaCintaHtml(t) {
     <div class="tarea-cinta ${t.hecha ? 'hecha' : ''}" style="background:${color};">
       <button class="tarea-check" data-act="tarea-toggle" data-id="${escapeHtml(t.id)}" title="${t.hecha ? 'Marcar pendiente' : 'Marcar hecha'}">${t.hecha ? '✓' : ''}</button>
       <input class="tarea-texto" data-change="tarea-texto" data-id="${escapeHtml(t.id)}" value="${escapeHtml(t.texto)}" placeholder="¿Qué hay que hacer?">
+      <input type="date" class="tarea-fecha" data-change="tarea-fecha" data-id="${escapeHtml(t.id)}" value="${escapeHtml(t.fecha || '')}" min="2026-01-01" title="Fecha de entrega (aparece en el Calendario)" style="color-scheme:dark;">
       <button class="tarea-quitar" data-act="tarea-eliminar" data-id="${escapeHtml(t.id)}" title="Quitar">✕</button>
     </div>
   `;

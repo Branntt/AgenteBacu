@@ -426,6 +426,17 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
   width: 14ch;
 }
 .tarea-texto::placeholder { color: rgba(12,14,13,0.6); }
+.tarea-fecha {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  color: inherit;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  min-height: 0;
+  width: 108px;
+  opacity: 0.75;
+}
 .tarea-quitar { flex-shrink: 0; background: none; border: none; color: rgba(12,14,13,0.5); cursor: pointer; font-size: 11px; padding: 4px; }
 .tarea-agregar {
   background: none;
@@ -737,6 +748,9 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
 .cal-flag.alta { color: var(--rojo); }
 
 .cal-entry.is-rodaje { border: 1px dashed var(--novena); }
+.cal-entry.is-clase { border: 1px dashed var(--azul); cursor: default; }
+.cal-entry.is-clase:hover { background: var(--panel2); }
+.cal-entry.is-tarea { border: 1px dashed var(--rojo); }
 .cal-entry-tag {
   display: inline-block;
   font-family: 'IBM Plex Mono', monospace;
@@ -749,6 +763,8 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
   margin-right: 6px;
   vertical-align: middle;
 }
+.cal-entry-tag.clase { color: var(--azul); border-color: var(--azul); }
+.cal-entry-tag.entrega { color: var(--rojo); border-color: var(--rojo); }
 
 /* Mes/Semana on phones: show the whole grid at once instead of scrolling sideways for it —
    entries collapse to compact colored bars (tap still opens that idea directly). The Agenda

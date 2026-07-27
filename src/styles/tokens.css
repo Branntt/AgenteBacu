@@ -19,6 +19,7 @@ html, body {
   --brant: #EDE7D3;
   --novena: #D98A50;
   --rojo: #C25A3C;
+  --azul: #5B8DEF;
 }
 
 [data-tema="galeria"] {
@@ -34,6 +35,7 @@ html, body {
   --brant: #6B6553;
   --novena: #A85F2E;
   --rojo: #A34B34;
+  --azul: #2F5FA8;
 }
 
 ::selection { background: #2E7D5B; color: #fff; }

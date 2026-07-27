@@ -151,3 +151,17 @@ export const FAMILIAS_GUION = {
 export function familiaDeFormato(formato) {
   return Object.keys(FAMILIAS_GUION).find(k => FAMILIAS_GUION[k].formatos.includes(formato)) || 'corto';
 }
+
+// Horario fijo de clases 2026-2 (UNAB), se repite cada semana dentro del rango del semestre.
+// dia: 1=Lunes ... 7=Domingo, igual que el orden de DIAS_SEMANA en calendario.js.
+export const HORARIO_CLASES = {
+  inicio: '2026-08-03',
+  fin: '2026-11-21',
+  clases: [
+    { dia: 2, horaInicio: '07:00', horaFin: '09:59', materia: 'Gestión Audiovisual', profesor: 'Ella Cardona Cadena', salon: 'LABCREACIO', lugar: 'Bloque N · El Jardín, UNAB' },
+    { dia: 2, horaInicio: '14:00', horaFin: '15:59', materia: 'Investigación Documental', profesor: 'Camilo Arenas Villabona', salon: 'LABCREACIO', lugar: 'Bloque N · El Jardín, UNAB' },
+    { dia: 2, horaInicio: '16:00', horaFin: '17:59', materia: 'Formas del Documental', profesor: 'Camilo Arenas Villabona', salon: 'N43', lugar: 'Bloque N · El Jardín, UNAB' },
+    { dia: 3, horaInicio: '13:00', horaFin: '17:59', materia: 'Diseño de Proyecto de Grado en Documental', profesor: 'René Palomino Rodríguez', salon: 'N41', lugar: 'Bloque N · El Jardín, UNAB' },
+    { dia: 4, horaInicio: '08:00', horaFin: '09:59', materia: 'Seminario Creativo', profesor: 'Sergio Abello Gómez', salon: 'N41', lugar: 'Bloque N · El Jardín, UNAB' }
+  ]
+};
