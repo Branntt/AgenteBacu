@@ -51,7 +51,6 @@ let drawerAbiertoAntes = false;
 
 function render() {
   const temaAttr = TEMA_MAP[state.tema] || 'cine';
-  const scroll = window.scrollY;
   const foco = capturarFoco();
 
   if (!state.authReady) {
@@ -90,8 +89,6 @@ function render() {
       ${renderIAModal(state)}
     </div>
   `;
-  window.scrollTo(0, scroll);
-  persistValue('app.scroll', scroll);
   restaurarFoco(foco);
 
   const drawerAbiertoAhora = !!(state.selId || state.clienteSelId || state.guionId || state.rodajeDraft || state.cuentaCobroDraft || state.historialAbierto || state.iaDraft);
