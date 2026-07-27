@@ -7,7 +7,7 @@ const MUTED = '#79807A';
 const MUTED_LT = '#9AA39B';
 const VERDE = '#3BA478';
 
-const ESTADO_LABEL = { prospecto: 'Prospecto', conversacion: 'En conversación', activo: 'Proyecto activo', entregado: 'Entregado' };
+const ESTADO_LABEL = { prospecto: 'Prospecto', conversacion: 'En conversación', proyecto_edicion: 'Proyecto por editar', entregado: 'Entregado', por_pagar: 'Por pagar' };
 
 export function generarListadoClientesPDF(clientes) {
   const doc = new jsPDF({ unit: 'pt', format: 'letter' });

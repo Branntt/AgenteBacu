@@ -1,6 +1,6 @@
 import { escapeHtml } from '../lib/format.js';
 
-const ESTADO_LABELS = { prospecto: 'Prospecto', conversacion: 'En conversación', activo: 'Proyecto activo', entregado: 'Entregado' };
+const ESTADO_LABELS = { prospecto: 'Prospecto', conversacion: 'En conversación para contratación', proyecto_edicion: 'Proyecto por editar', entregado: 'Entregado', por_pagar: 'Proyecto por pagar' };
 
 export function renderClienteDetalle(state) {
   const c = (state.clientes || []).find(x => x.id === state.clienteSelId);
@@ -49,10 +49,11 @@ export function renderClienteDetalle(state) {
 
         <div class="drawer-footer">
           <select data-change="cliente-estado" data-id="${id}">
-            <option value="prospecto" ${c.estado === 'prospecto' ? 'selected' : ''}>Prospecto</option>
-            <option value="conversacion" ${c.estado === 'conversacion' ? 'selected' : ''}>En conversación</option>
-            <option value="activo" ${c.estado === 'activo' ? 'selected' : ''}>Proyecto activo</option>
-            <option value="entregado" ${c.estado === 'entregado' ? 'selected' : ''}>Entregado</option>
+            <option value="prospecto" ${c.estado === 'prospecto' ? 'selected' : ''}>Prospectos</option>
+            <option value="conversacion" ${c.estado === 'conversacion' ? 'selected' : ''}>En conversación para contratación</option>
+            <option value="proyecto_edicion" ${c.estado === 'proyecto_edicion' ? 'selected' : ''}>Proyecto por editar</option>
+            <option value="entregado" ${c.estado === 'entregado' ? 'selected' : ''}>Entregados</option>
+            <option value="por_pagar" ${c.estado === 'por_pagar' ? 'selected' : ''}>Proyecto por pagar</option>
           </select>
           <button class="btn-ghost" data-act="cc-abrir" data-id="${id}">Cuenta de cobro</button>
           <button class="btn-delete" data-act="cliente-eliminar" data-id="${id}">Eliminar</button>
