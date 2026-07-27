@@ -4,7 +4,7 @@ import { MESES, MARCAS } from '../data/constants.js';
 // Orden de los módulos por tipo — las opciones son los que van adelante del actual
 const PIPELINE_IDEA = [
   ['prospecto', 'Prospecto'],
-  ['desarrollo', 'En desarrollo'],
+  ['desarrollo', 'En conversación para desarrollo'],
   ['grabar', 'Grabación'],
   ['edicion', 'Proyecto por editar'],
   ['entrega', 'Por confirmar entrega'],
@@ -13,7 +13,7 @@ const PIPELINE_IDEA = [
 ];
 const PIPELINE_CLIENTE = [
   ['prospecto', 'Prospecto'],
-  ['conversacion', 'En conversación para desarrollo'],
+  ['conversacion', 'En conversación para contratación'],
   ['grabacion', 'Grabación'],
   ['proyecto_edicion', 'Proyecto por editar'],
   ['confirmar_entrega', 'Por confirmar entrega'],

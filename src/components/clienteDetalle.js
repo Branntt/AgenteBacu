@@ -55,7 +55,7 @@ export function renderClienteDetalle(state) {
         <div class="drawer-footer">
           <select data-change="cliente-estado" data-id="${id}">
             <option value="prospecto" ${c.estado === 'prospecto' ? 'selected' : ''}>Prospecto</option>
-            <option value="conversacion" ${c.estado === 'conversacion' ? 'selected' : ''}>En conversación para desarrollo</option>
+            <option value="conversacion" ${c.estado === 'conversacion' ? 'selected' : ''}>En conversación para contratación</option>
             <option value="grabacion" ${c.estado === 'grabacion' ? 'selected' : ''}>Grabación</option>
             <option value="proyecto_edicion" ${c.estado === 'proyecto_edicion' ? 'selected' : ''}>Proyecto por editar</option>
             <option value="confirmar_entrega" ${c.estado === 'confirmar_entrega' ? 'selected' : ''}>Por confirmar entrega</option>

@@ -14,7 +14,7 @@ const ESTADO_COLORS = {
 };
 const COLUMNAS = [
   ['prospecto', 'Prospecto', 'Posibles clientes'],
-  ['conversacion', 'En conversación para desarrollo', 'En negociación'],
+  ['conversacion', 'En conversación para contratación', 'En negociación'],
   ['grabacion', 'Grabación', 'Por grabar o en grabación'],
   ['proyecto_edicion', 'Proyecto por editar', 'En edición'],
   ['confirmar_entrega', 'Por confirmar entrega', 'Esperando visto bueno'],

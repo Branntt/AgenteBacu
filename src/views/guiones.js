@@ -6,7 +6,7 @@ const FILTROS = [['todas', 'Todas'], ['brant', 'Brant'], ['bacu', 'Bacu'], ['nov
 const VISTAS = [['general', 'Vista general'], ['tipo', 'Por tipo de guion']];
 const COLUMNAS = [
   ['prospecto', 'Prospecto'],
-  ['desarrollo', 'En desarrollo'],
+  ['desarrollo', 'En conversación para desarrollo'],
   ['grabar', 'Grabación'],
   ['edicion', 'Proyecto por editar'],
   ['entrega', 'Por confirmar entrega'],
