@@ -32,6 +32,7 @@ export const state = {
   movimientosFinanciamiento: [],
   deudas: [],
   pagosMensuales: [],
+  gastosMenuales: [],
   metasPersonales: [],
   metasMensuales: [],
   tareas: [],

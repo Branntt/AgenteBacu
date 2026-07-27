@@ -1,7 +1,7 @@
 import { escapeHtml } from '../lib/format.js';
 import { calcularFinanciamiento } from '../lib/financiamiento.js';
 import { renderTablaFinanzas } from '../components/tablaFinanzas.js';
-import { hoyStr } from '../lib/idea.js';
+import { hoyStr, mesActual } from '../lib/idea.js';
 
 function fmtMoney(n) {
   const v = Number(n) || 0;
@@ -120,7 +120,41 @@ export function renderFinanciamiento(state) {
         </div>
       </div>
 
-      <!-- 2️⃣ DEUDAS PERSONALES -->
+      <!-- 2️⃣ GASTOS MENSUALES (ESTE MES) -->
+      <div class="finanzas-seccion" style="background:rgba(255,152,0,0.1);border-left:4px solid var(--naranja);margin-bottom:24px;">
+        <div class="seccion-titulo">📅 Gastos Mensuales - ${mesActual()}</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          ${gastosVivirSolo.map(g => {
+            const mesAño = new Date().toLocaleString('es-CO', { month: '2-digit', year: 'numeric' });
+            const gastoRegistrado = gastos.some(m => m.nota && m.nota.toLowerCase().includes(g.nombre.toLowerCase()));
+            return `
+              <div style="background:rgba(255,255,255,0.05);padding:12px;border-radius:8px;display:flex;justify-content:space-between;align-items:center;border-left:3px solid ${gastoRegistrado ? 'var(--verde)' : 'var(--naranja)'};">
+                <div style="flex:1;">
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    <span style="font-size:18px;">${g.emoji}</span>
+                    <div>
+                      <div style="font-weight:bold;">${escapeHtml(g.nombre)}</div>
+                      <div style="font-size:11px;opacity:0.6;">Vence: día ${g.dia_vencimiento}</div>
+                    </div>
+                  </div>
+                </div>
+                <div style="text-align:right;">
+                  <div style="font-size:14px;font-weight:bold;color:var(--rojo);">${fmtMoney(g.monto)}</div>
+                  <div style="font-size:11px;opacity:0.7;color:${gastoRegistrado ? 'var(--verde)' : 'var(--naranja)'};">
+                    ${gastoRegistrado ? '✓ PAGADA' : 'Pendiente'}
+                  </div>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+        <div style="background:rgba(0,0,0,0.3);padding:12px;border-radius:8px;margin-top:12px;text-align:center;font-size:13px;">
+          <div style="opacity:0.7;">Total a pagar este mes:</div>
+          <div style="font-size:18px;font-weight:bold;color:var(--rojo);margin-top:4px;">${fmtMoney(gastosMensualesTotal)}</div>
+        </div>
+      </div>
+
+      <!-- 3️⃣ DEUDAS PERSONALES -->
       ${yoDeboHtml.length > 0 ? `
       <div class="finanzas-seccion" style="background:rgba(255,107,107,0.1);border-left:4px solid var(--rojo);margin-bottom:24px;">
         <div class="seccion-titulo">⚠️ Debes Pagar - ${fmtMoney(yoDebenTotal)}</div>
