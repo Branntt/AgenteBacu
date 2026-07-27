@@ -120,37 +120,30 @@ export function renderFinanciamiento(state) {
         </div>
       </div>
 
-      <!-- 2️⃣ GASTOS MENSUALES (ESTE MES) -->
+      <!-- 2️⃣ GASTOS MENSUALES REALES (ESTE MES) -->
       <div class="finanzas-seccion" style="background:rgba(255,152,0,0.1);border-left:4px solid var(--naranja);margin-bottom:24px;">
-        <div class="seccion-titulo">📅 Gastos Mensuales - ${mesActual()}</div>
-        <div style="display:flex;flex-direction:column;gap:8px;">
-          ${gastosVivirSolo.map(g => {
-            const mesAño = new Date().toLocaleString('es-CO', { month: '2-digit', year: 'numeric' });
-            const gastoRegistrado = gastos.some(m => m.nota && m.nota.toLowerCase().includes(g.nombre.toLowerCase()));
-            return `
-              <div style="background:rgba(255,255,255,0.05);padding:12px;border-radius:8px;display:flex;justify-content:space-between;align-items:center;border-left:3px solid ${gastoRegistrado ? 'var(--verde)' : 'var(--naranja)'};">
+        <div class="seccion-titulo">💰 Gastos Mensuales Reales - ${mesActual()}</div>
+        ${gastos.length > 0 ? `
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(300px, 1fr));gap:16px;">
+          ${gastos.map(g => `
+            <div style="background:rgba(255,255,255,0.05);padding:12px;border-radius:8px;border-left:3px solid var(--rojo);">
+              <div style="display:flex;justify-content:space-between;align-items:start;">
                 <div style="flex:1;">
-                  <div style="display:flex;align-items:center;gap:8px;">
-                    <span style="font-size:18px;">${g.emoji}</span>
-                    <div>
-                      <div style="font-weight:bold;">${escapeHtml(g.nombre)}</div>
-                      <div style="font-size:11px;opacity:0.6;">Vence: día ${g.dia_vencimiento}</div>
-                    </div>
-                  </div>
+                  <div style="font-weight:bold;">${escapeHtml(g.nota || 'Gasto')}</div>
+                  <div style="font-size:11px;opacity:0.6;margin-top:4px;">${fmtFecha(g.fecha)}</div>
                 </div>
                 <div style="text-align:right;">
-                  <div style="font-size:14px;font-weight:bold;color:var(--rojo);">${fmtMoney(g.monto)}</div>
-                  <div style="font-size:11px;opacity:0.7;color:${gastoRegistrado ? 'var(--verde)' : 'var(--naranja)'};">
-                    ${gastoRegistrado ? '✓ PAGADA' : 'Pendiente'}
-                  </div>
+                  <div style="font-size:16px;font-weight:bold;color:var(--rojo);">${fmtMoney(g.monto)}</div>
                 </div>
               </div>
-            `;
-          }).join('')}
+            </div>
+          `).join('')}
         </div>
-        <div style="background:rgba(0,0,0,0.3);padding:12px;border-radius:8px;margin-top:12px;text-align:center;font-size:13px;">
-          <div style="opacity:0.7;">Total a pagar este mes:</div>
-          <div style="font-size:18px;font-weight:bold;color:var(--rojo);margin-top:4px;">${fmtMoney(gastosMensualesTotal)}</div>
+        ` : `<div style="opacity:0.5;font-size:13px;text-align:center;padding:20px;">Sin gastos registrados este mes</div>`}
+
+        <div style="background:rgba(0,0,0,0.3);padding:12px;border-radius:8px;margin-top:16px;text-align:center;font-size:13px;">
+          <div style="opacity:0.7;">Total gastado este mes:</div>
+          <div style="font-size:20px;font-weight:bold;color:var(--rojo);margin-top:6px;">${fmtMoney(totalGastos)}</div>
         </div>
       </div>
 
