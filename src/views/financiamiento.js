@@ -289,6 +289,45 @@ export function renderFinanciamiento(state) {
           <div style="font-size:36px;font-weight:bold;color:var(--rojo);">${fmtMoney(2643706)}</div>
           <div style="font-size:12px;opacity:0.7;margin-top:8px;">Básicos + Recurrentes + Aseo Personal</div>
         </div>
+
+        <!-- ANÁLISIS: ¿PUEDES VIVIR SOLO? -->
+        ${
+          (() => {
+            const gastoMensual = 2643706;
+            const efectivoActual = efectivo || 0;
+            const mesesPosibles = Math.floor(efectivoActual / gastoMensual);
+
+            let mensaje = '';
+            let color = 'var(--rojo)';
+
+            if (efectivoActual < 0) {
+              mensaje = '❌ NO PUEDES VIVIR SOLO: Tienes un déficit actual de ' + fmtMoney(Math.abs(efectivoActual)) + '. Necesitas primero generar ingresos.';
+            } else if (mesesPosibles === 0) {
+              mensaje = '⚠️ CRÍTICO: Tu efectivo actual (' + fmtMoney(efectivoActual) + ') es insuficiente para ni un mes completo de vida sola.';
+              color = 'var(--naranja)';
+            } else if (mesesPosibles < 3) {
+              mensaje = '⚠️ LIMITADO: Tu efectivo actual (' + fmtMoney(efectivoActual) + ') te alcanza para ' + mesesPosibles + ' mes(es) viviendo solo. Necesitas incrementar ingresos.';
+              color = 'var(--naranja)';
+            } else if (mesesPosibles < 6) {
+              mensaje = '🟡 POSIBLE A CORTO PLAZO: Tu efectivo actual (' + fmtMoney(efectivoActual) + ') te alcanza para ' + mesesPosibles + ' meses viviendo solo. Necesitas un plan de ingresos.';
+              color = 'var(--amarillo)';
+            } else if (mesesPosibles < 12) {
+              mensaje = '🟢 POSIBLE 6+ MESES: Tu efectivo actual (' + fmtMoney(efectivoActual) + ') te alcanza para ' + mesesPosibles + ' meses viviendo solo. Buen respaldo.';
+              color = 'var(--verde)';
+            } else {
+              mensaje = '✅ POSIBLE 1+ AÑO: Tu efectivo actual (' + fmtMoney(efectivoActual) + ') te alcanza para ' + Math.floor(mesesPosibles / 12) + ' año(s) y ' + (mesesPosibles % 12) + ' mes(es) viviendo solo. Tienes buena autonomía.';
+              color = 'var(--verde)';
+            }
+
+            return `
+              <div style="background:rgba(0,0,0,0.4);padding:16px;border-radius:8px;margin-top:16px;border-left:4px solid ${color};">
+                <div style="font-size:12px;line-height:1.6;color:${color};font-weight:bold;">
+                  ${mensaje}
+                </div>
+              </div>
+            `;
+          })()
+        }
       </div>
 
     </main>
