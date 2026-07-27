@@ -14,14 +14,14 @@ const COLUMNAS = [
   ['descartada', 'Descartada']
 ];
 
-// Escala de calor: entre más avanza la idea, más caliente el color; entrega = verde, descartada = gris
+// Escala de calor: blanco → azul → amarillo → naranja → rojo → rojo fuerte; descartada = gris
 const ESTADO_COLORS = {
   prospecto: 'var(--text)',
   desarrollo: 'var(--azul)',
   produccion: 'var(--amarillo)',
   grabar: 'var(--naranja)',
   edicion: 'var(--rojo)',
-  entrega: 'var(--verde)',
+  entrega: 'var(--rojofuerte)',
   descartada: 'var(--muted)'
 };
 
