@@ -64,7 +64,8 @@ export function renderPanorama(state) {
   const tareasHtml = tareas.length ? tareas.map(tareaCintaHtml).join('') : '';
 
   const metasHtml = CATEGORIAS_META.map(([cat, label]) => {
-    const items = (state.metasPersonales || []).filter(m => m.categoria === cat);
+    // las metas viejas de "objeto" caen en la columna Personal
+    const items = (state.metasPersonales || []).filter(m => m.categoria === cat || (cat === 'personal' && m.categoria === 'objeto'));
     return `
       <div class="metas-columna">
         <div class="metas-columna-head">
@@ -383,7 +384,8 @@ export function renderPanorama(state) {
         <button class="tarea-agregar" data-act="tarea-nueva">+ Tarea</button>
       </div>
 
-      <div class="section-title">Metas personales</div>
+      <div class="section-title">Mejora de equipo y metas</div>
+      <div class="vista-sub">Cámara, luces, edición y periféricos que faltan — más destrezas y logros. Marca cada uno cuando lo consigas.</div>
       <div class="metas-grid">${metasHtml}</div>
 
       <div class="seg-head">

@@ -60,7 +60,50 @@ export const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'ju
 
 export const ENFOQUE = [];
 
-export const CATEGORIAS_META = [['objeto', 'Objetos materiales'], ['logro', 'Logros'], ['destreza', 'Destrezas']];
+export const CATEGORIAS_META = [
+  ['camara', 'Cámara'],
+  ['luces', 'Luces'],
+  ['edicion', 'Edición'],
+  ['perifericos', 'Periféricos'],
+  ['personal', 'Personal'],
+  ['destreza', 'Destrezas'],
+  ['logro', 'Logros']
+];
+
+// Items iniciales de "Mejora de equipo" — se insertan solos en metas_personales si no existen aún
+export const METAS_EQUIPO_SEED = [
+  { categoria: 'camara', titulo: 'Sony A7 IV' },
+  { categoria: 'camara', titulo: 'Sony FX3' },
+  { categoria: 'camara', titulo: 'Monitor' },
+  { categoria: 'camara', titulo: 'Kit de limpieza' },
+  { categoria: 'camara', titulo: 'Bolso audiovisual' },
+  { categoria: 'camara', titulo: 'Trípode' },
+  { categoria: 'camara', titulo: 'Matte box' },
+  { categoria: 'camara', titulo: 'Disparador flash' },
+  { categoria: 'camara', titulo: 'Difusor flash' },
+  { categoria: 'luces', titulo: 'Godox ML150Bi' },
+  { categoria: 'luces', titulo: 'Godox ML100R' },
+  { categoria: 'luces', titulo: 'Softbox x2' },
+  { categoria: 'luces', titulo: 'Trípodes de luz x2' },
+  { categoria: 'luces', titulo: 'V-Mount x2' },
+  { categoria: 'luces', titulo: 'Extensiones' },
+  { categoria: 'edicion', titulo: 'iPhone 17 Pro Max' },
+  { categoria: 'edicion', titulo: 'Tarjeta gráfica' },
+  { categoria: 'edicion', titulo: 'MacBook' },
+  { categoria: 'edicion', titulo: 'iPad' },
+  { categoria: 'perifericos', titulo: 'Agarre Ronin' },
+  { categoria: 'perifericos', titulo: 'Ronin RS5' },
+  { categoria: 'perifericos', titulo: 'Gafas Meta' },
+  { categoria: 'perifericos', titulo: 'Soporte stream' },
+  { categoria: 'perifericos', titulo: 'PS5' },
+  { categoria: 'personal', titulo: 'Estudio audiovisual' },
+  { categoria: 'personal', titulo: 'Moto' },
+  { categoria: 'personal', titulo: 'Incienso' },
+  { categoria: 'personal', titulo: 'Almohada' },
+  { categoria: 'personal', titulo: 'Pantalonetas' },
+  { categoria: 'personal', titulo: 'Panel de corte' },
+  { categoria: 'destreza', titulo: 'Inglés' }
+];
 
 export const COLORES_TAREA = { verde: 'var(--verde)', brant: 'var(--brant)', novena: 'var(--novena)', rojo: 'var(--rojo)', muted: 'var(--muted)' };
 

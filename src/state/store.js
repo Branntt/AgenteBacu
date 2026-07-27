@@ -4,7 +4,7 @@ import { mesActual, hoyStr, lunesDe, sumarDias } from '../lib/idea.js';
 import { supabase } from '../lib/supabaseClient.js';
 import { generarCuentaCobroPDF, OBSERVACIONES_DEFAULT } from '../lib/pdfInvoice.js';
 import { generarListadoClientesPDF } from '../lib/pdfListadoClientes.js';
-import { MESES, COLORES_TAREA, familiaDeFormato } from '../data/constants.js';
+import { MESES, COLORES_TAREA, familiaDeFormato, METAS_EQUIPO_SEED } from '../data/constants.js';
 import { generarIdea } from '../lib/ia.js';
 
 export const state = {
@@ -185,6 +185,18 @@ async function cargarDatos() {
   notify();
   suscribirRealtime();
   verificarIdeasPorFecha();
+  sembrarMetasEquipo();
+}
+
+// Inserta los items de "Mejora de equipo" que aún no existan (una sola vez, comparando por título)
+function sembrarMetasEquipo() {
+  const existentes = new Set(state.metasPersonales.map(m => (m.titulo || '').trim().toLowerCase()));
+  const faltantes = METAS_EQUIPO_SEED.filter(s => !existentes.has(s.titulo.toLowerCase()));
+  if (!faltantes.length) return;
+  const rows = faltantes.map((s, i) => ({ id: 'mp' + Date.now() + '-' + i, categoria: s.categoria, titulo: s.titulo, fecha: null, cumplida: false }));
+  state.metasPersonales = state.metasPersonales.concat(rows);
+  notify();
+  supabase.from('metas_personales').insert(rows).then(({ error }) => marcarGuardado(!error));
 }
 
 function verificarIdeasPorFecha() {
