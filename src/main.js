@@ -103,8 +103,8 @@ function render() {
   drawerAbiertoAntes = drawerAbiertoAhora;
 }
 
-// Guardar scroll en tiempo real
-window.addEventListener('scroll', () => {
+// Guardar scroll justo antes de recargar/cerrar
+window.addEventListener('beforeunload', () => {
   const y = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || 0;
   persistValue('app.scroll', y);
 });
@@ -114,11 +114,10 @@ const restaurarScrollAlCargar = () => {
   if (state.dataReady && state.session && !yaRestoramos) {
     yaRestoramos = true;
     const scrollGuardado = loadValue('app.scroll', 0);
-    console.log('Restaurando scroll:', scrollGuardado);
-    setTimeout(() => {
+    // Restaurar en el siguiente frame después de que el DOM esté completamente renderizado
+    requestAnimationFrame(() => {
       window.scrollTo(0, scrollGuardado);
-      console.log('Scroll restaurado a:', window.scrollY);
-    }, 300);
+    });
   }
 };
 
