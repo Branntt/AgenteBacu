@@ -483,8 +483,18 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
 .meta-fecha { background: none; border: none; color: var(--muted); font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; flex-shrink: 0; width: 112px; }
 
 @media (min-width: 700px) {
-  .metas-grid { grid-template-columns: repeat(3, 1fr); }
+  .metas-grid { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
 }
+
+/* Pestaña Metas: grupos y resumen */
+.metas-grupo { margin-bottom: 8px; }
+.metas-grupo-head { margin-bottom: 14px; }
+.metas-resumen {
+  background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+  padding: 20px 24px; margin-bottom: 32px; display: flex; align-items: baseline; gap: 12px;
+}
+.metas-resumen-valor { font-size: 40px; font-weight: bold; line-height: 1; }
+.metas-resumen-label { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--muted); }
 
 .marcas-grid { display: grid; grid-template-columns: 1fr; gap: 16px; margin-bottom: 20px; }
 .marca-card {

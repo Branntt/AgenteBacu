@@ -103,6 +103,10 @@ export const METAS_EQUIPO_SEED = [
   { categoria: 'personal', titulo: 'Pantalonetas' },
   { categoria: 'personal', titulo: 'Panel de corte' },
   { categoria: 'destreza', titulo: 'Inglés' },
+  // Deseos (pestaña Metas): cosas que me compraría
+  { categoria: 'deseo_vehiculo', titulo: 'Moto de mayor cilindraje' },
+  { categoria: 'deseo_vehiculo', titulo: 'Carro' },
+  { categoria: 'deseo_camara', titulo: 'Sony A7S III' },
   // Inventario (pestaña Inventario): items con categoria inv_* ; cumplida = equipado
   { categoria: 'inv_garaje', titulo: 'Best 125' },
   // Bienestar: hábitos diarios. `fecha` guarda el último día cumplido, por eso se reinician solos.

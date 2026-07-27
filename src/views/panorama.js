@@ -1,4 +1,4 @@
-import { MARCAS, PREGUNTAS, PIPELINE, MESES, CATEGORIAS_META, COLORES_TAREA, ENFOQUE } from '../data/constants.js';
+import { MARCAS, PREGUNTAS, PIPELINE, MESES, COLORES_TAREA, ENFOQUE } from '../data/constants.js';
 import { fmtFecha, fmtNum, escapeHtml } from '../lib/format.js';
 import { hoyStr, lunesDe, sumarDias } from '../lib/idea.js';
 import { calcularFinanciamiento } from '../lib/financiamiento.js';
@@ -37,17 +37,6 @@ function tareaCintaHtml(t) {
   `;
 }
 
-function metaPersonalHtml(m) {
-  return `
-    <div class="meta-personal ${m.cumplida ? 'cumplida' : ''}">
-      <button class="meta-check" data-act="meta-personal-toggle" data-id="${escapeHtml(m.id)}" title="${m.cumplida ? 'Marcar pendiente' : 'Marcar cumplida'}">${m.cumplida ? '✓' : ''}</button>
-      <input class="meta-titulo" data-change="meta-personal-titulo" data-id="${escapeHtml(m.id)}" value="${escapeHtml(m.titulo)}" placeholder="Nombre de la meta">
-      <input type="date" class="meta-fecha" data-change="meta-personal-fecha" data-id="${escapeHtml(m.id)}" value="${escapeHtml(m.fecha || '')}" min="2026-01-01" style="color-scheme:dark;">
-      <button class="btn-text-muted" data-act="meta-personal-eliminar" data-id="${escapeHtml(m.id)}">✕</button>
-    </div>
-  `;
-}
-
 export function renderPanorama(state) {
   const ideas = state.ideas;
   const [anio, mesNum] = state.month.split('-').map(Number);
@@ -63,19 +52,6 @@ export function renderPanorama(state) {
   const tareas = state.tareas || [];
   const tareasHtml = tareas.length ? tareas.map(tareaCintaHtml).join('') : '';
 
-  const metasHtml = CATEGORIAS_META.map(([cat, label]) => {
-    // las metas viejas de "objeto" caen en la columna Personal
-    const items = (state.metasPersonales || []).filter(m => m.categoria === cat || (cat === 'personal' && m.categoria === 'objeto'));
-    return `
-      <div class="metas-columna">
-        <div class="metas-columna-head">
-          <span class="mono-label" style="margin-bottom:0;">${label}</span>
-          <button class="btn-text-muted" data-act="meta-personal-nueva" data-categoria="${cat}">+ Agregar</button>
-        </div>
-        <div class="metas-lista">${items.length ? items.map(metaPersonalHtml).join('') : '<div class="empty-note">Nada por aquí todavía.</div>'}</div>
-      </div>
-    `;
-  }).join('');
 
   // ---- seguimiento: registros de seguidores/alcance, fusionado desde la vieja pestaña Seguimiento ----
   const snapsOrdenados = (state.snaps || []).slice().sort((a, b) => a.fecha < b.fecha ? -1 : 1);
@@ -388,9 +364,6 @@ export function renderPanorama(state) {
         <button class="tarea-agregar" data-act="tarea-nueva">+ Tarea</button>
       </div>
 
-      <div class="section-title">Mejora de equipo y metas</div>
-      <div class="vista-sub">Cámara, luces, edición y periféricos que faltan — más destrezas y logros. Marca cada uno cuando lo consigas.</div>
-      <div class="metas-grid">${metasHtml}</div>
 
       <div class="seg-head">
         <div class="section-title" style="margin-bottom:0;">Las marcas — pipeline y seguimiento</div>

@@ -17,6 +17,7 @@ import { renderClientes } from './views/clientes.js';
 import { renderFinanciamiento } from './views/financiamiento.js';
 import { renderInventario } from './views/inventario.js';
 import { renderBienestar } from './views/bienestar.js';
+import { renderMetas } from './views/metas.js';
 import { renderIAModal } from './views/iaModal.js';
 import { renderRevisionIdeasModal } from './components/revisionIdeasModal.js';
 import { renderNotificacionBacu } from './components/notificacionBacu.js';
@@ -28,7 +29,8 @@ const VIEWS = {
   clientes: renderClientes,
   financiamiento: renderFinanciamiento,
   inventario: renderInventario,
-  bienestar: renderBienestar
+  bienestar: renderBienestar,
+  metas: renderMetas
 };
 
 const root = document.getElementById('app');
