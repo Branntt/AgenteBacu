@@ -13,11 +13,11 @@ function entryHtml(i, tipo) {
   const prioridadAlta = i.prioridad === 'Alta' && i.estado !== 'publicada' && i.estado !== 'descartada';
   const flags = (ok ? '<span class="cal-flag ok" title="Validada">✓</span>' : '')
     + (prioridadAlta ? '<span class="cal-flag alta" title="Prioridad alta">⚠</span>' : '');
-  const tag = tipo === 'rodaje' ? '<span class="cal-entry-tag">Rodaje</span>' : '';
+  const tag = tipo === 'rodaje' ? `<span class="cal-entry-tag" style="color:${M.color}">Rodaje</span>` : '';
   const icono = tipo === 'rodaje' ? '🎬' : '📢';
 
   return `
-    <div class="cal-entry ${tipo === 'rodaje' ? 'is-rodaje' : ''}" data-act="idea-abrir" data-id="${escapeHtml(i.id)}">
+    <div class="cal-entry ${tipo === 'rodaje' ? 'is-rodaje' : ''}" ${tipo === 'rodaje' ? `style="border-color:${M.color}"` : ''} data-act="idea-abrir" data-id="${escapeHtml(i.id)}">
       <span class="cal-entry-bar" style="background:${M.color}"></span>
       <span class="cal-entry-icon" aria-hidden="true">${icono}</span>
       <div class="cal-entry-title"><span class="cal-entry-title-icon" aria-hidden="true">${icono}</span>${tag}${escapeHtml(i.titulo)}</div>
@@ -32,10 +32,10 @@ function entryHtml(i, tipo) {
 // Grabación agendada desde la ficha de un cliente (pestaña Clientes) — se muestra en el calendario en modo solo lectura.
 function entryClienteHtml(c) {
   return `
-    <div class="cal-entry is-rodaje" data-act="nav-go" data-view="clientes" title="Editar en la pestaña Clientes">
+    <div class="cal-entry is-rodaje" style="border-color:var(--verde)" data-act="nav-go" data-view="clientes" title="Editar en la pestaña Clientes">
       <span class="cal-entry-bar" style="background:var(--verde)"></span>
       <span class="cal-entry-icon" aria-hidden="true">🎥</span>
-      <div class="cal-entry-title"><span class="cal-entry-title-icon" aria-hidden="true">🎥</span><span class="cal-entry-tag">Grabación</span>${escapeHtml(c.nombre || 'Cliente')}</div>
+      <div class="cal-entry-title"><span class="cal-entry-title-icon" aria-hidden="true">🎥</span><span class="cal-entry-tag" style="color:var(--verde)">Grabación</span>${escapeHtml(c.nombre || 'Cliente')}</div>
       <div class="cal-entry-meta"><span class="cal-entry-meta-text">${escapeHtml(c.proyecto || 'Proyecto sin definir')}</span></div>
     </div>
   `;
