@@ -67,7 +67,7 @@ export const state = {
     { id: 'gr7', nombre: 'Lightroom', emoji: '🖼️', monto: 8515, dia_vencimiento: 6 },
     { id: 'gr8', nombre: 'Apple.com', emoji: '🍎', monto: 9022, dia_vencimiento: 15 },
     { id: 'gr9', nombre: 'Gmail', emoji: '📧', monto: 2015, dia_vencimiento: 16 },
-    { id: 'gr10', nombre: 'Aseo personal (Shampú 15k/2m + Jabón cara 45k/2m + Cuchillas 9k/2m + Desodorante 50k/m + Contorno 80k/m)', emoji: '🧴', monto: 199000, dia_vencimiento: 20 },
+    { id: 'gr10', nombre: 'Aseo personal\n🧴 Shampú 15k/2m\n🧼 Jabón cara 45k/2m\n🪒 Cuchillas 9k/2m\n🧴 Desodorante 50k/m\n👁️ Contorno 80k/m', emoji: '🧴', monto: 199000, dia_vencimiento: 28 },
     { id: 'gr11', nombre: 'Google Play', emoji: '🎮', monto: 8900, dia_vencimiento: 23 }
   ],
   historialAbierto: false,
