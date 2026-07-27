@@ -58,16 +58,15 @@ export const state = {
     { id: 'g7', nombre: 'Transporte', emoji: '🚌', monto: 120000, dia_vencimiento: 1 }
   ],
   gastosRecurrentes: [
-    { id: 'gr1', nombre: 'Mango (comida)', emoji: '🥭', monto: 50000, dia_vencimiento: 5 },
-    { id: 'gr2', nombre: 'Gato (comida + arena)', emoji: '🐱', monto: 90000, dia_vencimiento: 1 },
-    { id: 'gr3', nombre: 'Lightroom', emoji: '🖼️', monto: 8515, dia_vencimiento: 16 },
-    { id: 'gr4', nombre: 'Gmail', emoji: '📧', monto: 2015, dia_vencimiento: 16 },
-    { id: 'gr5', nombre: 'Google Play', emoji: '🎮', monto: 8900, dia_vencimiento: 23 },
-    { id: 'gr6', nombre: 'CapCut', emoji: '✂️', monto: 29866, dia_vencimiento: 1 },
-    { id: 'gr7', nombre: 'Claude (suscripción)', emoji: '🤖', monto: 99888, dia_vencimiento: 2 },
-    { id: 'gr8', nombre: 'Manejo tarjeta', emoji: '💳', monto: 11000, dia_vencimiento: 11 },
-    { id: 'gr9', nombre: 'Spotify (plan familiar ÷6)', emoji: '🎵', monto: 5000, dia_vencimiento: 12 },
-    { id: 'gr10', nombre: 'Apple.com', emoji: '🍎', monto: 9022, dia_vencimiento: 15 }
+    { id: 'gr1', nombre: 'Mango (gato - comida + arena)', emoji: '🐱', monto: 140000, dia_vencimiento: 1 },
+    { id: 'gr2', nombre: 'CapCut', emoji: '✂️', monto: 29866, dia_vencimiento: 1 },
+    { id: 'gr3', nombre: 'Claude (suscripción)', emoji: '🤖', monto: 99888, dia_vencimiento: 2 },
+    { id: 'gr4', nombre: 'Manejo tarjeta', emoji: '💳', monto: 11000, dia_vencimiento: 11 },
+    { id: 'gr5', nombre: 'Spotify (plan familiar ÷6)', emoji: '🎵', monto: 5000, dia_vencimiento: 12 },
+    { id: 'gr6', nombre: 'Gmail', emoji: '📧', monto: 2015, dia_vencimiento: 16 },
+    { id: 'gr7', nombre: 'Lightroom', emoji: '🖼️', monto: 8515, dia_vencimiento: 16 },
+    { id: 'gr8', nombre: 'Apple.com', emoji: '🍎', monto: 9022, dia_vencimiento: 15 },
+    { id: 'gr9', nombre: 'Google Play', emoji: '🎮', monto: 8900, dia_vencimiento: 23 }
   ],
   historialAbierto: false,
   historialBusqueda: '',
