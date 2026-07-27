@@ -28,6 +28,8 @@ export const state = {
   iaBusy: false,
   iaError: null,
   iaResultado: null,
+  revisionIdeasModal: false,
+  revisionIdeasPendientes: [],
   cuentasCobro: [],
   movimientosFinanciamiento: [],
   deudas: [],
@@ -698,6 +700,18 @@ export const actions = {
     iaError: null
   }),
   iaCerrar: () => setState({ iaDraft: null, iaResultado: null, iaError: null }),
+
+  // Revisión de ideas por fecha
+  abrirRevisionIdeas: (ideas) => setState({ revisionIdeasModal: true, revisionIdeasPendientes: ideas }),
+  cerrarRevisionIdeas: () => setState({ revisionIdeasModal: false, revisionIdeasPendientes: [] }),
+  actualizarEstadoIdea: (ideaId, nuevoEstado) => {
+    const idea = state.ideas.find(i => i.id === ideaId);
+    if (!idea) return;
+    const updated = { ...idea, estado: nuevoEstado, revisada: true };
+    const idx = state.ideas.indexOf(idea);
+    state.ideas[idx] = updated;
+    supabase.from('ideas').update({ estado: nuevoEstado, revisada: true }).eq('id', ideaId).then(() => notify());
+  },
   iaSetCampo: (campo, val) => setState({ iaDraft: { ...state.iaDraft, [campo]: val } }),
 
   iaGenerar: async () => {

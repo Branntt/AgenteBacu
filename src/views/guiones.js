@@ -4,7 +4,15 @@ import { valida } from '../lib/idea.js';
 
 const FILTROS = [['todas', 'Todas'], ['brant', 'Brant'], ['bacu', 'Bacu'], ['novena', 'Novena']];
 const VISTAS = [['general', 'Vista general'], ['tipo', 'Por tipo de guion']];
-const COLUMNAS = [['desarrollo', 'En desarrollo'], ['lista', 'Lista para producir'], ['publicada', 'Publicada'], ['descartada', 'Descartada']];
+const COLUMNAS = [
+  ['prospecto', 'Prospecto'],
+  ['desarrollo', 'En desarrollo'],
+  ['produccion', 'Por producirse'],
+  ['grabar', 'Por grabar'],
+  ['edicion', 'Por editar'],
+  ['entrega', 'Por confirmar entrega'],
+  ['descartada', 'Descartada']
+];
 
 function cardGeneral(i, calma) {
   const M = MARCAS[i.marca];
