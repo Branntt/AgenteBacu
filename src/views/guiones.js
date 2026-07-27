@@ -14,15 +14,15 @@ const COLUMNAS = [
   ['descartada', 'Descartada']
 ];
 
-// Escala de calor: blanco → azul → amarillo → naranja → rojo → rojo fuerte; descartada = gris
+// Misma gama que Clientes: de frío a caliente según avanza la idea; descartada = gris
 const ESTADO_COLORS = {
-  prospecto: 'var(--text)',
-  desarrollo: 'var(--azul)',
-  produccion: 'var(--amarillo)',
-  grabar: 'var(--naranja)',
-  edicion: 'var(--rojo)',
-  entrega: 'var(--rojofuerte)',
-  descartada: 'var(--muted)'
+  prospecto: 'var(--text)',    // blanco
+  desarrollo: '#2E55E0',       // azul
+  produccion: '#1FB6CE',       // cian
+  grabar: '#EFC94C',           // amarillo
+  edicion: '#F08A2E',          // naranja
+  entrega: '#E0312E',          // rojo (lo más urgente de cerrar)
+  descartada: 'var(--muted)'   // gris
 };
 
 function cardGeneral(i, calma) {

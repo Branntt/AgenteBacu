@@ -1,16 +1,16 @@
 import { escapeHtml } from '../lib/format.js';
 
-// Escala de calor: entre más avanza el cliente, más caliente el color (por pagar = rojo fuerte); verdes = cerrado
+// Gama de 8 colores distintos, de frío a caliente según avanza el cliente; descartado = gris
 const ESTADO_COLORS = {
-  prospecto: 'var(--text)',
-  conversacion: 'var(--azul)',
-  grabacion: 'var(--amarillo)',
-  proyecto_edicion: 'var(--naranja)',
-  confirmar_entrega: 'var(--rojo)',
-  por_pagar: 'var(--rojofuerte)',
-  ya_pagos: 'var(--verde)',
-  entregado: 'var(--verdedeep)',
-  descartado: 'var(--muted)'
+  prospecto: 'var(--text)',          // blanco
+  conversacion: '#2E55E0',           // azul
+  grabacion: '#1FB6CE',              // cian
+  proyecto_edicion: '#EFC94C',       // amarillo
+  confirmar_entrega: '#F08A2E',      // naranja
+  por_pagar: '#E0312E',              // rojo (plata pendiente)
+  ya_pagos: '#1FAF74',               // verde
+  entregado: '#8E5BE8',              // violeta (archivado)
+  descartado: 'var(--muted)'         // gris
 };
 const COLUMNAS = [
   ['prospecto', 'Prospectos', 'Posibles clientes'],
