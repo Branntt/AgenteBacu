@@ -6,6 +6,9 @@ const DIAS_SEMANA = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 const VISTAS = [['mes', 'Mes'], ['semana', 'Semana'], ['agenda', 'Agenda']];
 const FILTROS = [['todas', 'Todas'], ['brant', 'Brant'], ['bacu', 'Bacu'], ['novena', 'Novena']];
 
+// Filtro de marca activo (se fija en renderCalendario) — con una marca elegida, clases/tareas se ocultan
+let filtroActivo = 'todas';
+
 function entryHtml(i, tipo) {
   const M = MARCAS[i.marca];
   const marcaTxt = M.nombre + (i.colab ? ' + ' + MARCAS[i.colab].nombre : '');
@@ -74,6 +77,7 @@ function entryClaseHtml(clase) {
 }
 
 function clasesDeDia(fs) {
+  if (filtroActivo !== 'todas') return [];
   if (fs < HORARIO_CLASES.inicio || fs > HORARIO_CLASES.fin) return [];
   const [anio, mes, dia] = fs.split('-').map(Number);
   const dow = new Date(anio, mes - 1, dia).getDay();
@@ -190,9 +194,11 @@ function renderAgenda(state, ideas, clientes, tareas) {
 }
 
 export function renderCalendario(state) {
-  const ideas = state.ideas.filter(i => state.filtroCalendario === 'todas' || i.marca === state.filtroCalendario || i.colab === state.filtroCalendario);
-  const clientes = state.clientes || [];
-  const tareas = state.tareas || [];
+  filtroActivo = state.filtroCalendario;
+  const ideas = state.ideas.filter(i => filtroActivo === 'todas' || i.marca === filtroActivo || i.colab === filtroActivo);
+  // Grabaciones de clientes son trabajo Bacu: solo se ven en "Todas" o "Bacu". Tareas y clases, solo en "Todas".
+  const clientes = (filtroActivo === 'todas' || filtroActivo === 'bacu') ? (state.clientes || []) : [];
+  const tareas = filtroActivo === 'todas' ? (state.tareas || []) : [];
 
   let titulo, contenido, fechasPeriodo, diasPeriodo, statsLabel;
   const mesLabel = MESES[Number(state.month.split('-')[1]) - 1];
