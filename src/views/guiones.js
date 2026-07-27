@@ -7,10 +7,11 @@ const VISTAS = [['general', 'Vista general'], ['tipo', 'Por tipo de guion']];
 const COLUMNAS = [
   ['prospecto', 'Prospecto'],
   ['desarrollo', 'En desarrollo'],
-  ['produccion', 'Por producirse'],
   ['grabar', 'Por grabar'],
   ['edicion', 'Por editar'],
   ['entrega', 'Por confirmar entrega'],
+  ['por_pagar', 'Por pagar'],
+  ['ya_pago', 'Ya pagó'],
   ['descartada', 'Descartada']
 ];
 
@@ -18,12 +19,21 @@ const COLUMNAS = [
 const ESTADO_COLORS = {
   prospecto: 'var(--text)',    // blanco
   desarrollo: '#2E55E0',       // azul
-  produccion: '#1FB6CE',       // cian
-  grabar: '#EFC94C',           // amarillo
-  edicion: '#E0312E',          // rojo (edición pendiente, lo más urgente)
-  entrega: '#E8641B',          // naranja fuerte (esperando confirmación del cliente)
+  grabar: '#1FB6CE',           // cian
+  edicion: '#EFC94C',          // amarillo
+  entrega: '#E8641B',          // naranja fuerte
+  por_pagar: '#E0312E',        // rojo (plata pendiente)
+  ya_pago: 'var(--verde)',     // verde Bacu (cerrado)
   descartada: 'var(--muted)'   // gris
 };
+
+// Estados viejos que caen en las columnas nuevas equivalentes
+function enColumnaIdea(i, estado) {
+  if (estado === 'desarrollo') return i.estado === 'desarrollo' || i.estado === 'lista';
+  if (estado === 'grabar') return i.estado === 'grabar' || i.estado === 'produccion';
+  if (estado === 'ya_pago') return i.estado === 'ya_pago' || i.estado === 'publicada';
+  return i.estado === estado;
+}
 
 function cardGeneral(i, calma) {
   const M = MARCAS[i.marca];
@@ -74,7 +84,7 @@ function cardTipo(i) {
 
 function renderGeneral(state, ideas) {
   const colsHtml = COLUMNAS.map(([estado, titulo]) => {
-    const items = ideas.filter(i => i.estado === estado);
+    const items = ideas.filter(i => enColumnaIdea(i, estado));
     const itemsHtml = items.length
       ? items.map(i => cardGeneral(i, state.modoCalma)).join('')
       : `<div class="col-empty">Vacío.<br>Mejor que mediocre.</div>`;

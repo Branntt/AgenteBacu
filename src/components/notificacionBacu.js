@@ -5,10 +5,11 @@ import { MESES, MARCAS } from '../data/constants.js';
 const PIPELINE_IDEA = [
   ['prospecto', 'Prospecto'],
   ['desarrollo', 'En desarrollo'],
-  ['produccion', 'Por producirse'],
   ['grabar', 'Por grabar'],
   ['edicion', 'Por editar'],
-  ['entrega', 'Por confirmar entrega']
+  ['entrega', 'Por confirmar entrega'],
+  ['por_pagar', 'Por pagar'],
+  ['ya_pago', 'Ya pagó']
 ];
 const PIPELINE_CLIENTE = [
   ['prospecto', 'Prospecto'],
