@@ -726,12 +726,17 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
 .cal-week-body {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 10px;
-  max-height: 260px;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
+  gap: 6px;
+  padding: 8px;
+  /* sin max-height ni scroll interno: la columna crece y todo se ve completo */
 }
+
+/* Semana: entradas compactas — texto pequeño que cabe en el renglón, sin scroll */
+.cal-week .cal-entry { padding: 5px 7px; min-height: 0; gap: 2px; }
+.cal-week .cal-entry-title { font-size: 10.5px; line-height: 1.25; }
+.cal-week .cal-entry-title-icon { font-size: 10px; margin-right: 3px; }
+.cal-week .cal-entry-meta { font-size: 8px; letter-spacing: .5px; }
+.cal-week .cal-entry-tag { font-size: 7.5px; letter-spacing: .5px; }
 
 /* shared entry card — used by mes, semana and agenda alike */
 .cal-entry { background: var(--panel2); padding: 8px 10px; cursor: pointer; display: flex; flex-direction: column; flex-shrink: 0; gap: 3px; min-height: 44px; justify-content: center; position: relative; }
