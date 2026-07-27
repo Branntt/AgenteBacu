@@ -751,8 +751,12 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
 .cal-flag.alta { color: var(--rojo); }
 
 .cal-entry.is-rodaje { border: 1px dashed var(--novena); }
-.cal-entry.is-clase { border: 1px dashed var(--azul); cursor: default; }
-.cal-entry.is-clase:hover { background: var(--panel2); }
+/* Clases: atenuadas — el usuario ya sabe qué son, solo marcan el día/hora ocupados */
+.cal-entry.is-clase { border: 1px dashed var(--line); cursor: default; opacity: .45; }
+.cal-entry.is-clase:hover { background: var(--panel2); opacity: 1; }
+.cal-entry.is-clase .cal-entry-bar { background: var(--muted) !important; }
+/* En la vista de mes solo se ve hora + materia (sin profesor/salón) */
+.cal-grid .cal-entry.is-clase .cal-entry-meta { display: none; }
 .cal-entry.is-tarea { border: 1px dashed var(--rojo); }
 .cal-entry-tag {
   display: inline-block;
