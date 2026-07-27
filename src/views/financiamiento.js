@@ -204,34 +204,32 @@ export function renderFinanciamiento(state) {
       </div>
       ` : ''}
 
-      <!-- 4️⃣ GASTOS MENSUALES (SI VIVIERAS SOLO) -->
+      <!-- 4️⃣ SIMULACIÓN: SI VIVIERAS SOLO -->
       <div class="finanzas-seccion" style="background:linear-gradient(135deg, rgba(255,107,107,0.1), rgba(255,149,0,0.1));border-left:4px solid var(--rojo);">
         <div class="seccion-titulo">🎯 Simulación: Si vivieras solo</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
-          ${gastosVivirSolo.map(g => `
-            <div style="background:rgba(255,255,255,0.05);padding:12px;border-radius:8px;font-size:13px;">
-              <div style="display:flex;justify-content:space-between;align-items:center;">
-                <div style="display:flex;align-items:center;gap:6px;">
-                  <span style="font-size:16px;">${g.emoji}</span>
-                  <span style="font-weight:bold;">${escapeHtml(g.nombre)}</span>
-                </div>
-                <div style="text-align:right;">
-                  <div style="font-weight:bold;color:var(--rojo);">${fmtMoney(g.monto)}</div>
-                  <div style="font-size:11px;opacity:0.6;">Día ${g.dia_vencimiento}</div>
-                </div>
-              </div>
-            </div>
-          `).join('')}
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:16px;">
+          <!-- Stack 1: Gastos Básicos -->
+          <div style="background:linear-gradient(135deg, rgba(76,175,80,0.2), rgba(56,142,60,0.2));padding:24px;border-radius:12px;border-left:4px solid var(--verde);text-align:center;">
+            <div style="font-size:32px;margin-bottom:8px;">🏠</div>
+            <div style="font-size:13px;opacity:0.8;margin-bottom:12px;">Gastos Básicos</div>
+            <div style="font-size:28px;font-weight:bold;color:var(--verde);">${fmtMoney(2150000)}</div>
+            <div style="font-size:11px;opacity:0.6;margin-top:8px;">Arriendo, servicios, comida, transporte</div>
+          </div>
+
+          <!-- Stack 2: Gastos Reales Actuales -->
+          <div style="background:linear-gradient(135deg, rgba(33,150,243,0.2), rgba(13,71,161,0.2));padding:24px;border-radius:12px;border-left:4px solid var(--azul);text-align:center;">
+            <div style="font-size:32px;margin-bottom:8px;">💼</div>
+            <div style="font-size:13px;opacity:0.8;margin-bottom:12px;">Gastos Reales Actuales</div>
+            <div style="font-size:28px;font-weight:bold;color:var(--azul);">${fmtMoney(493706)}</div>
+            <div style="font-size:11px;opacity:0.6;margin-top:8px;">Recurrentes + Aseo personal</div>
+          </div>
         </div>
-        <div style="background:rgba(0,0,0,0.3);padding:14px;border-radius:8px;font-size:14px;text-align:center;">
-          <div style="color:var(--rojo);font-weight:bold;font-size:20px;">${fmtMoney(gastosMensualesTotal)}</div>
-          <div style="opacity:0.7;margin-top:4px;">Total mensual necesario</div>
+
+        <div style="background:rgba(0,0,0,0.3);padding:16px;border-radius:8px;font-size:14px;text-align:center;">
+          <div style="opacity:0.8;margin-bottom:8px;">TOTAL MENSUAL SI VIVIERAS SOLO:</div>
+          <div style="font-size:32px;font-weight:bold;color:var(--rojo);">${fmtMoney(2643706)}</div>
         </div>
-        ${mesesParaVivir > 0 ? `
-        <div style="background:rgba(76,175,80,0.2);padding:12px;border-radius:8px;margin-top:12px;text-align:center;font-size:13px;color:var(--verde);">
-          <strong>Con tu dinero actual, podrías vivir ${mesesParaVivir} mes${mesesParaVivir !== 1 ? 'es' : ''}</strong>
-        </div>
-        ` : ''}
       </div>
 
     </main>
