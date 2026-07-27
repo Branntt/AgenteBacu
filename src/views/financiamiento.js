@@ -173,9 +173,9 @@ export function renderFinanciamiento(state) {
             <div style="font-size:12px;opacity:0.8;margin-top:4px;">~1 mes de duración</div>
             <div style="font-size:14px;font-weight:bold;color:#9c27ac;margin-top:6px;">$80k/mes</div>
           </div>
-          <div style="background:rgba(255,255,255,0.05);padding:12px;border-radius:8px;border-left:3px solid #9c27ac;order:2;">
+          <div style="background:rgba(255,255,255,0.05);padding:12px;border-radius:8px;border-left:3px solid #9c27ac;order:2;opacity:0.3;">
             <div style="font-size:13px;font-weight:bold;">🧴 Desodorante</div>
-            <div style="font-size:12px;opacity:0.8;margin-top:4px;">Menos de 1 mes</div>
+            <div style="font-size:12px;opacity:0.8;margin-top:4px;">Aún dura</div>
             <div style="font-size:14px;font-weight:bold;color:#9c27ac;margin-top:6px;">$50k/mes</div>
           </div>
           <div style="background:rgba(255,255,255,0.05);padding:12px;border-radius:8px;border-left:3px solid #9c27ac;order:3;">
@@ -183,9 +183,9 @@ export function renderFinanciamiento(state) {
             <div style="font-size:12px;opacity:0.8;margin-top:4px;">$90k cada 2 meses</div>
             <div style="font-size:14px;font-weight:bold;color:#9c27ac;margin-top:6px;">$45k/mes</div>
           </div>
-          <div style="background:rgba(255,255,255,0.05);padding:12px;border-radius:8px;border-left:3px solid #9c27ac;order:4;">
+          <div style="background:rgba(255,255,255,0.05);padding:12px;border-radius:8px;border-left:3px solid #9c27ac;order:4;opacity:0.3;">
             <div style="font-size:13px;font-weight:bold;">🧴 Shampú</div>
-            <div style="font-size:12px;opacity:0.8;margin-top:4px;">$30k cada 2 meses</div>
+            <div style="font-size:12px;opacity:0.8;margin-top:4px;">Aún dura</div>
             <div style="font-size:14px;font-weight:bold;color:#9c27ac;margin-top:6px;">$15k/mes</div>
           </div>
           <div style="background:rgba(255,255,255,0.05);padding:12px;border-radius:8px;border-left:3px solid #9c27ac;order:5;">
