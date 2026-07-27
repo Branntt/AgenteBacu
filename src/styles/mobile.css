@@ -58,7 +58,6 @@
 
   /* Header */
   .header-nav { gap: 4px; }
-  .nav-btn { min-height: 48px; padding: 10px 12px; font-size: 13px; }
 
   /* Secciones financiamiento */
   .finanzas-seccion { margin-bottom: 20px; padding: 16px; }

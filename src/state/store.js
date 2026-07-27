@@ -17,6 +17,7 @@ export const state = {
   selId: null,
   guionId: null,
   clienteSelId: null,
+  menuAbierto: false,
   filtroGuiones: loadValue('ui.filtroGuiones', 'todas'),
   guionesVista: loadValue('ui.guionesVista', 'general'),
   filtroCalendario: loadValue('ui.filtroCalendario', 'todas'),
@@ -336,6 +337,8 @@ function suscribirRealtime() {
 
 export const actions = {
   setView: v => { persistValue('app.view', v); setState({ view: v }); },
+  menuToggle: () => setState({ menuAbierto: !state.menuAbierto }),
+  menuCerrar: () => setState({ menuAbierto: false }),
   setFiltroGuiones: v => setState({ filtroGuiones: v }),
   setGuionesVista: v => setState({ guionesVista: v }),
   abrirMarca: marca => setState({ view: 'guiones', filtroGuiones: marca, guionesVista: 'general' }),

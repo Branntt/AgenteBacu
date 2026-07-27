@@ -59,6 +59,47 @@ function restaurarFoco(info) {
 
 let drawerAbiertoAntes = false;
 
+// ---- navegación por URL (#vista) ----
+function vistaDeHash() {
+  const v = window.location.hash.slice(1);
+  return VIEWS[v] ? v : null;
+}
+
+let vistaHashAnterior = state.view;
+let historialInicializado = false;
+
+function sincronizarHashConVista() {
+  if (!state.session) {
+    if (window.location.hash) history.replaceState(null, '', window.location.pathname + window.location.search);
+    return;
+  }
+  if (!state.dataReady || state.view === vistaHashAnterior) return;
+
+  if (!historialInicializado) {
+    // la entrada inicial del historial nunca recibió su propio hash — se lo damos
+    // ahora (a la vista de la que venimos) para que "atrás" resuelva bien.
+    history.replaceState({ view: vistaHashAnterior }, '', '#' + vistaHashAnterior);
+    historialInicializado = true;
+  }
+
+  vistaHashAnterior = state.view;
+  const nuevoHash = '#' + state.view;
+  if (window.location.hash !== nuevoHash) {
+    history.pushState({ view: state.view }, '', nuevoHash);
+  }
+}
+
+function sincronizarVistaConHash() {
+  const v = vistaDeHash();
+  if (v && v !== state.view) actions.setView(v);
+}
+
+window.addEventListener('popstate', sincronizarVistaConHash);
+window.addEventListener('hashchange', sincronizarVistaConHash);
+
+const vistaInicial = vistaDeHash();
+if (vistaInicial) actions.setView(vistaInicial);
+
 function render() {
   const temaAttr = TEMA_MAP[state.tema] || 'cine';
   const foco = capturarFoco();
@@ -149,6 +190,7 @@ const restaurarScrollAlCargar = () => {
 
 subscribe(render);
 subscribe(alCambiarVista);
+subscribe(sincronizarHashConVista);
 render();
 initAuth();
 subscribe(restaurarScrollAlCargar);
@@ -160,7 +202,7 @@ if ('serviceWorker' in navigator) {
 }
 
 document.addEventListener('keydown', e => {
-  const drawerAbierto = state.selId || state.clienteSelId || state.guionId || state.rodajeDraft || state.cuentaCobroDraft || state.iaDraft;
+  const drawerAbierto = state.selId || state.clienteSelId || state.guionId || state.rodajeDraft || state.cuentaCobroDraft || state.iaDraft || state.menuAbierto;
   if (!drawerAbierto) return;
 
   if (e.key === 'Escape') {
@@ -170,11 +212,12 @@ document.addEventListener('keydown', e => {
     if (state.rodajeDraft) actions.rodajeRapidoCerrar();
     if (state.cuentaCobroDraft) actions.cuentaCobroCerrar();
     if (state.iaDraft) actions.iaCerrar();
+    if (state.menuAbierto) actions.menuCerrar();
     return;
   }
 
   if (e.key === 'Tab') {
-    const drawer = root.querySelector('.drawer');
+    const drawer = root.querySelector('.drawer') || root.querySelector('.nav.nav-abierto');
     if (!drawer) return;
     const focusables = Array.from(drawer.querySelectorAll(FOCUSABLE));
     if (!focusables.length) return;
@@ -192,7 +235,9 @@ root.addEventListener('click', e => {
   const { act, id, view, marca, idx, value, fecha, categoria, direccion } = el.dataset;
 
   switch (act) {
-    case 'nav-go': actions.setView(view); break;
+    case 'nav-go': actions.setView(view); actions.menuCerrar(); break;
+    case 'menu-toggle': actions.menuToggle(); break;
+    case 'menu-cerrar': actions.menuCerrar(); break;
     case 'nueva-idea': actions.nuevaIdea(); break;
     case 'marca-abrir': actions.abrirMarca(marca); break;
     case 'idea-abrir': actions.abrirIdea(id); break;
