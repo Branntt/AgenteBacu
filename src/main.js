@@ -104,29 +104,43 @@ function render() {
   drawerAbiertoAntes = drawerAbiertoAhora;
 }
 
-// Guardar scroll en sessionStorage cada segundo
-setInterval(() => {
+// ---- memoria de scroll por pestaña ----
+// Cada vista guarda su propia posición ('scroll.calendario', 'scroll.financiamiento', ...)
+function guardarScrollVista() {
   const y = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || 0;
-  try { sessionStorage.setItem('scroll', Math.round(y).toString()); } catch (e) {}
-});
+  try { localStorage.setItem('scroll.' + state.view, String(Math.round(y))); } catch (e) {}
+}
+window.addEventListener('scroll', guardarScrollVista, { passive: true });
 
+function restaurarScrollVista() {
+  let y = 0;
+  try { y = parseInt(localStorage.getItem('scroll.' + state.view) || '0', 10); } catch (e) {}
+  const ir = () => window.scrollTo(0, y);
+  requestAnimationFrame(ir);
+  setTimeout(ir, 150);
+}
+
+// Al cambiar de pestaña, se restaura donde quedó esa pestaña
+let vistaAnterior = state.view;
+const alCambiarVista = () => {
+  if (state.view !== vistaAnterior) {
+    vistaAnterior = state.view;
+    restaurarScrollVista();
+  }
+};
+
+// Al recargar la página, se restaura el scroll de la pestaña activa
 let yaRestoramos = false;
 const restaurarScrollAlCargar = () => {
   if (state.dataReady && state.session && !yaRestoramos) {
     yaRestoramos = true;
-    try {
-      const scroll = parseInt(sessionStorage.getItem('scroll') || '0', 10);
-      if (scroll > 0) {
-        const restaurar = () => window.scrollTo(0, scroll);
-        restaurar();
-        setTimeout(restaurar, 200);
-        setTimeout(restaurar, 500);
-      }
-    } catch (e) {}
+    restaurarScrollVista();
+    setTimeout(restaurarScrollVista, 400);
   }
 };
 
 subscribe(render);
+subscribe(alCambiarVista);
 render();
 initAuth();
 subscribe(restaurarScrollAlCargar);

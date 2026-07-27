@@ -9,18 +9,18 @@ import { generarIdea } from '../lib/ia.js';
 
 export const state = {
   view: loadValue('app.view', 'calendario'),
-  month: mesActual(),
+  month: loadValue('ui.month', mesActual()),
   ideas: [],
   snaps: [],
   clientes: [],
   selId: null,
   guionId: null,
   clienteSelId: null,
-  filtroGuiones: 'todas',
-  guionesVista: 'general',
-  filtroCalendario: 'todas',
-  calVista: 'mes',
-  semanaInicio: lunesDe(hoyStr()),
+  filtroGuiones: loadValue('ui.filtroGuiones', 'todas'),
+  guionesVista: loadValue('ui.guionesVista', 'general'),
+  filtroCalendario: loadValue('ui.filtroCalendario', 'todas'),
+  calVista: loadValue('ui.calVista', 'mes'),
+  semanaInicio: loadValue('ui.semanaInicio', lunesDe(hoyStr())),
   snapDraft: null,
   rodajeDraft: null,
   cuentaCobroDraft: null,
@@ -105,8 +105,14 @@ const listeners = [];
 export function subscribe(fn) { listeners.push(fn); }
 function notify() { listeners.forEach(fn => fn()); }
 
+// Claves de interfaz que se recuerdan entre sesiones (cada pestaña vuelve donde quedó)
+const UI_PERSIST = ['month', 'filtroGuiones', 'guionesVista', 'filtroCalendario', 'calVista', 'semanaInicio'];
+
 function setState(patch) {
   Object.assign(state, patch);
+  for (const k of UI_PERSIST) {
+    if (k in patch) persistValue('ui.' + k, patch[k]);
+  }
   notify();
 }
 
