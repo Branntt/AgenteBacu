@@ -264,6 +264,8 @@ root.addEventListener('click', e => {
     case 'pago-mensual-eliminar': actions.eliminarPagoMensual(id); break;
     case 'meta-personal-nueva': actions.metaPersonalNueva(categoria); break;
     case 'inv-vista': actions.invSetVista(value); break;
+    case 'avatar-set': actions.avatarSet(el.dataset.campo, value); break;
+    case 'avatar-editor-toggle': actions.avatarEditorToggle(); break;
     case 'inv-agregar': actions.metaPersonalNueva('inv_' + value); break;
     case 'inv-equipar': {
       const item = state.metasPersonales.find(m => m.id === id);

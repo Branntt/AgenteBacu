@@ -72,6 +72,10 @@
   /* Espaciado general */
   gap { gap: 12px !important; }
 
+  /* Avatar: los swatches de color mantienen su forma redonda */
+  .avatar-swatch { min-height: 34px; width: 34px; height: 34px; padding: 0; }
+  .avatar-opt { min-height: 40px; padding: 8px 12px; font-size: 12px; }
+
   /* Modales */
   .modal-overlay { backdrop-filter: blur(4px); }
   .modal-content { padding: 20px; border-radius: 12px; }

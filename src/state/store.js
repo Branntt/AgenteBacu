@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabaseClient.js';
 import { generarCuentaCobroPDF, OBSERVACIONES_DEFAULT } from '../lib/pdfInvoice.js';
 import { generarListadoClientesPDF } from '../lib/pdfListadoClientes.js';
 import { MESES, COLORES_TAREA, familiaDeFormato, METAS_EQUIPO_SEED } from '../data/constants.js';
+import { AVATAR_DEFAULT } from '../components/avatar.js';
 import { generarIdea } from '../lib/ia.js';
 
 export const state = {
@@ -21,6 +22,8 @@ export const state = {
   filtroCalendario: loadValue('ui.filtroCalendario', 'todas'),
   calVista: loadValue('ui.calVista', 'mes'),
   invVista: loadValue('ui.invVista', 'personal'),
+  avatar: loadValue('ui.avatar', AVATAR_DEFAULT),
+  avatarEditor: false,
   semanaInicio: loadValue('ui.semanaInicio', lunesDe(hoyStr())),
   snapDraft: null,
   rodajeDraft: null,
@@ -107,7 +110,7 @@ export function subscribe(fn) { listeners.push(fn); }
 function notify() { listeners.forEach(fn => fn()); }
 
 // Claves de interfaz que se recuerdan entre sesiones (cada pestaña vuelve donde quedó)
-const UI_PERSIST = ['month', 'filtroGuiones', 'guionesVista', 'filtroCalendario', 'calVista', 'semanaInicio', 'invVista'];
+const UI_PERSIST = ['month', 'filtroGuiones', 'guionesVista', 'filtroCalendario', 'calVista', 'semanaInicio', 'invVista', 'avatar'];
 
 function setState(patch) {
   Object.assign(state, patch);
@@ -494,6 +497,8 @@ export const actions = {
 
   setCalVista: v => setState({ calVista: v }),
   invSetVista: v => setState({ invVista: v }),
+  avatarSet: (campo, valor) => setState({ avatar: { ...AVATAR_DEFAULT, ...state.avatar, [campo]: valor } }),
+  avatarEditorToggle: () => setState({ avatarEditor: !state.avatarEditor }),
   setFiltroCalendario: v => setState({ filtroCalendario: v }),
   cambiaSemana: delta => setState({ semanaInicio: sumarDias(state.semanaInicio, delta * 7) }),
 

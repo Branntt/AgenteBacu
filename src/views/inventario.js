@@ -1,4 +1,5 @@
 import { escapeHtml } from '../lib/format.js';
+import { renderAvatarSVG, renderAvatarEditor } from '../components/avatar.js';
 
 const VISTAS_INV = [
   ['personal', '🎒 Personal'],
@@ -17,7 +18,7 @@ function itemHtml(m, equipable) {
   `;
 }
 
-function renderPersonal(items) {
+function renderPersonal(items, state) {
   const equipados = items.filter(m => m.cumplida);
   const mochila = items.filter(m => !m.cumplida);
   const izq = equipados.filter((_, i) => i % 2 === 0);
@@ -27,12 +28,17 @@ function renderPersonal(items) {
     <div class="inv-escena">
       <div class="inv-lado">${izq.map(m => itemHtml(m, true)).join('') || '<div class="empty-note">Nada equipado</div>'}</div>
       <div class="inv-avatar">
-        <div class="inv-avatar-figura">🧍</div>
+        <div class="inv-avatar-figura">${renderAvatarSVG(state.avatar, 150)}</div>
         <div class="inv-avatar-nombre mono-label">BRANDON</div>
         <div class="inv-avatar-sub">${equipados.length} equipado${equipados.length === 1 ? '' : 's'}</div>
+        <button class="btn-ghost" data-act="avatar-editor-toggle" style="margin-top:10px;font-size:11px;padding:7px 12px;min-height:0;">
+          ${state.avatarEditor ? 'Listo' : '✎ Personalizar'}
+        </button>
       </div>
       <div class="inv-lado">${der.map(m => itemHtml(m, true)).join('') || '<div class="empty-note">Nada equipado</div>'}</div>
     </div>
+
+    ${state.avatarEditor ? renderAvatarEditor(state.avatar) : ''}
 
     <div class="section-title">Mochila — objetos personales</div>
     <div class="vista-sub">Tu ropa y objetos personales. ▲ equipa el item (aparece a tu lado), ▼ lo devuelve a la mochila.</div>
@@ -86,7 +92,7 @@ export function renderInventario(state) {
   let contenido;
   if (vista === 'habitacion') contenido = renderHabitacion(items('habitacion'));
   else if (vista === 'garaje') contenido = renderGaraje(items('garaje'));
-  else contenido = renderPersonal(items('personal'));
+  else contenido = renderPersonal(items('personal'), state);
 
   return `
     <main class="inventario">
