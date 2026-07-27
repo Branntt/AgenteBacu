@@ -14,12 +14,12 @@ html, body {
   --line2: #3D3D3D;
   --text: #FFFFFF;
   --muted: #8C8C8C;
-  --verde: #42C88F;
-  --verdedeep: #2E9C6C;
+  --verde: #1FAF74;
+  --verdedeep: #17945F;
   --brant: #EDE7D3;
   --novena: #D98A50;
-  --rojo: #C25A3C;
-  --azul: #5B8DEF;
+  --rojo: #D9362E;
+  --azul: #2E55E0;
 }
 
 [data-tema="galeria"] {
@@ -30,12 +30,12 @@ html, body {
   --line2: #CCC9BB;
   --text: #181B19;
   --muted: #79807A;
-  --verde: #26775A;
-  --verdedeep: #1F6349;
+  --verde: #1B6B4E;
+  --verdedeep: #145A40;
   --brant: #6B6553;
   --novena: #A85F2E;
-  --rojo: #A34B34;
-  --azul: #2F5FA8;
+  --rojo: #A82A22;
+  --azul: #1E3FAE;
 }
 
 ::selection { background: #2E7D5B; color: #fff; }

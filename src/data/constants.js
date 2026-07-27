@@ -3,7 +3,7 @@ export const MARCAS = {
     nombre: 'Brant',
     handle: '@branntt._',
     rol: 'Marca personal',
-    color: 'var(--brant)',
+    color: 'var(--azul)',
     esencia: 'No vende servicios: construye reputación. Dirección creativa, filosofía, procesos y visión. Que te sigan por cómo piensas.'
   },
   bacu: {
@@ -17,7 +17,7 @@ export const MARCAS = {
     nombre: 'Novena Crew',
     handle: '@novenacrew_',
     rol: 'Productora & comunidad',
-    color: 'var(--novena)',
+    color: 'var(--rojo)',
     esencia: 'No es una empresa: es un movimiento. Artistas, sesiones, eventos y cultura. Que la gente quiera participar, no solo consumir.'
   }
 };
