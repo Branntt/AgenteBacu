@@ -103,19 +103,23 @@ function render() {
   drawerAbiertoAntes = drawerAbiertoAhora;
 }
 
+// Guardar scroll en tiempo real
+window.addEventListener('scroll', () => {
+  persistValue('app.scroll', window.scrollY);
+});
+
+let yaRestoramos = false;
+const restaurarScrollAlCargar = () => {
+  if (state.dataReady && state.session && !yaRestoramos) {
+    yaRestoramos = true;
+    const scrollGuardado = loadValue('app.scroll', 0);
+    setTimeout(() => { window.scrollTo(0, scrollGuardado); }, 150);
+  }
+};
+
 subscribe(render);
 render();
 initAuth();
-
-// Restaurar scroll después de que la página esté lista
-const restaurarScrollAlCargar = () => {
-  if (state.dataReady && state.session) {
-    const scrollGuardado = loadValue('app.scroll', 0);
-    if (scrollGuardado > 0) {
-      setTimeout(() => { window.scrollTo(0, scrollGuardado); }, 100);
-    }
-  }
-};
 subscribe(restaurarScrollAlCargar);
 
 if ('serviceWorker' in navigator) {
