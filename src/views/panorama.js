@@ -2,6 +2,8 @@ import { MARCAS, PREGUNTAS, PIPELINE, MESES, COLORES_TAREA, ENFOQUE } from '../d
 import { fmtFecha, fmtNum, escapeHtml } from '../lib/format.js';
 import { hoyStr, lunesDe, sumarDias } from '../lib/idea.js';
 import { calcularFinanciamiento } from '../lib/financiamiento.js';
+import { calcularEstres } from '../lib/bienestar.js';
+import { UNIVERSIDAD } from '../data/universidad.js';
 
 function fmtMoney(n) {
   const v = Number(n) || 0;
@@ -95,6 +97,27 @@ export function renderPanorama(state) {
 
   // Gastos recurrentes del mes
   const recurrentesTotal = (state.gastosRecurrentes || []).reduce((s, g) => s + (Number(g.monto) || 0), 0);
+
+  // Inventario
+  const invItems = (state.metasPersonales || []).filter(m => (m.categoria || '').startsWith('inv_'));
+  const invPersonal = invItems.filter(m => m.categoria === 'inv_personal');
+  const invEquipados = invPersonal.filter(m => m.cumplida).length;
+  const invHabitacion = invItems.filter(m => m.categoria === 'inv_habitacion').length;
+  const invGaraje = invItems.filter(m => m.categoria === 'inv_garaje').length;
+
+  // Bienestar
+  const estres = calcularEstres(state);
+
+  // Metas (sin inventario ni hábitos)
+  const metasReales = (state.metasPersonales || []).filter(m => !(m.categoria || '').startsWith('inv_') && m.categoria !== 'habito');
+  const metasCumplidas = metasReales.filter(m => m.cumplida).length;
+  const metasDeseos = metasReales.filter(m => (m.categoria || '').startsWith('deseo_')).length;
+  const metasEquipo = metasReales.filter(m => ['camara', 'luces', 'edicion', 'perifericos'].includes(m.categoria)).length;
+
+  // Universidad
+  const uniPct = (UNIVERSIDAD.creditosAprobados / UNIVERSIDAD.creditosRequeridos) * 100;
+  const uniFaltan = UNIVERSIDAD.creditosRequeridos - UNIVERSIDAD.creditosAprobados;
+  const uniPendientes = UNIVERSIDAD.bloques.reduce((n, b) => n + ((b.cursos || []).filter(c => c.estado === 'pend' || c.estado === 'parcial').length), 0);
 
   // Fila de estadística compacta para el centro de stats
   const statRow = (label, valor, color) => `
@@ -282,27 +305,14 @@ export function renderPanorama(state) {
       <div class="vista-sub">El resumen de todo lo importante, pestaña por pestaña. Toca una tarjeta para ir allá.</div>
 
       <div class="stats-centro">
-        <!-- FINANZAS -->
-        <div class="panel" data-act="nav-go" data-view="financiamiento" style="cursor:pointer;">
-          <span class="mono-label">💰 Finanzas</span>
-          <div class="vital-value ${finTotal.patrimonio < 0 ? 'alto' : 'verde'}" style="margin-bottom:10px;">${fmtMoney(finTotal.patrimonio)}</div>
-          ${statRow('En bolsillo', fmtMoney(finTotal.efectivo), 'var(--verde)')}
-          ${statRow('Te deben', fmtMoney(finTotal.teDeben), 'var(--azul)')}
-          ${statRow('Debes', fmtMoney(finTotal.debes), 'var(--rojo)')}
-          ${statRow('Recurrentes/mes', fmtMoney(recurrentesTotal), 'var(--rojo)')}
-        </div>
-
-        <!-- ESTRATEGIA -->
-        <div class="panel" data-act="nav-go" data-view="guiones" style="cursor:pointer;">
-          <span class="mono-label">🎬 Estrategia</span>
-          <div class="vital-value" style="margin-bottom:10px;">${ideasActivas.length} idea${ideasActivas.length === 1 ? '' : 's'}</div>
-          ${statRow('Prospecto', cuentaIdeas(['prospecto']))}
-          ${statRow('En desarrollo', cuentaIdeas(['desarrollo', 'lista']))}
-          ${statRow('Grabación', cuentaIdeas(['grabar', 'produccion']), '#1FB6CE')}
-          ${statRow('Por editar', cuentaIdeas(['edicion']), '#EFC94C')}
-          ${statRow('Por confirmar entrega', cuentaIdeas(['entrega']), '#E8641B')}
-          ${statRow('Por pagar', cuentaIdeas(['por_pagar']), 'var(--rojo)')}
-          ${statRow('Ya pagó', cuentaIdeas(['ya_pago', 'publicada']), 'var(--verde)')}
+        <!-- CALENDARIO -->
+        <div class="panel" data-act="nav-go" data-view="calendario" style="cursor:pointer;">
+          <span class="mono-label">📅 Calendario — ${MESES[mesNum - 1]}</span>
+          <div class="vital-value" style="margin-bottom:10px;">${enMes.length} publicación${enMes.length === 1 ? '' : 'es'}</div>
+          ${statRow('Rodajes este mes', rodajesMes)}
+          ${statRow('Grabaciones de clientes', grabClientesMes, '#1FB6CE')}
+          ${statRow('Entregas pendientes', entregasPendientes, entregasPendientes > 0 ? 'var(--rojo)' : 'var(--verde)')}
+          ${statRow('Días sin publicar', diasMes - diasConPub)}
         </div>
 
         <!-- CLIENTES -->
@@ -318,42 +328,63 @@ export function renderPanorama(state) {
           ${statRow('Cerrados', cuentaCls(['ya_pagos', 'entregado']), 'var(--verde)')}
         </div>
 
-        <!-- CALENDARIO -->
-        <div class="panel" data-act="nav-go" data-view="calendario" style="cursor:pointer;">
-          <span class="mono-label">📅 Calendario — ${MESES[mesNum - 1]}</span>
-          <div class="vital-value" style="margin-bottom:10px;">${enMes.length} publicación${enMes.length === 1 ? '' : 'es'}</div>
-          ${statRow('Rodajes este mes', rodajesMes)}
-          ${statRow('Grabaciones de clientes', grabClientesMes, '#1FB6CE')}
-          ${statRow('Entregas pendientes', entregasPendientes, entregasPendientes > 0 ? 'var(--rojo)' : 'var(--verde)')}
-          ${statRow('Días sin publicar', diasMes - diasConPub)}
+        <!-- ESTRATEGIA -->
+        <div class="panel" data-act="nav-go" data-view="guiones" style="cursor:pointer;">
+          <span class="mono-label">🎬 Estrategia</span>
+          <div class="vital-value" style="margin-bottom:10px;">${ideasActivas.length} idea${ideasActivas.length === 1 ? '' : 's'}</div>
+          ${statRow('Prospecto', cuentaIdeas(['prospecto']))}
+          ${statRow('En desarrollo', cuentaIdeas(['desarrollo', 'lista']))}
+          ${statRow('Grabación', cuentaIdeas(['grabar', 'produccion']), '#1FB6CE')}
+          ${statRow('Por editar', cuentaIdeas(['edicion']), '#EFC94C')}
+          ${statRow('Por confirmar entrega', cuentaIdeas(['entrega']), '#E8641B')}
+          ${statRow('Por pagar', cuentaIdeas(['por_pagar']), 'var(--rojo)')}
+          ${statRow('Ya pagó', cuentaIdeas(['ya_pago', 'publicada']), 'var(--verde)')}
         </div>
 
-        <!-- SEGUIDORES -->
-        <div class="panel">
-          <span class="mono-label">📈 Seguidores — total</span>
-          <div class="vital-value verde" style="margin-bottom:10px;">${totalSeg != null ? fmtNum(totalSeg) : '—'}</div>
-          ${['brant', 'bacu', 'novena'].map(k => {
-            const cur = ultimoSnap && ultimoSnap[k] ? ultimoSnap[k].seg : null;
-            const antes = penultimoSnap && penultimoSnap[k] ? penultimoSnap[k].seg : null;
-            const d = cur != null && antes != null ? cur - antes : null;
-            const deltaTxt = d != null ? ` (${d >= 0 ? '+' : ''}${fmtNum(d)})` : '';
-            return statRow(MARCAS[k].nombre, (cur != null ? fmtNum(cur) : '—') + deltaTxt, MARCAS[k].color);
-          }).join('')}
-          ${statRow('Cambio total', deltaTotalSeg != null ? (deltaTotalSeg >= 0 ? '+' : '') + fmtNum(deltaTotalSeg) : '—', deltaTotalSeg != null && deltaTotalSeg < 0 ? 'var(--rojo)' : 'var(--verde)')}
+        <!-- FINANZAS -->
+        <div class="panel" data-act="nav-go" data-view="financiamiento" style="cursor:pointer;">
+          <span class="mono-label">💰 Finanzas</span>
+          <div class="vital-value ${finTotal.patrimonio < 0 ? 'alto' : 'verde'}" style="margin-bottom:10px;">${fmtMoney(finTotal.patrimonio)}</div>
+          ${statRow('En bolsillo', fmtMoney(finTotal.efectivo), 'var(--verde)')}
+          ${statRow('Te deben', fmtMoney(finTotal.teDeben), 'var(--azul)')}
+          ${statRow('Debes', fmtMoney(finTotal.debes), 'var(--rojo)')}
+          ${statRow('Recurrentes/mes', fmtMoney(recurrentesTotal), 'var(--rojo)')}
         </div>
 
-        <!-- SEMANA Y HÁBITOS -->
-        <div class="panel">
-          <span class="mono-label">✅ Semana y hábitos</span>
-          <div class="vital-value ${orgSemana.clase}" style="margin-bottom:10px;">${orgSemana.label}</div>
-          ${statRow('Programadas esta semana', orgSemana.estaSemana)}
-          ${statRow('Prioridad alta sin fecha', orgSemana.prioridadSinFecha, orgSemana.prioridadSinFecha > 0 ? 'var(--rojo)' : 'var(--verde)')}
-          ${statRow('Tareas cumplidas', tareasHechas + ' / ' + tareas.length, tareas.length && tareasHechas === tareas.length ? 'var(--verde)' : undefined)}
-          ${(() => {
-            // solo metas reales: sin items de Inventario ni hábitos de Bienestar
-            const reales = (state.metasPersonales || []).filter(m => !(m.categoria || '').startsWith('inv_') && m.categoria !== 'habito');
-            return statRow('Metas cumplidas', reales.filter(m => m.cumplida).length + ' / ' + reales.length);
-          })()}
+        <!-- INVENTARIO -->
+        <div class="panel" data-act="nav-go" data-view="inventario" style="cursor:pointer;">
+          <span class="mono-label">🎒 Inventario</span>
+          <div class="vital-value" style="margin-bottom:10px;">${invItems.length} item${invItems.length === 1 ? '' : 's'}</div>
+          ${statRow('Equipados', invEquipados + ' / ' + invPersonal.length, 'var(--verde)')}
+          ${statRow('En la habitación', invHabitacion)}
+          ${statRow('En el garaje', invGaraje, '#1FB6CE')}
+        </div>
+
+        <!-- BIENESTAR -->
+        <div class="panel" data-act="nav-go" data-view="bienestar" style="cursor:pointer;">
+          <span class="mono-label">🧠 Bienestar</span>
+          <div class="vital-value" style="margin-bottom:10px;color:${estres.color};">${estres.pct}%</div>
+          ${statRow('Nivel', estres.nivel, estres.color)}
+          ${statRow('Carga total', estres.bruto + ' pts')}
+          ${statRow('Hábitos hoy', estres.habitosHoy + ' / ' + estres.habitos.length, estres.habitosHoy > 0 ? 'var(--verde)' : undefined)}
+        </div>
+
+        <!-- METAS -->
+        <div class="panel" data-act="nav-go" data-view="metas" style="cursor:pointer;">
+          <span class="mono-label">🎯 Metas</span>
+          <div class="vital-value verde" style="margin-bottom:10px;">${metasCumplidas} / ${metasReales.length}</div>
+          ${statRow('Cumplidas', metasCumplidas, 'var(--verde)')}
+          ${statRow('Mejora de equipo', metasEquipo)}
+          ${statRow('Lo que quiero', metasDeseos, '#8E5BE8')}
+        </div>
+
+        <!-- UNIVERSIDAD -->
+        <div class="panel" data-act="nav-go" data-view="universidad" style="cursor:pointer;">
+          <span class="mono-label">🎓 Universidad</span>
+          <div class="vital-value verde" style="margin-bottom:10px;">${uniPct.toFixed(1)}%</div>
+          ${statRow('Créditos', UNIVERSIDAD.creditosAprobados + ' / ' + UNIVERSIDAD.creditosRequeridos, 'var(--verde)')}
+          ${statRow('Te faltan', uniFaltan + ' cr', 'var(--rojo)')}
+          ${statRow('Cursos pendientes', uniPendientes, 'var(--rojo)')}
         </div>
       </div>
 
