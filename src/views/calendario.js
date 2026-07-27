@@ -67,7 +67,7 @@ function tareasDeDia(tareas, fs) {
 function entryClaseHtml(clase) {
   return `
     <div class="cal-entry is-clase" data-act="clase-info" title="Horario fijo de clase">
-      <span class="cal-entry-bar" style="background:var(--azul)"></span>
+      <span class="cal-entry-bar" style="background:var(--naranja)"></span>
       <span class="cal-entry-icon" aria-hidden="true">🎓</span>
       <div class="cal-entry-title"><span class="cal-entry-title-icon" aria-hidden="true">🎓</span><span class="cal-entry-tag clase">${escapeHtml(clase.horaInicio)}–${escapeHtml(clase.horaFin)}</span>${escapeHtml(clase.materia)}</div>
       <div class="cal-entry-meta"><span class="cal-entry-meta-text">${escapeHtml(clase.profesor)}</span></div>
