@@ -100,16 +100,12 @@ function render() {
   drawerAbiertoAntes = drawerAbiertoAhora;
 }
 
-// Guardar scroll cada 2 segundos
+// Guardar scroll cada segundo
 setInterval(() => {
-  const y = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || 0;
-  try { localStorage.setItem('app.scroll', y.toString()); } catch (e) {}
-});
-
-// Guardar también justo antes de recargar
-window.addEventListener('beforeunload', () => {
-  const y = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || 0;
-  try { localStorage.setItem('app.scroll', y.toString()); } catch (e) {}
+  const y = document.documentElement.scrollTop || document.body.scrollTop || window.scrollY || 0;
+  if (y > 0) {
+    try { localStorage.setItem('__scroll_pos__', y.toString()); } catch (e) {}
+  }
 });
 
 let yaRestoramos = false;
@@ -117,12 +113,21 @@ const restaurarScrollAlCargar = () => {
   if (state.dataReady && state.session && !yaRestoramos) {
     yaRestoramos = true;
     try {
-      const scrollStr = localStorage.getItem('app.scroll');
+      const scrollStr = localStorage.getItem('__scroll_pos__');
       const scroll = scrollStr ? parseInt(scrollStr, 10) : 0;
+
       if (scroll > 0) {
-        setTimeout(() => {
+        // Restaurar en múltiples intentos
+        const restaurar = () => {
+          document.documentElement.scrollTop = scroll;
+          document.body.scrollTop = scroll;
           window.scrollTo(0, scroll);
-        }, 500);
+        };
+
+        restaurar();
+        setTimeout(restaurar, 100);
+        setTimeout(restaurar, 300);
+        setTimeout(restaurar, 600);
       }
     } catch (e) {}
   }
