@@ -1,6 +1,7 @@
 import { escapeHtml } from '../lib/format.js';
 import { calcularFinanciamiento } from '../lib/financiamiento.js';
 import { renderVivirSoloSimulador } from '../components/vivirSoloSimulador.js';
+import { renderTablaFinanzas } from '../components/tablaFinanzas.js';
 
 function fmtMoney(n) {
   const v = Number(n) || 0;
@@ -33,6 +34,11 @@ export function renderFinanciamiento(state) {
     <main class="financiamiento">
       <div class="financ-head">
         <h2 class="serif" style="margin:0;font-size:32px;">Finanzas</h2>
+      </div>
+
+      <!-- SECCIÓN 0: TABLA DE FINANZAS (LA VERDAD ABSOLUTA) -->
+      <div class="finanzas-seccion">
+        ${renderTablaFinanzas(movimientos)}
       </div>
 
       <!-- SECCIÓN 1: SITUACIÓN HOY -->
