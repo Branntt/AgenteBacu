@@ -80,6 +80,31 @@ export function renderPanorama(state) {
   const snapsOrdenados = (state.snaps || []).slice().sort((a, b) => a.fecha < b.fecha ? -1 : 1);
   const ultimoSnap = snapsOrdenados[snapsOrdenados.length - 1];
   const penultimoSnap = snapsOrdenados[snapsOrdenados.length - 2];
+
+  // ---- resúmenes para las tarjetas vitales ----
+  // Estrategia (los estados viejos cuentan en su módulo equivalente)
+  const ideasActivas = ideas.filter(i => i.estado !== 'descartada');
+  const resEstrategia = {
+    desarrollo: ideasActivas.filter(i => ['prospecto', 'desarrollo', 'lista'].includes(i.estado)).length,
+    grabar: ideasActivas.filter(i => ['grabar', 'produccion'].includes(i.estado)).length,
+    edicion: ideasActivas.filter(i => i.estado === 'edicion').length,
+    porCerrar: ideasActivas.filter(i => ['entrega', 'por_pagar'].includes(i.estado)).length
+  };
+
+  // Clientes
+  const cls = state.clientes || [];
+  const clientesActivos = cls.filter(c => !['descartado', 'ya_pagos', 'entregado'].includes(c.estado));
+  const clientesProspectos = cls.filter(c => c.estado === 'prospecto').length;
+  const porCobrarTotal = cls.filter(c => c.estado === 'por_pagar').reduce((s, c) => s + (Number(c.precio) || 0), 0);
+
+  // Totalizador de seguidores (suma de las 3 marcas en el último registro)
+  const sumaSeg = snap => snap ? ['brant', 'bacu', 'novena'].reduce((s, k) => s + ((snap[k] && snap[k].seg) || 0), 0) : null;
+  const totalSeg = sumaSeg(ultimoSnap);
+  const totalSegAntes = sumaSeg(penultimoSnap);
+  const deltaTotalSeg = totalSeg != null && totalSegAntes != null ? totalSeg - totalSegAntes : null;
+
+  // Seguimiento de hábitos: las cintas de tareas cumplidas
+  const tareasHechas = tareas.filter(t => t.hecha).length;
   const D = state.snapDraft;
 
   const snapFormHtml = D ? `
@@ -121,7 +146,7 @@ export function renderPanorama(state) {
     return `<div class="historial-row"><span class="fecha">${fmtFecha(s.fecha, MESES)}</span><span>${resumen}</span></div>`;
   }).join('');
 
-  const publicadas = ideas.filter(i => i.estado === 'publicada');
+  const publicadas = ideas.filter(i => i.estado === 'publicada' || i.estado === 'ya_pago');
   const topPubsHtml = publicadas.length ? publicadas.map(i => {
     const m = i.metricas || {};
     const parts = [];
@@ -140,9 +165,9 @@ export function renderPanorama(state) {
   const marcasHtml = Object.keys(MARCAS).map(k => {
     const M = MARCAS[k];
     const propias = ideas.filter(i => i.marca === k || i.colab === k);
-    const nDesarrollo = propias.filter(i => i.estado === 'desarrollo').length;
-    const nListas = propias.filter(i => i.estado === 'lista' && !i.fecha).length;
-    const nProgramadas = propias.filter(i => i.fecha && i.estado === 'lista').length;
+    const nDesarrollo = propias.filter(i => ['prospecto', 'desarrollo', 'lista'].includes(i.estado)).length;
+    const nListas = propias.filter(i => ['grabar', 'produccion'].includes(i.estado)).length;
+    const nProgramadas = propias.filter(i => i.fecha && i.fecha >= hoy && !['descartada', 'publicada', 'ya_pago'].includes(i.estado)).length;
     const prox = propias.filter(i => i.fecha && i.fecha >= hoy && i.estado !== 'descartada' && i.estado !== 'publicada').sort((a, b) => a.fecha < b.fecha ? -1 : 1)[0];
     const proxima = prox ? `${fmtFecha(prox.fecha, MESES)} · ${escapeHtml(prox.titulo)}` : 'nada programado — está bien';
 
@@ -174,7 +199,7 @@ export function renderPanorama(state) {
         ${muestraMetricas ? `
         <div class="marca-metrics">
           <div><div class="marca-metric-value">${nDesarrollo}</div><div class="marca-metric-label">en desarrollo</div></div>
-          <div><div class="marca-metric-value">${nListas}</div><div class="marca-metric-label">listas</div></div>
+          <div><div class="marca-metric-value">${nListas}</div><div class="marca-metric-label">por grabar</div></div>
           <div><div class="marca-metric-value verde">${nProgramadas}</div><div class="marca-metric-label">programadas</div></div>
         </div>` : ''}
         <div class="marca-next"><span class="mono-label" style="display:inline;margin-bottom:0;">Próxima → </span>${proxima}</div>
@@ -248,9 +273,29 @@ export function renderPanorama(state) {
           <div class="vital-detail">${orgSemana.estaSemana} programada${orgSemana.estaSemana === 1 ? '' : 's'} · ${orgSemana.prioridadSinFecha} prioridad alta sin fecha</div>
         </div>
         <div class="vital-card">
-          <span class="mono-label">Tu bolsillo</span>
+          <span class="mono-label">Finanzas — tu bolsillo</span>
           <div class="vital-value ${finTotal.patrimonio < 0 ? 'alto' : 'verde'}">${fmtMoney(finTotal.patrimonio)}</div>
           <div class="vital-detail">${fmtMoney(finTotal.efectivo)} efectivo · ${fmtMoney(finTotal.teDeben)} te deben · ${fmtMoney(finTotal.debes)} debes</div>
+        </div>
+        <div class="vital-card">
+          <span class="mono-label">Estrategia</span>
+          <div class="vital-value">${ideasActivas.length} idea${ideasActivas.length === 1 ? '' : 's'} activa${ideasActivas.length === 1 ? '' : 's'}</div>
+          <div class="vital-detail">${resEstrategia.desarrollo} en desarrollo · ${resEstrategia.grabar} grabación · ${resEstrategia.edicion} edición · ${resEstrategia.porCerrar} por cerrar</div>
+        </div>
+        <div class="vital-card">
+          <span class="mono-label">Clientes</span>
+          <div class="vital-value">${clientesActivos.length} activo${clientesActivos.length === 1 ? '' : 's'}</div>
+          <div class="vital-detail">${clientesProspectos} prospecto${clientesProspectos === 1 ? '' : 's'} · ${fmtMoney(porCobrarTotal)} por cobrar</div>
+        </div>
+        <div class="vital-card">
+          <span class="mono-label">Seguidores — las 3 marcas</span>
+          <div class="vital-value verde">${totalSeg != null ? fmtNum(totalSeg) : '—'}</div>
+          <div class="vital-detail">${deltaTotalSeg != null ? (deltaTotalSeg >= 0 ? '+' : '') + fmtNum(deltaTotalSeg) + ' desde el último registro' : 'carga un registro para ver el cambio'}</div>
+        </div>
+        <div class="vital-card">
+          <span class="mono-label">Hábitos — tareas</span>
+          <div class="vital-value ${tareas.length && tareasHechas === tareas.length ? 'ok' : ''}">${tareasHechas} / ${tareas.length}</div>
+          <div class="vital-detail">cintas cumplidas en la pared</div>
         </div>
       </div>
 
@@ -291,9 +336,9 @@ export function renderPanorama(state) {
 
       <div class="rules-grid">
         <div class="panel">
-          <div class="section-title">La regla — cuatro preguntas</div>
+          <div class="section-title">Las 4 reglas — esto no se rompe</div>
           <div style="display:flex; flex-direction:column; gap:14px;">${preguntasHtml}</div>
-          <div class="rule-footnote">Un «no» a cualquiera → la idea no entra al calendario.</div>
+          <div class="rule-footnote">Si una regla se rompe, el sistema deja de decir la verdad.</div>
         </div>
         <div class="panel">
           <div class="section-title">Flujo de producción</div>

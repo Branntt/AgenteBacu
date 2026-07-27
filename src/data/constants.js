@@ -48,11 +48,12 @@ export const ETAPA_HINTS = [
   'Aprendizajes: escribe qué repites y qué no. Eso alimenta las próximas ideas.'
 ];
 
+// Las 4 reglas del sistema — más fuertes que preguntas: si una se rompe, el sistema deja de decir la verdad
 export const PREGUNTAS = [
-  '¿Vale la pena que exista dentro de cinco años?',
-  '¿Fortalece la identidad de la marca o solo llena un espacio?',
-  '¿Alguien la guardaría o recordaría una semana después?',
-  'Si solo publicaras una vez esta semana, ¿elegirías esta pieza?'
+  'Si no está en el sistema, no existe: toda idea, cliente o peso entra aquí el mismo día.',
+  'Nada avanza de módulo sin terminar el anterior — cero saltos, cero "después lo muevo".',
+  'Cada fecha vencida se responde el mismo día: se mueve, se reagenda o se descarta. Nunca se ignora.',
+  'La Tabla de Finanzas es la verdad absoluta: si un número no cuadra ahí, se corrige antes de seguir.'
 ];
 
 export const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
