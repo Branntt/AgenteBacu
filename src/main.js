@@ -199,6 +199,19 @@ root.addEventListener('click', e => {
     case 'cc-item-quitar': actions.cuentaCobroRemoveItem(Number(idx)); break;
     case 'cc-item-concepto': actions.cuentaCobroUpdItem(Number(idx), 'descripcion', value); break;
     case 'movimiento-nuevo': actions.movimientoNuevo(); break;
+    case 'movimiento-agregar-rapido': {
+      const fecha = document.querySelector('[data-change="mov-fecha"]')?.value;
+      const nota = document.querySelector('[data-change="mov-nota"]')?.value;
+      const monto = parseN(document.querySelector('[data-change="mov-monto"]')?.value);
+      const tipo = document.querySelector('[data-change="mov-tipo"]')?.value;
+      if (fecha && monto > 0 && tipo) {
+        actions.movimientoAgregar({ fecha, nota: nota || '', monto, tipo });
+        document.querySelector('[data-change="mov-fecha"]').value = '';
+        document.querySelector('[data-change="mov-nota"]').value = '';
+        document.querySelector('[data-change="mov-monto"]').value = '';
+      }
+      break;
+    }
     case 'movimiento-eliminar': actions.eliminarMovimiento(id); break;
     case 'deuda-nueva': actions.deudaNueva(direccion); break;
     case 'deuda-toggle': actions.toggleDeudaPagada(id); break;

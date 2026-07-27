@@ -52,6 +52,33 @@ export function renderFinanciamiento(state) {
         <p style="margin:8px 0 0 0;font-size:14px;opacity:0.7;">Tu situación financiera actual</p>
       </div>
 
+      <!-- 📝 FORMULARIO RÁPIDO DE REGISTRO -->
+      <div class="finanzas-seccion" style="background:rgba(33,150,243,0.1);border-left:4px solid var(--azul);margin-bottom:24px;">
+        <div class="seccion-titulo">📝 Registrar Movimiento Rápido</div>
+        <div style="display:grid;grid-template-columns:120px 200px 120px 120px auto;gap:12px;align-items:end;">
+          <div>
+            <label style="font-size:12px;opacity:0.7;">Fecha</label>
+            <input type="date" data-change="mov-fecha" style="width:100%;padding:8px;border-radius:6px;border:1px solid rgba(255,255,255,0.2);background:rgba(0,0,0,0.3);color:inherit;font-family:inherit;" />
+          </div>
+          <div>
+            <label style="font-size:12px;opacity:0.7;">Concepto</label>
+            <input type="text" data-change="mov-nota" placeholder="Ej: Comida, Transporte..." style="width:100%;padding:8px;border-radius:6px;border:1px solid rgba(255,255,255,0.2);background:rgba(0,0,0,0.3);color:inherit;font-family:inherit;" />
+          </div>
+          <div>
+            <label style="font-size:12px;opacity:0.7;">Monto</label>
+            <input type="number" data-change="mov-monto" placeholder="0" min="0" step="100" style="width:100%;padding:8px;border-radius:6px;border:1px solid rgba(255,255,255,0.2);background:rgba(0,0,0,0.3);color:inherit;font-family:inherit;" />
+          </div>
+          <div>
+            <label style="font-size:12px;opacity:0.7;">Tipo</label>
+            <select data-change="mov-tipo" style="width:100%;padding:8px;border-radius:6px;border:1px solid rgba(255,255,255,0.2);background:rgba(0,0,0,0.3);color:inherit;font-family:inherit;">
+              <option value="entrada">Entrada</option>
+              <option value="salida">Salida</option>
+            </select>
+          </div>
+          <button class="btn-primary" data-act="movimiento-agregar-rapido" style="white-space:nowrap;">Guardar</button>
+        </div>
+      </div>
+
       <!-- 1️⃣ SITUACIÓN HOY (con Gastos + Ingresos) -->
       <div class="finanzas-seccion" style="margin-bottom:24px;">
         <div class="seccion-titulo">📊 Tu Situación Hoy</div>
