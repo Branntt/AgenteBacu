@@ -18,6 +18,7 @@ import { renderFinanciamiento } from './views/financiamiento.js';
 import { renderInventario } from './views/inventario.js';
 import { renderBienestar } from './views/bienestar.js';
 import { renderMetas } from './views/metas.js';
+import { renderUniversidad } from './views/universidad.js';
 import { renderIAModal } from './views/iaModal.js';
 import { renderRevisionIdeasModal } from './components/revisionIdeasModal.js';
 import { renderNotificacionBacu } from './components/notificacionBacu.js';
@@ -30,7 +31,8 @@ const VIEWS = {
   financiamiento: renderFinanciamiento,
   inventario: renderInventario,
   bienestar: renderBienestar,
-  metas: renderMetas
+  metas: renderMetas,
+  universidad: renderUniversidad
 };
 
 const root = document.getElementById('app');
@@ -272,6 +274,7 @@ root.addEventListener('click', e => {
     case 'avatar-editor-toggle': actions.avatarEditorToggle(); break;
     case 'habito-nuevo': actions.habitoNuevo(); break;
     case 'habito-toggle': actions.habitoToggle(id); break;
+    case 'uni-toggle': actions.uniToggleBloque(Number(idx)); break;
     case 'inv-agregar': actions.metaPersonalNueva('inv_' + value); break;
     case 'inv-equipar': {
       const item = state.metasPersonales.find(m => m.id === id);

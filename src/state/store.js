@@ -24,6 +24,7 @@ export const state = {
   invVista: loadValue('ui.invVista', 'personal'),
   avatar: loadValue('ui.avatar', AVATAR_DEFAULT),
   avatarEditor: false,
+  uniBloquesAbiertos: {},
   semanaInicio: loadValue('ui.semanaInicio', lunesDe(hoyStr())),
   snapDraft: null,
   rodajeDraft: null,
@@ -499,6 +500,10 @@ export const actions = {
   invSetVista: v => setState({ invVista: v }),
   avatarSet: (campo, valor) => setState({ avatar: { ...AVATAR_DEFAULT, ...state.avatar, [campo]: valor } }),
   avatarEditorToggle: () => setState({ avatarEditor: !state.avatarEditor }),
+  uniToggleBloque: idx => {
+    const abiertos = { ...state.uniBloquesAbiertos, [idx]: !state.uniBloquesAbiertos[idx] };
+    setState({ uniBloquesAbiertos: abiertos });
+  },
 
   // Hábitos (Bienestar): `fecha` guarda el último día cumplido — marcar hoy = fecha de hoy
   habitoNuevo: () => actions.metaPersonalNueva('habito'),

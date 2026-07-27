@@ -1127,6 +1127,58 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
   .clasif-grid { grid-template-columns: repeat(3, 1fr); }
 }
 
+/* ---------- Universidad ---------- */
+.uni-avance { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 24px; margin-bottom: 36px; }
+.uni-avance-top { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; }
+.uni-avance-valor { font-size: 44px; font-weight: bold; line-height: 1; color: var(--verde); margin-top: 4px; }
+.uni-avance-cred { display: flex; gap: 20px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--muted); text-align: right; }
+.uni-num { display: block; font-size: 22px; font-weight: bold; color: var(--text); }
+.uni-num.verde { color: var(--verde); }
+.uni-num.rojo { color: var(--rojo); }
+.uni-avance-barra { height: 12px; background: var(--panel2); border-radius: 6px; overflow: hidden; }
+.uni-avance-fill { height: 100%; border-radius: 6px; background: linear-gradient(90deg, var(--rojo), #E8641B, var(--verde)); }
+
+.uni-ruta { display: grid; grid-template-columns: 1fr; gap: 8px; margin-bottom: 36px; }
+.uni-ruta-item { display: flex; align-items: center; gap: 12px; background: var(--panel); border: 1px solid var(--line); border-left: 3px solid var(--rojo); border-radius: 8px; padding: 12px 14px; }
+.uni-ruta-check { color: var(--rojo); font-size: 15px; flex-shrink: 0; }
+.uni-ruta-nombre { font-size: 13px; font-weight: 600; }
+.uni-ruta-bloque { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: var(--muted); margin-top: 2px; }
+
+.uni-matricula { display: grid; grid-template-columns: 1fr; gap: 8px; margin-bottom: 36px; }
+.uni-mat-fila { display: flex; justify-content: space-between; align-items: center; gap: 12px; background: var(--panel); border: 1px solid var(--line); border-left: 3px solid var(--azul); border-radius: 8px; padding: 12px 14px; }
+.uni-mat-curso { font-size: 13px; font-weight: 600; }
+.uni-mat-meta { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: var(--muted); margin-top: 2px; }
+.uni-mat-cred { font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: bold; color: var(--azul); flex-shrink: 0; }
+
+.uni-bloques { display: flex; flex-direction: column; gap: 8px; margin-bottom: 40px; }
+.uni-bloque { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.uni-bloque.ok { border-left: 3px solid var(--verde); }
+.uni-bloque.pend { border-left: 3px solid #EFC94C; }
+.uni-bloque-head { display: grid; grid-template-columns: 1fr auto 140px 24px; align-items: center; gap: 14px; padding: 14px 16px; cursor: default; }
+.uni-bloque-head[data-act] { cursor: pointer; }
+.uni-bloque-nombre { font-size: 14px; font-weight: 600; }
+.uni-bloque-cred { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--muted); }
+.uni-bloque-barra { height: 6px; background: var(--panel2); border-radius: 3px; overflow: hidden; }
+.uni-bloque-fill { height: 100%; border-radius: 3px; }
+.uni-bloque-toggle { font-family: 'IBM Plex Mono', monospace; font-size: 16px; color: var(--muted); text-align: center; }
+.uni-bloque-cursos { padding: 4px 16px 14px; display: flex; flex-direction: column; gap: 6px; }
+.uni-curso { display: flex; align-items: center; gap: 10px; background: var(--panel2); border-radius: 6px; padding: 9px 11px; }
+.uni-curso-ic { flex-shrink: 0; font-size: 13px; }
+.uni-curso-cuerpo { flex: 1; min-width: 0; }
+.uni-curso-nombre { font-size: 12.5px; }
+.uni-curso-materia { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--muted); margin-top: 2px; }
+.uni-curso-nota { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--verde); flex-shrink: 0; }
+.uni-curso-cred { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: var(--muted); flex-shrink: 0; }
+
+@media (min-width: 700px) {
+  .uni-ruta { grid-template-columns: repeat(2, 1fr); }
+  .uni-matricula { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 600px) {
+  .uni-bloque-head { grid-template-columns: 1fr auto 20px; }
+  .uni-bloque-barra { display: none; }
+}
+
 /* ---------- Inventario (estilo videojuego) ---------- */
 .inv-tabs { display: flex; gap: 8px; margin-bottom: 28px; flex-wrap: wrap; }
 .inv-tab {
