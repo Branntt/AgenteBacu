@@ -77,7 +77,8 @@ function entryClaseHtml(clase) {
 }
 
 function clasesDeDia(fs) {
-  if (filtroActivo !== 'todas') return [];
+  // Las clases son de Brant: se ven en "Todas" y en el filtro "Brant"
+  if (filtroActivo !== 'todas' && filtroActivo !== 'brant') return [];
   if (fs < HORARIO_CLASES.inicio || fs > HORARIO_CLASES.fin) return [];
   const [anio, mes, dia] = fs.split('-').map(Number);
   const dow = new Date(anio, mes - 1, dia).getDay();
