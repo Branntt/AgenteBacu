@@ -23,9 +23,16 @@ function deudaRowHtml(d) {
 export function renderFinanciamiento(state) {
   const movimientos = state.movimientosFinanciamiento || [];
   const deudas = state.deudas || [];
+  const clientes = state.clientes || [];
   const gastosVivirSolo = state.gastosVivirSolo || [];
 
-  const { efectivo, debes, teDeben, patrimonio } = calcularFinanciamiento(movimientos, deudas);
+  // Te deben = clientes en por_pagar + deudas me_deben
+  const clientesPorPagar = clientes.filter(c => c.estado === 'por_pagar').reduce((sum, c) => sum + (Number(c.precio) || 0), 0);
+  const deudaAFavor = deudas.filter(d => d.direccion === 'me_deben').reduce((sum, d) => sum + (Number(d.monto) || 0), 0);
+  const teDeben = clientesPorPagar + deudaAFavor;
+
+  const { efectivo, debes, patrimonio: _ } = calcularFinanciamiento(movimientos, deudas);
+  const patrimonio = efectivo + teDeben - debes;
 
   const meDebenHtml = deudas.filter(d => d.direccion === 'me_deben');
   const yoDeboHtml = deudas.filter(d => d.direccion === 'debo');
