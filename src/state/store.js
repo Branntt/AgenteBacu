@@ -30,6 +30,7 @@ export const state = {
   iaResultado: null,
   revisionIdeasModal: false,
   revisionIdeasPendientes: [],
+  notificacionBacu: null,
   cuentasCobro: [],
   movimientosFinanciamiento: [],
   deudas: [],
@@ -193,6 +194,15 @@ function verificarIdeasPorFecha() {
     setTimeout(() => {
       actions.abrirRevisionIdeas(ideasViejas);
     }, 500);
+  }
+
+  // Mostrar notificación de Bacu solo si es una recarga (no primera vez en la sesión)
+  const yaNotificada = sessionStorage.getItem('bacu_notificada');
+  if (!yaNotificada && ideasViejas.length === 0) {
+    sessionStorage.setItem('bacu_notificada', 'true');
+    setTimeout(() => {
+      actions.abrirNotificacionBacu();
+    }, 800);
   }
 }
 
@@ -721,6 +731,17 @@ export const actions = {
   // Revisión de ideas por fecha
   abrirRevisionIdeas: (ideas) => setState({ revisionIdeasModal: true, revisionIdeasPendientes: ideas }),
   cerrarRevisionIdeas: () => setState({ revisionIdeasModal: false, revisionIdeasPendientes: [] }),
+
+  abrirNotificacionBacu: () => setState({ notificacionBacu: true }),
+  cerrarNotificacionBacu: () => setState({ notificacionBacu: null }),
+  grabeBacu: () => {
+    setState({ notificacionBacu: 'grabé' });
+    setTimeout(() => setState({ notificacionBacu: null }), 3000);
+  },
+  procrastineBacu: () => {
+    setState({ notificacionBacu: 'procrastiné' });
+    setTimeout(() => setState({ notificacionBacu: null }), 3000);
+  },
   actualizarEstadoIdea: (ideaId, nuevoEstado) => {
     const idea = state.ideas.find(i => i.id === ideaId);
     if (!idea) return;

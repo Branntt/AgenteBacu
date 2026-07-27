@@ -17,6 +17,7 @@ import { renderClientes } from './views/clientes.js';
 import { renderFinanciamiento } from './views/financiamiento.js';
 import { renderIAModal } from './views/iaModal.js';
 import { renderRevisionIdeasModal } from './components/revisionIdeasModal.js';
+import { renderNotificacionBacu } from './components/notificacionBacu.js';
 
 const VIEWS = {
   panorama: renderPanorama,
@@ -89,6 +90,7 @@ function render() {
       ${renderHistorialCuentas(state)}
       ${renderIAModal(state)}
       ${renderRevisionIdeasModal(state)}
+      ${renderNotificacionBacu(state)}
     </div>
   `;
   restaurarFoco(foco);
@@ -277,6 +279,8 @@ root.addEventListener('click', e => {
       }
       break;
     }
+    case 'grabe-bacu': actions.grabeBacu(); break;
+    case 'procrastine-bacu': actions.procrastineBacu(); break;
   }
 });
 
