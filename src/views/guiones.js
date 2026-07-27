@@ -93,6 +93,7 @@ function renderPorTipo(ideas) {
   return `<div class="desarrollo-grid">${columnasHtml}</div>`;
 }
 
+// Pestaña de Estrategia - generación de ideas con IA
 export function renderGuiones(state) {
   const filtro = state.filtroGuiones;
   const ideas = state.ideas.filter(i => filtro === 'todas' || i.marca === filtro || i.colab === filtro);
