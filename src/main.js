@@ -51,7 +51,7 @@ let drawerAbiertoAntes = false;
 
 function render() {
   const temaAttr = TEMA_MAP[state.tema] || 'cine';
-  const scroll = root.scrollTop;
+  const scroll = window.scrollY;
   const foco = capturarFoco();
 
   if (!state.authReady) {
@@ -90,7 +90,7 @@ function render() {
       ${renderIAModal(state)}
     </div>
   `;
-  root.scrollTop = scroll;
+  window.scrollTo(0, scroll);
   persistValue('app.scroll', scroll);
   restaurarFoco(foco);
 
@@ -112,7 +112,7 @@ const restaurarScrollAlCargar = () => {
   if (state.dataReady && state.session) {
     const scrollGuardado = loadValue('app.scroll', 0);
     if (scrollGuardado > 0) {
-      setTimeout(() => { root.scrollTop = scrollGuardado; }, 100);
+      setTimeout(() => { window.scrollTo(0, scrollGuardado); }, 100);
     }
   }
 };
