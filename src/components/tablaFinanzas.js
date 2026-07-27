@@ -1,4 +1,5 @@
 import { escapeHtml } from '../lib/format.js';
+import { hoyStr } from '../lib/idea.js';
 
 function fmtMoney(n) {
   const v = Number(n) || 0;
@@ -30,6 +31,32 @@ export function renderTablaFinanzas(movimientos) {
       <div class="tabla-titulo">📊 Registro de Finanzas (La verdad absoluta)</div>
       <div class="tabla-subtitulo">Cada movimiento de dinero se registra aquí inmediatamente</div>
 
+      <!-- FORMULARIO DE REGISTRO -->
+      <div style="background:rgba(33,150,243,0.1);padding:16px;border-radius:8px;margin-bottom:16px;">
+        <div style="font-size:13px;font-weight:bold;margin-bottom:12px;color:var(--azul);">📝 Registrar Movimiento</div>
+        <div style="display:grid;grid-template-columns:110px 180px 110px 110px auto;gap:10px;align-items:end;">
+          <div>
+            <label style="font-size:11px;opacity:0.7;">Fecha</label>
+            <input type="date" data-change="mov-fecha" value="${hoyStr()}" style="width:100%;padding:6px;border-radius:6px;border:1px solid rgba(255,255,255,0.2);background:rgba(0,0,0,0.3);color:inherit;font-family:inherit;font-size:12px;" />
+          </div>
+          <div>
+            <label style="font-size:11px;opacity:0.7;">Concepto</label>
+            <input type="text" data-change="mov-nota" placeholder="Ej: Comida..." style="width:100%;padding:6px;border-radius:6px;border:1px solid rgba(255,255,255,0.2);background:rgba(0,0,0,0.3);color:inherit;font-family:inherit;font-size:12px;" />
+          </div>
+          <div>
+            <label style="font-size:11px;opacity:0.7;">Monto</label>
+            <input type="number" data-change="mov-monto" placeholder="0" min="0" step="100" style="width:100%;padding:6px;border-radius:6px;border:1px solid rgba(255,255,255,0.2);background:rgba(0,0,0,0.3);color:inherit;font-family:inherit;font-size:12px;" />
+          </div>
+          <div>
+            <label style="font-size:11px;opacity:0.7;">Tipo</label>
+            <select data-change="mov-tipo" style="width:100%;padding:6px;border-radius:6px;border:1px solid rgba(255,255,255,0.2);background:rgba(0,0,0,0.3);color:inherit;font-family:inherit;font-size:12px;">
+              <option value="entrada">Entrada</option>
+              <option value="salida">Salida</option>
+            </select>
+          </div>
+          <button class="btn-primary" data-act="movimiento-agregar-rapido" style="white-space:nowrap;font-size:12px;padding:6px 12px;">Guardar</button>
+        </div>
+      </div>
 
       <div class="tabla-container">
         <table class="tabla-movimientos">
