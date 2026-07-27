@@ -185,8 +185,8 @@ function verificarIdeasPorFecha() {
   const hoy = hoyStr();
   const revisadas = loadValue('bacu.ideasRevisadas', []);
 
-  // Ideas cuya fecha (rodaje o publicación) ya pasó y no están en un estado final
-  const estadosFinalesIdea = ['edicion', 'entrega', 'publicada', 'descartada'];
+  // Ideas cuya fecha (rodaje o publicación) ya pasó — solo se excluyen descartadas
+  const estadosFinalesIdea = ['descartada'];
   const ideasVencidas = state.ideas
     .filter(i => {
       const f = i.fechaRodaje || i.fecha;
@@ -194,8 +194,8 @@ function verificarIdeasPorFecha() {
     })
     .map(i => ({ tipo: 'idea', id: i.id, titulo: i.titulo, marca: i.marca, estado: i.estado, fecha: i.fechaRodaje || i.fecha }));
 
-  // Grabaciones de clientes con fecha pasada que siguen sin pasar a edición
-  const estadosYaGrabados = ['conversacion', 'proyecto_edicion', 'entregado', 'por_pagar', 'ya_pagos'];
+  // Grabaciones de clientes con fecha pasada — se pregunta sin importar el estado
+  const estadosYaGrabados = ['conversacion'];
   const grabacionesVencidas = state.clientes
     .filter(c => c.fecha_grabacion && c.fecha_grabacion < hoy && !estadosYaGrabados.includes(c.estado) && !revisadas.includes(c.id))
     .map(c => ({ tipo: 'cliente', id: c.id, titulo: c.nombre + (c.proyecto ? ' — ' + c.proyecto : ''), marca: null, estado: c.estado, fecha: c.fecha_grabacion }));
