@@ -105,7 +105,8 @@ function render() {
 
 // Guardar scroll en tiempo real
 window.addEventListener('scroll', () => {
-  persistValue('app.scroll', window.scrollY);
+  const y = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || 0;
+  persistValue('app.scroll', y);
 });
 
 let yaRestoramos = false;
@@ -113,7 +114,11 @@ const restaurarScrollAlCargar = () => {
   if (state.dataReady && state.session && !yaRestoramos) {
     yaRestoramos = true;
     const scrollGuardado = loadValue('app.scroll', 0);
-    setTimeout(() => { window.scrollTo(0, scrollGuardado); }, 150);
+    console.log('Restaurando scroll:', scrollGuardado);
+    setTimeout(() => {
+      window.scrollTo(0, scrollGuardado);
+      console.log('Scroll restaurado a:', window.scrollY);
+    }, 300);
   }
 };
 
