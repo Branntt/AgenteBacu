@@ -14,6 +14,17 @@ const COLUMNAS = [
   ['descartada', 'Descartada']
 ];
 
+// Escala de calor: entre más avanza la idea, más caliente el color; entrega = verde, descartada = gris
+const ESTADO_COLORS = {
+  prospecto: 'var(--text)',
+  desarrollo: 'var(--azul)',
+  produccion: 'var(--amarillo)',
+  grabar: 'var(--naranja)',
+  edicion: 'var(--rojo)',
+  entrega: 'var(--verde)',
+  descartada: 'var(--muted)'
+};
+
 function cardGeneral(i, calma) {
   const M = MARCAS[i.marca];
   const ok = valida(i);
@@ -69,7 +80,7 @@ function renderGeneral(state, ideas) {
       : `<div class="col-empty">Vacío.<br>Mejor que mediocre.</div>`;
     return `
       <div class="banco-col">
-        <div class="banco-col-head"><span>${titulo}</span><span class="banco-col-count">${items.length}</span></div>
+        <div class="banco-col-head"><span><span class="dot" style="width:8px;height:8px;background:${ESTADO_COLORS[estado]};margin-right:8px;"></span>${titulo}</span><span class="banco-col-count">${items.length}</span></div>
         <div class="banco-col-body">${itemsHtml}</div>
       </div>
     `;

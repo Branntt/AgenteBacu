@@ -1,6 +1,7 @@
 import { escapeHtml } from '../lib/format.js';
 
-const ESTADO_COLORS = { prospecto: 'var(--muted)', conversacion: 'var(--novena)', proyecto_edicion: 'var(--azul)', entregado: 'var(--brant)', por_pagar: 'var(--rojo)', ya_pagos: 'var(--verde)' };
+// Escala de calor: entre más avanza el cliente, más caliente el color (por pagar = rojo fuerte); ya pagó = verde
+const ESTADO_COLORS = { prospecto: 'var(--text)', conversacion: 'var(--azul)', proyecto_edicion: 'var(--amarillo)', entregado: 'var(--naranja)', por_pagar: 'var(--rojo)', ya_pagos: 'var(--verde)' };
 const COLUMNAS = [
   ['prospecto', 'Prospectos', 'Posibles clientes'],
   ['conversacion', 'En conversación para contratación', 'En negociación'],
