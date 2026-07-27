@@ -53,6 +53,10 @@ export function renderFinanciamiento(state) {
         <p style="margin:8px 0 0 0;font-size:14px;opacity:0.7;">Tu situación financiera actual</p>
       </div>
 
+      <!-- 0️⃣ REGISTRO DE FINANZAS (PRIMERO) -->
+      <div class="finanzas-seccion" style="margin-bottom:24px;">
+        ${renderTablaFinanzas(movimientos)}
+      </div>
 
       <!-- 1️⃣ SITUACIÓN HOY (con Gastos + Ingresos) -->
       <div class="finanzas-seccion" style="margin-bottom:24px;">
@@ -116,12 +120,7 @@ export function renderFinanciamiento(state) {
         </div>
       </div>
 
-      <!-- 2️⃣ TABLA INTELIGENTE (LA VERDAD ABSOLUTA) -->
-      <div class="finanzas-seccion" style="margin-bottom:24px;">
-        ${renderTablaFinanzas(movimientos)}
-      </div>
-
-      <!-- 3️⃣ DEUDAS PERSONALES -->
+      <!-- 2️⃣ DEUDAS PERSONALES -->
       ${yoDeboHtml.length > 0 ? `
       <div class="finanzas-seccion" style="background:rgba(255,107,107,0.1);border-left:4px solid var(--rojo);margin-bottom:24px;">
         <div class="seccion-titulo">⚠️ Debes Pagar - ${fmtMoney(yoDebenTotal)}</div>
