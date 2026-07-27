@@ -736,9 +736,10 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
 }
 
 /* shared entry card — used by mes, semana and agenda alike */
-.cal-entry { background: var(--panel2); padding: 8px 10px; cursor: pointer; display: flex; flex-direction: column; flex-shrink: 0; gap: 3px; min-height: 44px; justify-content: center; }
+.cal-entry { background: var(--panel2); padding: 8px 10px; cursor: pointer; display: flex; flex-direction: column; flex-shrink: 0; gap: 3px; min-height: 44px; justify-content: center; position: relative; }
 .cal-entry:hover { background: var(--panel); }
 .cal-entry-bar { display: block; width: 22px; height: 2px; flex-shrink: 0; }
+.cal-entry-icon { display: none; }
 .cal-entry-title { font-size: 12px; font-weight: 600; line-height: 1.3; overflow-wrap: break-word; flex-shrink: 0; }
 .cal-entry-meta { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
 .cal-entry-meta-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
@@ -782,11 +783,16 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
   .cal-week-body { gap: 3px; padding: 3px; max-height: 96px; }
   .cal-week-body .col-empty { padding: 8px 4px; font-size: 9px; }
 
-  .cal-cell .cal-entry, .cal-week-body .cal-entry { min-height: 0; height: 10px; padding: 0; border-radius: 2px; overflow: hidden; }
+  .cal-cell .cal-entry, .cal-week-body .cal-entry { min-height: 0; height: 14px; padding: 0; border-radius: 2px; overflow: hidden; }
   .cal-cell .cal-entry:hover, .cal-week-body .cal-entry:hover { background: var(--panel2); }
   .cal-cell .cal-entry-bar, .cal-week-body .cal-entry-bar { width: 100%; height: 100%; }
   .cal-cell .cal-entry-title, .cal-week-body .cal-entry-title,
   .cal-cell .cal-entry-meta, .cal-week-body .cal-entry-meta { display: none; }
+  .cal-cell .cal-entry-icon, .cal-week-body .cal-entry-icon {
+    display: flex; align-items: center; justify-content: center;
+    position: absolute; inset: 0;
+    font-size: 9px; line-height: 1;
+  }
 }
 
 @media (min-width: 900px) {
