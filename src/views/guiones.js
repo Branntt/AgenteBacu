@@ -20,8 +20,8 @@ const ESTADO_COLORS = {
   desarrollo: '#2E55E0',       // azul
   produccion: '#1FB6CE',       // cian
   grabar: '#EFC94C',           // amarillo
-  edicion: '#F08A2E',          // naranja
-  entrega: '#E0312E',          // rojo (lo más urgente de cerrar)
+  edicion: '#E0312E',          // rojo (edición pendiente, lo más urgente)
+  entrega: '#F08A2E',          // naranja (esperando confirmación del cliente)
   descartada: 'var(--muted)'   // gris
 };
 
