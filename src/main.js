@@ -1,4 +1,5 @@
 import { state, actions, subscribe, initAuth } from './state/store.js';
+import { persistValue, loadValue } from './lib/storage.js';
 import { TEMA_MAP } from './data/constants.js';
 import { parseN } from './lib/format.js';
 import { renderHeader } from './components/header.js';
@@ -90,6 +91,7 @@ function render() {
     </div>
   `;
   root.scrollTop = scroll;
+  persistValue('app.scroll', scroll);
   restaurarFoco(foco);
 
   const drawerAbiertoAhora = !!(state.selId || state.clienteSelId || state.guionId || state.rodajeDraft || state.cuentaCobroDraft || state.historialAbierto || state.iaDraft);
@@ -104,6 +106,17 @@ function render() {
 subscribe(render);
 render();
 initAuth();
+
+// Restaurar scroll después de que la página esté lista
+const restaurarScrollAlCargar = () => {
+  if (state.dataReady && state.session) {
+    const scrollGuardado = loadValue('app.scroll', 0);
+    if (scrollGuardado > 0) {
+      setTimeout(() => { root.scrollTop = scrollGuardado; }, 100);
+    }
+  }
+};
+subscribe(restaurarScrollAlCargar);
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
