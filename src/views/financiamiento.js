@@ -124,7 +124,44 @@ export function renderFinanciamiento(state) {
         </div>
       </div>
 
-      <!-- 2️⃣ GASTOS MENSUALES RECURRENTES -->
+      <!-- 2️⃣ ASEO PERSONAL -->
+      <div class="finanzas-seccion" style="background:rgba(156,39,176,0.1);border-left:4px solid #9c27ac;margin-bottom:24px;">
+        <div class="seccion-titulo">🧴 Aseo Personal (Día 28)</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:12px;margin-bottom:16px;">
+          <div style="background:rgba(255,255,255,0.05);padding:12px;border-radius:8px;border-left:3px solid #9c27ac;">
+            <div style="font-size:13px;font-weight:bold;">🧴 Shampú</div>
+            <div style="font-size:12px;opacity:0.8;margin-top:4px;">$30k cada 2 meses</div>
+            <div style="font-size:14px;font-weight:bold;color:#9c27ac;margin-top:6px;">$15k/mes</div>
+          </div>
+          <div style="background:rgba(255,255,255,0.05);padding:12px;border-radius:8px;border-left:3px solid #9c27ac;">
+            <div style="font-size:13px;font-weight:bold;">🧼 Jabón cara</div>
+            <div style="font-size:12px;opacity:0.8;margin-top:4px;">$90k cada 2 meses</div>
+            <div style="font-size:14px;font-weight:bold;color:#9c27ac;margin-top:6px;">$45k/mes</div>
+          </div>
+          <div style="background:rgba(255,255,255,0.05);padding:12px;border-radius:8px;border-left:3px solid #9c27ac;">
+            <div style="font-size:13px;font-weight:bold;">🪒 Cuchillas</div>
+            <div style="font-size:12px;opacity:0.8;margin-top:4px;">$18k cada 2 meses</div>
+            <div style="font-size:14px;font-weight:bold;color:#9c27ac;margin-top:6px;">$9k/mes</div>
+          </div>
+          <div style="background:rgba(255,255,255,0.05);padding:12px;border-radius:8px;border-left:3px solid #9c27ac;">
+            <div style="font-size:13px;font-weight:bold;">🧴 Desodorante</div>
+            <div style="font-size:12px;opacity:0.8;margin-top:4px;">Menos de 1 mes</div>
+            <div style="font-size:14px;font-weight:bold;color:#9c27ac;margin-top:6px;">$50k/mes</div>
+          </div>
+          <div style="background:rgba(255,255,255,0.05);padding:12px;border-radius:8px;border-left:3px solid #9c27ac;">
+            <div style="font-size:13px;font-weight:bold;">👁️ Contorno ojos</div>
+            <div style="font-size:12px;opacity:0.8;margin-top:4px;">~1 mes</div>
+            <div style="font-size:14px;font-weight:bold;color:#9c27ac;margin-top:6px;">$80k/mes</div>
+          </div>
+        </div>
+        <div style="background:rgba(0,0,0,0.3);padding:16px;border-radius:8px;text-align:center;font-size:14px;">
+          <div style="opacity:0.8;">Total promedio mensual de Aseo Personal:</div>
+          <div style="font-size:24px;font-weight:bold;color:#9c27ac;margin-top:8px;">$199k</div>
+          <div style="opacity:0.6;font-size:12px;margin-top:6px;">Se reinicia cada 28 del mes</div>
+        </div>
+      </div>
+
+      <!-- 3️⃣ GASTOS MENSUALES RECURRENTES -->
       <div class="finanzas-seccion" style="background:rgba(255,152,0,0.1);border-left:4px solid var(--naranja);margin-bottom:24px;">
         <div class="seccion-titulo">💰 Gastos Mensuales Recurrentes</div>
         <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:12px;margin-bottom:16px;">
