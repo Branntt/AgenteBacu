@@ -20,6 +20,7 @@ export function renderFinanciamiento(state) {
   const deudas = state.deudas || [];
   const clientes = state.clientes || [];
   const gastosVivirSolo = state.gastosVivirSolo || [];
+  const gastosRecurrentes = state.gastosRecurrentes || [];
 
   // Cálculos financieros
   const clientesPorPagar = clientes.filter(c => c.estado === 'por_pagar').reduce((sum, c) => sum + (Number(c.precio) || 0), 0);
@@ -44,6 +45,9 @@ export function renderFinanciamiento(state) {
   // Gastos si viviera solo
   const gastosMensualesTotal = gastosVivirSolo.reduce((sum, g) => sum + (Number(g.monto) || 0), 0);
   const mesesParaVivir = efectivo > 0 && gastosMensualesTotal > 0 ? Math.floor(efectivo / gastosMensualesTotal) : 0;
+
+  // Gastos recurrentes totales
+  const gastosRecurrentesTotal = gastosRecurrentes.reduce((sum, g) => sum + (Number(g.monto) || 0), 0);
 
   return `
     <main class="financiamiento">
@@ -120,30 +124,31 @@ export function renderFinanciamiento(state) {
         </div>
       </div>
 
-      <!-- 2️⃣ GASTOS MENSUALES REALES (ESTE MES) -->
+      <!-- 2️⃣ GASTOS MENSUALES RECURRENTES -->
       <div class="finanzas-seccion" style="background:rgba(255,152,0,0.1);border-left:4px solid var(--naranja);margin-bottom:24px;">
-        <div class="seccion-titulo">💰 Gastos Mensuales Reales - ${mesActual()}</div>
-        ${gastos.length > 0 ? `
-        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(300px, 1fr));gap:16px;">
-          ${gastos.map(g => `
-            <div style="background:rgba(255,255,255,0.05);padding:12px;border-radius:8px;border-left:3px solid var(--rojo);">
+        <div class="seccion-titulo">💰 Gastos Mensuales Recurrentes</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:12px;margin-bottom:16px;">
+          ${gastosRecurrentes.map(g => `
+            <div style="background:rgba(255,255,255,0.05);padding:12px;border-radius:8px;border-left:3px solid var(--naranja);">
               <div style="display:flex;justify-content:space-between;align-items:start;">
                 <div style="flex:1;">
-                  <div style="font-weight:bold;">${escapeHtml(g.nota || 'Gasto')}</div>
-                  <div style="font-size:11px;opacity:0.6;margin-top:4px;">${fmtFecha(g.fecha)}</div>
+                  <div style="display:flex;align-items:center;gap:6px;">
+                    <span style="font-size:16px;">${g.emoji}</span>
+                    <div style="font-weight:bold;font-size:13px;">${escapeHtml(g.nombre)}</div>
+                  </div>
+                  <div style="font-size:10px;opacity:0.6;margin-top:4px;">Día ${g.dia_vencimiento}</div>
                 </div>
                 <div style="text-align:right;">
-                  <div style="font-size:16px;font-weight:bold;color:var(--rojo);">${fmtMoney(g.monto)}</div>
+                  <div style="font-size:14px;font-weight:bold;color:var(--rojo);">${fmtMoney(g.monto)}</div>
                 </div>
               </div>
             </div>
           `).join('')}
         </div>
-        ` : `<div style="opacity:0.5;font-size:13px;text-align:center;padding:20px;">Sin gastos registrados este mes</div>`}
 
-        <div style="background:rgba(0,0,0,0.3);padding:12px;border-radius:8px;margin-top:16px;text-align:center;font-size:13px;">
-          <div style="opacity:0.7;">Total gastado este mes:</div>
-          <div style="font-size:20px;font-weight:bold;color:var(--rojo);margin-top:6px;">${fmtMoney(totalGastos)}</div>
+        <div style="background:rgba(0,0,0,0.3);padding:12px;border-radius:8px;text-align:center;font-size:13px;">
+          <div style="opacity:0.7;">Total gastos recurrentes mensuales:</div>
+          <div style="font-size:20px;font-weight:bold;color:var(--rojo);margin-top:6px;">${fmtMoney(gastosRecurrentesTotal)}</div>
         </div>
       </div>
 
