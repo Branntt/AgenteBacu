@@ -13,10 +13,12 @@ const PIPELINE_IDEA = [
 const PIPELINE_CLIENTE = [
   ['prospecto', 'Prospecto'],
   ['conversacion', 'En conversación'],
+  ['grabacion', 'Grabación'],
   ['proyecto_edicion', 'Proyecto por editar'],
-  ['entregado', 'Entregado'],
+  ['confirmar_entrega', 'Por confirmar entrega'],
   ['por_pagar', 'Por pagar'],
-  ['ya_pagos', 'Ya pagó']
+  ['ya_pagos', 'Ya pagó'],
+  ['entregado', 'Entregado']
 ];
 
 function opcionesDelanteras(item) {

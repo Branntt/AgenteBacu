@@ -2,7 +2,18 @@ import { MARCAS, OBJETIVOS, FORMATOS, PIPELINE, ETAPA_HINTS, PREGUNTAS } from '.
 import { escapeHtml } from '../lib/format.js';
 import { valida } from '../lib/idea.js';
 
-const ESTADO_LABELS = { desarrollo: 'En desarrollo', lista: 'Lista para producir', publicada: 'Publicada', descartada: 'Descartada' };
+const ESTADO_LABELS = {
+  prospecto: 'Prospecto',
+  desarrollo: 'En desarrollo',
+  produccion: 'Por producirse',
+  grabar: 'Por grabar',
+  edicion: 'Por editar',
+  entrega: 'Por confirmar entrega',
+  descartada: 'Descartada',
+  // estados viejos que aún pueden existir en ideas antiguas
+  lista: 'Lista para producir',
+  publicada: 'Publicada'
+};
 
 export function renderDetalle(state) {
   const selIdea = state.ideas.find(i => i.id === state.selId);
@@ -170,8 +181,12 @@ export function renderDetalle(state) {
 
         <div class="drawer-footer">
           <select data-change="idea-estado" data-id="${id}">
+            <option value="prospecto" ${selIdea.estado === 'prospecto' ? 'selected' : ''}>Prospecto</option>
             <option value="desarrollo" ${selIdea.estado === 'desarrollo' ? 'selected' : ''}>En desarrollo</option>
-            <option value="lista" ${selIdea.estado === 'lista' ? 'selected' : ''}>Lista para producir</option>
+            <option value="produccion" ${selIdea.estado === 'produccion' ? 'selected' : ''}>Por producirse</option>
+            <option value="grabar" ${selIdea.estado === 'grabar' ? 'selected' : ''}>Por grabar</option>
+            <option value="edicion" ${selIdea.estado === 'edicion' ? 'selected' : ''}>Por editar</option>
+            <option value="entrega" ${selIdea.estado === 'entrega' ? 'selected' : ''}>Por confirmar entrega</option>
             <option value="publicada" ${selIdea.estado === 'publicada' ? 'selected' : ''}>Publicada</option>
             <option value="descartada" ${selIdea.estado === 'descartada' ? 'selected' : ''}>Descartada</option>
           </select>

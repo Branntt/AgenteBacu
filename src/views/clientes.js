@@ -1,14 +1,27 @@
 import { escapeHtml } from '../lib/format.js';
 
-// Escala de calor: entre más avanza el cliente, más caliente el color (por pagar = rojo fuerte); ya pagó = verde
-const ESTADO_COLORS = { prospecto: 'var(--text)', conversacion: 'var(--azul)', proyecto_edicion: 'var(--amarillo)', entregado: 'var(--naranja)', por_pagar: 'var(--rojo)', ya_pagos: 'var(--verde)' };
+// Escala de calor: entre más avanza el cliente, más caliente el color (por pagar = rojo fuerte); verdes = cerrado
+const ESTADO_COLORS = {
+  prospecto: 'var(--text)',
+  conversacion: 'var(--azul)',
+  grabacion: 'var(--amarillo)',
+  proyecto_edicion: 'var(--naranja)',
+  confirmar_entrega: 'var(--rojo)',
+  por_pagar: 'var(--rojofuerte)',
+  ya_pagos: 'var(--verde)',
+  entregado: 'var(--verdedeep)',
+  descartado: 'var(--muted)'
+};
 const COLUMNAS = [
   ['prospecto', 'Prospectos', 'Posibles clientes'],
   ['conversacion', 'En conversación para contratación', 'En negociación'],
-  ['proyecto_edicion', 'Proyecto por editar', 'En revisión antes de entregar'],
-  ['entregado', 'Entregados', 'Proyectos completados'],
+  ['grabacion', 'Grabación', 'Por grabar o en grabación'],
+  ['proyecto_edicion', 'Proyecto por editar', 'En edición'],
+  ['confirmar_entrega', 'Proyecto por confirmar entrega', 'Esperando visto bueno'],
   ['por_pagar', 'Por pagar', 'Pendiente de cobro'],
-  ['ya_pagos', 'Ya pagos', 'Historial de pagos']
+  ['ya_pagos', 'Ya pagos', 'Pagos recibidos'],
+  ['entregado', 'Entregados', 'Proyectos cerrados'],
+  ['descartado', 'Descartado', 'No avanzó']
 ];
 
 function fmtMoney(n) {
