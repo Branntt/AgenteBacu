@@ -1,11 +1,13 @@
 import { escapeHtml } from '../lib/format.js';
 
-const ESTADO_COLORS = { prospecto: 'var(--muted)', conversacion: 'var(--novena)', proyecto_edicion: 'var(--azul)', entregado: 'var(--brant)', por_pagar: 'var(--rojo)' };
+const ESTADO_COLORS = { prospecto: 'var(--muted)', conversacion: 'var(--novena)', proyecto_edicion: 'var(--azul)', entregado: 'var(--brant)', por_pagar: 'var(--rojo)', ya_pagos: 'var(--verde)' };
 const COLUMNAS = [
   ['prospecto', 'Prospectos', 'Posibles clientes'],
   ['conversacion', 'En conversación para contratación', 'En negociación'],
   ['proyecto_edicion', 'Proyecto por editar', 'En revisión antes de entregar'],
-  ['entregado', 'Entregados', 'Proyectos completados']
+  ['entregado', 'Entregados', 'Proyectos completados'],
+  ['por_pagar', 'Por pagar', 'Pendiente de cobro'],
+  ['ya_pagos', 'Ya pagos', 'Historial de pagos']
 ];
 
 function clienteCardHtml(c) {

@@ -1,6 +1,6 @@
 import { escapeHtml } from '../lib/format.js';
 
-const ESTADO_LABELS = { prospecto: 'Prospecto', conversacion: 'En conversación para contratación', proyecto_edicion: 'Proyecto por editar', entregado: 'Entregado', por_pagar: 'Proyecto por pagar' };
+const ESTADO_LABELS = { prospecto: 'Prospecto', conversacion: 'En conversación para contratación', proyecto_edicion: 'Proyecto por editar', entregado: 'Entregado', por_pagar: 'Por pagar', ya_pagos: 'Ya pagos' };
 
 export function renderClienteDetalle(state) {
   const c = (state.clientes || []).find(x => x.id === state.clienteSelId);
@@ -53,7 +53,8 @@ export function renderClienteDetalle(state) {
             <option value="conversacion" ${c.estado === 'conversacion' ? 'selected' : ''}>En conversación para contratación</option>
             <option value="proyecto_edicion" ${c.estado === 'proyecto_edicion' ? 'selected' : ''}>Proyecto por editar</option>
             <option value="entregado" ${c.estado === 'entregado' ? 'selected' : ''}>Entregados</option>
-            <option value="por_pagar" ${c.estado === 'por_pagar' ? 'selected' : ''}>Proyecto por pagar</option>
+            <option value="por_pagar" ${c.estado === 'por_pagar' ? 'selected' : ''}>Por pagar</option>
+            <option value="ya_pagos" ${c.estado === 'ya_pagos' ? 'selected' : ''}>Ya pagos</option>
           </select>
           <button class="btn-ghost" data-act="cc-abrir" data-id="${id}">Cuenta de cobro</button>
           <button class="btn-delete" data-act="cliente-eliminar" data-id="${id}">Eliminar</button>
