@@ -15,6 +15,20 @@ function fmtFecha(fecha) {
   return `${día}/${mes}`;
 }
 
+// Paleta única de Finanzas: verde = entra plata, rojo = sale plata/deudas, azul = informativo
+function card(accent, contenido, extra = '') {
+  return `<div style="background:var(--panel2);border:1px solid var(--line);border-left:3px solid ${accent};border-radius:8px;padding:16px;${extra}">${contenido}</div>`;
+}
+
+function filaMonto(etiqueta, monto, color) {
+  return `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;font-size:13px;border-bottom:1px solid var(--line);">
+      <span>${etiqueta}</span>
+      <span style="font-weight:bold;color:${color};">${monto}</span>
+    </div>
+  `;
+}
+
 export function renderFinanciamiento(state) {
   const movimientos = state.movimientosFinanciamiento || [];
   const deudas = state.deudas || [];
@@ -42,10 +56,6 @@ export function renderFinanciamiento(state) {
   const totalGastos = gastos.reduce((sum, m) => sum + (Number(m.monto) || 0), 0);
   const totalIngresos = ingresos.reduce((sum, m) => sum + (Number(m.monto) || 0), 0);
 
-  // Gastos si viviera solo
-  const gastosMensualesTotal = gastosVivirSolo.reduce((sum, g) => sum + (Number(g.monto) || 0), 0);
-  const mesesParaVivir = efectivo > 0 && gastosMensualesTotal > 0 ? Math.floor(efectivo / gastosMensualesTotal) : 0;
-
   // Gastos recurrentes totales
   const gastosRecurrentesTotal = gastosRecurrentes.reduce((sum, g) => sum + (Number(g.monto) || 0), 0);
 
@@ -57,237 +67,170 @@ export function renderFinanciamiento(state) {
         <p style="margin:8px 0 0 0;font-size:14px;opacity:0.7;">Tu situación financiera actual</p>
       </div>
 
-      <!-- 0️⃣ REGISTRO DE FINANZAS (PRIMERO) -->
+      <!-- 0️⃣ REGISTRO DE FINANZAS -->
       <div class="finanzas-seccion" style="margin-bottom:24px;">
         ${renderTablaFinanzas(movimientos)}
       </div>
 
-      <!-- 1️⃣ SITUACIÓN HOY (con Gastos + Ingresos) -->
+      <!-- 1️⃣ SITUACIÓN HOY -->
       <div class="finanzas-seccion" style="margin-bottom:24px;">
         <div class="seccion-titulo">📊 Tu Situación Hoy</div>
 
-        <div class="financ-total-card ${patrimonio < 0 ? 'negativo' : ''}" style="padding:32px;border-radius:12px;text-align:center;margin-bottom:24px;">
-          <div style="font-size:14px;opacity:0.8;margin-bottom:12px;">Patrimonio Neto</div>
-          <div style="font-size:56px;font-weight:bold;margin-bottom:32px;color:${patrimonio >= 0 ? 'var(--verde)' : 'var(--rojo)'};">${fmtMoney(patrimonio)}</div>
+        <div style="background:var(--panel2);border:1px solid var(--line);padding:32px;border-radius:8px;text-align:center;margin-bottom:16px;">
+          <div style="font-size:13px;opacity:0.7;margin-bottom:10px;">Patrimonio Neto</div>
+          <div style="font-size:52px;font-weight:bold;margin-bottom:28px;color:${patrimonio >= 0 ? 'var(--verde)' : 'var(--rojo)'};">${fmtMoney(patrimonio)}</div>
 
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;font-size:13px;">
-            <div style="background:rgba(76,175,80,0.15);padding:16px;border-radius:8px;border-left:3px solid var(--verde);">
-              <div style="opacity:0.8;margin-bottom:6px;">En bolsillo</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;font-size:13px;">
+            ${card('var(--verde)', `
+              <div style="opacity:0.7;margin-bottom:6px;">En bolsillo</div>
               <div style="font-size:18px;font-weight:bold;color:var(--verde);">${fmtMoney(efectivo)}</div>
-            </div>
-            <div style="background:rgba(33,150,243,0.15);padding:16px;border-radius:8px;border-left:3px solid var(--azul);">
-              <div style="opacity:0.8;margin-bottom:6px;">Te deben</div>
+            `)}
+            ${card('var(--azul)', `
+              <div style="opacity:0.7;margin-bottom:6px;">Te deben</div>
               <div style="font-size:18px;font-weight:bold;color:var(--azul);">${fmtMoney(teDeben)}</div>
-            </div>
-            <div style="background:rgba(255,107,107,0.15);padding:16px;border-radius:8px;border-left:3px solid var(--rojo);">
-              <div style="opacity:0.8;margin-bottom:6px;">Debes</div>
+            `)}
+            ${card('var(--rojo)', `
+              <div style="opacity:0.7;margin-bottom:6px;">Debes</div>
               <div style="font-size:18px;font-weight:bold;color:var(--rojo);">${fmtMoney(debes)}</div>
-            </div>
+            `)}
           </div>
         </div>
 
-        <!-- Tabla de Gastos e Ingresos -->
+        <!-- Gastos e Ingresos -->
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-          <!-- GASTOS -->
-          <div style="background:rgba(255,107,107,0.1);border-left:4px solid var(--rojo);border-radius:8px;padding:16px;">
-            <div style="font-size:14px;font-weight:bold;margin-bottom:12px;color:var(--rojo);">💸 Gastos - ${fmtMoney(totalGastos)}</div>
-            <div style="display:flex;flex-direction:column;gap:8px;max-height:300px;overflow-y:auto;">
-              ${gastos.slice(0, 10).map(m => `
-                <div style="background:rgba(255,255,255,0.05);padding:10px;border-radius:6px;font-size:12px;display:flex;justify-content:space-between;align-items:center;">
-                  <div>
-                    <div>${escapeHtml(m.nota || 'Gasto')}</div>
-                    <div style="opacity:0.6;font-size:11px;">${fmtFecha(m.fecha)}</div>
-                  </div>
-                  <div style="font-weight:bold;color:var(--rojo);">${fmtMoney(m.monto)}</div>
-                </div>
-              `).join('')}
+          ${card('var(--rojo)', `
+            <div style="font-size:14px;font-weight:bold;margin-bottom:12px;color:var(--rojo);">💸 Gastos · ${fmtMoney(totalGastos)}</div>
+            <div style="display:flex;flex-direction:column;">
+              ${gastos.slice(0, 10).map(m => filaMonto(
+                `${escapeHtml(m.nota || 'Gasto')} <span style="opacity:0.5;font-size:11px;">· ${fmtFecha(m.fecha)}</span>`,
+                fmtMoney(m.monto), 'var(--rojo)'
+              )).join('')}
               ${gastos.length === 0 ? '<div style="opacity:0.5;font-size:12px;">Sin gastos registrados</div>' : ''}
             </div>
-          </div>
-
-          <!-- INGRESOS -->
-          <div style="background:rgba(76,175,80,0.1);border-left:4px solid var(--verde);border-radius:8px;padding:16px;">
-            <div style="font-size:14px;font-weight:bold;margin-bottom:12px;color:var(--verde);">💵 Pagos Recibidos - ${fmtMoney(totalIngresos)}</div>
-            <div style="display:flex;flex-direction:column;gap:8px;max-height:300px;overflow-y:auto;">
-              ${ingresos.slice(0, 10).map(m => `
-                <div style="background:rgba(255,255,255,0.05);padding:10px;border-radius:6px;font-size:12px;display:flex;justify-content:space-between;align-items:center;">
-                  <div>
-                    <div>${escapeHtml(m.nota || 'Ingreso')}</div>
-                    <div style="opacity:0.6;font-size:11px;">${fmtFecha(m.fecha)}</div>
-                  </div>
-                  <div style="font-weight:bold;color:var(--verde);">${fmtMoney(m.monto)}</div>
-                </div>
-              `).join('')}
+          `)}
+          ${card('var(--verde)', `
+            <div style="font-size:14px;font-weight:bold;margin-bottom:12px;color:var(--verde);">💵 Pagos Recibidos · ${fmtMoney(totalIngresos)}</div>
+            <div style="display:flex;flex-direction:column;">
+              ${ingresos.slice(0, 10).map(m => filaMonto(
+                `${escapeHtml(m.nota || 'Ingreso')} <span style="opacity:0.5;font-size:11px;">· ${fmtFecha(m.fecha)}</span>`,
+                fmtMoney(m.monto), 'var(--verde)'
+              )).join('')}
               ${ingresos.length === 0 ? '<div style="opacity:0.5;font-size:12px;">Sin ingresos registrados</div>' : ''}
             </div>
-          </div>
+          `)}
         </div>
       </div>
 
       <!-- 2️⃣ GASTOS MENSUALES RECURRENTES -->
-      <div class="finanzas-seccion" style="background:rgba(255,152,0,0.1);border-left:4px solid var(--naranja);margin-bottom:24px;">
+      <div class="finanzas-seccion" style="margin-bottom:24px;">
         <div class="seccion-titulo">💰 Gastos Mensuales Recurrentes</div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:12px;margin-bottom:16px;">
-          ${gastosRecurrentes.map(g => `
-            <div style="background:rgba(255,255,255,0.05);padding:12px;border-radius:8px;border-left:3px solid var(--naranja);">
-              <div style="display:flex;justify-content:space-between;align-items:start;">
-                <div style="flex:1;">
-                  <div style="display:flex;align-items:center;gap:6px;">
-                    <span style="font-size:16px;">${g.emoji}</span>
-                    <div style="font-weight:bold;font-size:13px;">${escapeHtml(g.nombre)}</div>
-                  </div>
-                  <div style="font-size:10px;opacity:0.6;margin-top:6px;">Día ${g.dia_vencimiento}</div>
-                </div>
-                <div style="text-align:right;">
-                  <div style="font-size:14px;font-weight:bold;color:var(--rojo);">${fmtMoney(g.monto)}</div>
-                </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));gap:10px;margin-bottom:12px;">
+          ${gastosRecurrentes.map(g => card('var(--rojo)', `
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <div>
+                <div style="font-size:13px;font-weight:bold;">${g.emoji} ${escapeHtml(g.nombre)}</div>
+                <div style="font-size:10px;opacity:0.55;margin-top:4px;">Día ${g.dia_vencimiento}</div>
               </div>
+              <div style="font-size:14px;font-weight:bold;color:var(--rojo);">${fmtMoney(g.monto)}</div>
             </div>
-          `).join('')}
+          `, 'padding:12px;')).join('')}
         </div>
-
-        <div style="background:rgba(0,0,0,0.3);padding:12px;border-radius:8px;text-align:center;font-size:13px;">
-          <div style="opacity:0.7;">Total gastos recurrentes mensuales:</div>
-          <div style="font-size:20px;font-weight:bold;color:var(--rojo);margin-top:6px;">${fmtMoney(gastosRecurrentesTotal)}</div>
-        </div>
+        ${card('var(--rojo)', `
+          <div style="text-align:center;">
+            <span style="opacity:0.7;font-size:13px;">Total recurrentes del mes: </span>
+            <span style="font-size:18px;font-weight:bold;color:var(--rojo);">${fmtMoney(gastosRecurrentesTotal)}</span>
+          </div>
+        `)}
       </div>
 
       <!-- 3️⃣ ASEO PERSONAL (DÍA 28) -->
-      <div class="finanzas-seccion" style="background:rgba(156,39,176,0.1);border-left:4px solid #9c27ac;margin-bottom:24px;">
+      <div class="finanzas-seccion" style="margin-bottom:24px;">
         <div class="seccion-titulo">🧴 Aseo Personal (Día 28)</div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:12px;margin-bottom:16px;">
-          <div style="background:rgba(255,255,255,0.05);padding:12px;border-radius:8px;border-left:3px solid #9c27ac;order:1;">
-            <div style="font-size:13px;font-weight:bold;">👁️ Contorno ojos</div>
-            <div style="font-size:12px;opacity:0.8;margin-top:4px;">~1 mes de duración</div>
-            <div style="font-size:14px;font-weight:bold;color:#9c27ac;margin-top:6px;">$80k/mes</div>
-          </div>
-          <div style="background:rgba(255,255,255,0.05);padding:12px;border-radius:8px;border-left:3px solid #9c27ac;order:2;opacity:0.3;">
-            <div style="font-size:13px;font-weight:bold;">🧴 Desodorante</div>
-            <div style="font-size:12px;opacity:0.8;margin-top:4px;">Aún dura</div>
-            <div style="font-size:14px;font-weight:bold;color:#9c27ac;margin-top:6px;">$50k/mes</div>
-          </div>
-          <div style="background:rgba(255,255,255,0.05);padding:12px;border-radius:8px;border-left:3px solid #9c27ac;order:3;">
-            <div style="font-size:13px;font-weight:bold;">🧼 Jabón cara</div>
-            <div style="font-size:12px;opacity:0.8;margin-top:4px;">$90k cada 2 meses</div>
-            <div style="font-size:14px;font-weight:bold;color:#9c27ac;margin-top:6px;">$45k/mes</div>
-          </div>
-          <div style="background:rgba(255,255,255,0.05);padding:12px;border-radius:8px;border-left:3px solid #9c27ac;order:4;opacity:0.3;">
-            <div style="font-size:13px;font-weight:bold;">🧴 Shampú</div>
-            <div style="font-size:12px;opacity:0.8;margin-top:4px;">Aún dura</div>
-            <div style="font-size:14px;font-weight:bold;color:#9c27ac;margin-top:6px;">$15k/mes</div>
-          </div>
-          <div style="background:rgba(255,255,255,0.05);padding:12px;border-radius:8px;border-left:3px solid #9c27ac;order:5;">
-            <div style="font-size:13px;font-weight:bold;">🪒 Cuchillas</div>
-            <div style="font-size:12px;opacity:0.8;margin-top:4px;">$18k cada 2 meses</div>
-            <div style="font-size:14px;font-weight:bold;color:#9c27ac;margin-top:6px;">$9k/mes</div>
-          </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(190px, 1fr));gap:10px;margin-bottom:12px;">
+          ${[
+            ['👁️ Contorno ojos', '~1 mes de duración', '$80k/mes', false],
+            ['🧴 Desodorante', 'Aún dura', '$50k/mes', true],
+            ['🧼 Jabón cara', '$90k cada 2 meses', '$45k/mes', false],
+            ['🧴 Shampú', 'Aún dura', '$15k/mes', true],
+            ['🪒 Cuchillas', '$18k cada 2 meses', '$9k/mes', false]
+          ].map(([nombre, nota, precio, agotado]) => card('var(--azul)', `
+            <div style="font-size:13px;font-weight:bold;">${nombre}</div>
+            <div style="font-size:11px;opacity:0.6;margin-top:4px;">${nota}</div>
+            <div style="font-size:14px;font-weight:bold;color:var(--azul);margin-top:6px;">${precio}</div>
+          `, `padding:12px;${agotado ? 'opacity:0.35;' : ''}`)).join('')}
         </div>
-        <div style="background:rgba(0,0,0,0.3);padding:16px;border-radius:8px;text-align:center;font-size:14px;">
-          <div style="opacity:0.8;">Total promedio mensual de Aseo Personal:</div>
-          <div style="font-size:24px;font-weight:bold;color:#9c27ac;margin-top:8px;">$199k</div>
-          <div style="opacity:0.6;font-size:12px;margin-top:6px;">Se reinicia cada 28 del mes</div>
-        </div>
+        ${card('var(--azul)', `
+          <div style="text-align:center;">
+            <span style="opacity:0.7;font-size:13px;">Promedio mensual de aseo: </span>
+            <span style="font-size:18px;font-weight:bold;color:var(--azul);">$199.000</span>
+            <span style="opacity:0.5;font-size:11px;"> · se reinicia cada 28</span>
+          </div>
+        `)}
       </div>
 
       <!-- 4️⃣ DEUDAS PERSONALES -->
       ${yoDeboHtml.length > 0 ? `
-      <div class="finanzas-seccion" style="background:rgba(255,107,107,0.1);border-left:4px solid var(--rojo);margin-bottom:24px;">
-        <div class="seccion-titulo">⚠️ Debes Pagar - ${fmtMoney(yoDebenTotal)}</div>
-        <div style="display:flex;flex-direction:column;gap:8px;">
-          ${yoDeboHtml.map(d => `
-            <div style="background:rgba(255,255,255,0.05);padding:12px;border-radius:8px;display:flex;justify-content:space-between;align-items:center;">
-              <span>${escapeHtml(d.persona)}</span>
-              <span style="font-weight:bold;color:var(--rojo);">${fmtMoney(d.monto)}</span>
-            </div>
-          `).join('')}
-        </div>
+      <div class="finanzas-seccion" style="margin-bottom:24px;">
+        <div class="seccion-titulo">⚠️ Debes Pagar · ${fmtMoney(yoDebenTotal)}</div>
+        ${card('var(--rojo)', yoDeboHtml.map(d => filaMonto(escapeHtml(d.persona), fmtMoney(d.monto), 'var(--rojo)')).join(''))}
       </div>
       ` : ''}
 
-      <!-- 4️⃣ SIMULACIÓN: SI VIVIERAS SOLO -->
-      <div class="finanzas-seccion" style="background:linear-gradient(135deg, rgba(255,107,107,0.1), rgba(255,149,0,0.1));border-left:4px solid var(--rojo);">
+      <!-- 5️⃣ SIMULACIÓN: SI VIVIERAS SOLO -->
+      <div class="finanzas-seccion">
         <div class="seccion-titulo">🎯 Simulación: Si vivieras solo</div>
 
         <!-- GASTOS BÁSICOS -->
-        <div style="margin-bottom:24px;">
-          <div style="font-size:14px;font-weight:bold;margin-bottom:12px;color:var(--verde);display:flex;align-items:center;gap:8px;">
-            <span>🏠</span> GASTOS BÁSICOS
-          </div>
-          <div style="background:rgba(76,175,80,0.1);border-radius:8px;padding:16px;border-left:3px solid var(--verde);">
+        <div style="margin-bottom:20px;">
+          <div style="font-size:13px;font-weight:bold;margin-bottom:10px;color:var(--azul);">🏠 GASTOS BÁSICOS</div>
+          ${card('var(--azul)', `
             ${[1,2,3,8,9,10,6,7].map(idx => {
-              const g = state.gastosVivirSolo.find(x => x.id === `g${idx}`);
+              const g = gastosVivirSolo.find(x => x.id === `g${idx}`);
               if (!g) return '';
-              return `
-                <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;font-size:13px;border-bottom:1px solid rgba(255,255,255,0.1);">
-                  <span>${g.emoji} ${escapeHtml(g.nombre)}</span>
-                  <span style="font-weight:bold;color:var(--verde);">${fmtMoney(g.monto)}</span>
-                </div>
-              `;
+              return filaMonto(`${g.emoji} ${escapeHtml(g.nombre)}`, fmtMoney(g.monto), 'var(--text)');
             }).join('')}
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;font-weight:bold;color:var(--verde);border-top:2px solid rgba(76,175,80,0.3);">
-              <span>Subtotal Básicos:</span>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0 2px;font-weight:bold;color:var(--azul);">
+              <span>Subtotal Básicos</span>
               <span>${fmtMoney(700000+450000+150000+50000+80000+50000+120000+100000)}</span>
             </div>
-          </div>
+          `)}
         </div>
 
         <!-- GASTOS RECURRENTES -->
-        <div style="margin-bottom:24px;">
-          <div style="font-size:14px;font-weight:bold;margin-bottom:12px;color:var(--azul);display:flex;align-items:center;gap:8px;">
-            <span>💼</span> GASTOS RECURRENTES
-          </div>
-          <div style="background:rgba(33,150,243,0.1);border-radius:8px;padding:16px;border-left:3px solid var(--azul);">
-            ${state.gastosRecurrentes.map(g => `
-              <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;font-size:13px;border-bottom:1px solid rgba(255,255,255,0.1);">
-                <span>${g.emoji} ${escapeHtml(g.nombre)}</span>
-                <span style="font-weight:bold;color:var(--azul);">${fmtMoney(g.monto)}</span>
-              </div>
-            `).join('')}
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;font-weight:bold;color:var(--azul);border-top:2px solid rgba(33,150,243,0.3);">
-              <span>Subtotal Recurrentes:</span>
-              <span>${fmtMoney(state.gastosRecurrentes.reduce((sum, g) => sum + g.monto, 0))}</span>
+        <div style="margin-bottom:20px;">
+          <div style="font-size:13px;font-weight:bold;margin-bottom:10px;color:var(--azul);">💼 GASTOS RECURRENTES</div>
+          ${card('var(--azul)', `
+            ${gastosRecurrentes.map(g => filaMonto(`${g.emoji} ${escapeHtml(g.nombre)}`, fmtMoney(g.monto), 'var(--text)')).join('')}
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0 2px;font-weight:bold;color:var(--azul);">
+              <span>Subtotal Recurrentes</span>
+              <span>${fmtMoney(gastosRecurrentesTotal)}</span>
             </div>
-          </div>
+          `)}
         </div>
 
         <!-- ASEO PERSONAL -->
-        <div style="margin-bottom:24px;">
-          <div style="font-size:14px;font-weight:bold;margin-bottom:12px;color:var(--naranja);display:flex;align-items:center;gap:8px;">
-            <span>🧴</span> ASEO PERSONAL
-          </div>
-          <div style="background:rgba(255,152,0,0.1);border-radius:8px;padding:16px;border-left:3px solid var(--naranja);">
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;font-size:13px;border-bottom:1px solid rgba(255,255,255,0.1);">
-              <span>🧴 Contorno de ojos</span>
-              <span style="font-weight:bold;color:var(--naranja);">$80.000</span>
-            </div>
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;font-size:13px;border-bottom:1px solid rgba(255,255,255,0.1);">
-              <span>🧴 Jabón para la cara</span>
-              <span style="font-weight:bold;color:var(--naranja);">$45.000</span>
-            </div>
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;font-size:13px;border-bottom:1px solid rgba(255,255,255,0.1);">
-              <span>🧴 Shampú</span>
-              <span style="font-weight:bold;color:var(--naranja);">$15.000</span>
-            </div>
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;font-size:13px;border-bottom:1px solid rgba(255,255,255,0.1);">
-              <span>🧴 Desodorante</span>
-              <span style="font-weight:bold;color:var(--naranja);">$50.000</span>
-            </div>
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;font-size:13px;">
-              <span>🧴 Cuchillas</span>
-              <span style="font-weight:bold;color:var(--naranja);">$9.000</span>
-            </div>
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;font-weight:bold;color:var(--naranja);border-top:2px solid rgba(255,152,0,0.3);">
-              <span>Subtotal Aseo:</span>
+        <div style="margin-bottom:20px;">
+          <div style="font-size:13px;font-weight:bold;margin-bottom:10px;color:var(--azul);">🧴 ASEO PERSONAL</div>
+          ${card('var(--azul)', `
+            ${[
+              ['🧴 Contorno de ojos', '$80.000'],
+              ['🧼 Jabón para la cara', '$45.000'],
+              ['🧴 Shampú', '$15.000'],
+              ['🧴 Desodorante', '$50.000'],
+              ['🪒 Cuchillas', '$9.000']
+            ].map(([nombre, precio]) => filaMonto(nombre, precio, 'var(--text)')).join('')}
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0 2px;font-weight:bold;color:var(--azul);">
+              <span>Subtotal Aseo</span>
               <span>$199.000</span>
             </div>
-          </div>
+          `)}
         </div>
 
         <!-- TOTAL FINAL -->
-        <div style="background:linear-gradient(135deg, rgba(255,107,107,0.2), rgba(255,149,0,0.2));padding:20px;border-radius:8px;font-size:14px;text-align:center;border:2px solid var(--rojo);">
-          <div style="opacity:0.8;margin-bottom:12px;font-weight:bold;">TOTAL MENSUAL SI VIVIERAS SOLO:</div>
+        <div style="background:var(--panel2);border:2px solid var(--rojo);padding:24px;border-radius:8px;font-size:14px;text-align:center;">
+          <div style="opacity:0.75;margin-bottom:10px;font-weight:bold;">TOTAL MENSUAL SI VIVIERAS SOLO</div>
           <div style="font-size:36px;font-weight:bold;color:var(--rojo);">${fmtMoney(2643706)}</div>
-          <div style="font-size:12px;opacity:0.7;margin-top:8px;">Básicos + Recurrentes + Aseo Personal</div>
+          <div style="font-size:12px;opacity:0.6;margin-top:8px;">Básicos + Recurrentes + Aseo Personal</div>
         </div>
 
         <!-- ANÁLISIS: ¿PUEDES VIVIR SOLO? -->
@@ -303,14 +246,12 @@ export function renderFinanciamiento(state) {
             if (efectivoActual < 0) {
               mensaje = '❌ NO PUEDES VIVIR SOLO: Tienes un déficit actual de ' + fmtMoney(Math.abs(efectivoActual)) + '. Necesitas primero generar ingresos.';
             } else if (mesesPosibles === 0) {
-              mensaje = '⚠️ CRÍTICO: Tu efectivo actual (' + fmtMoney(efectivoActual) + ') es insuficiente para ni un mes completo de vida sola.';
-              color = 'var(--naranja)';
+              mensaje = '⚠️ CRÍTICO: Tu efectivo actual (' + fmtMoney(efectivoActual) + ') no alcanza ni para un mes completo viviendo solo.';
             } else if (mesesPosibles < 3) {
               mensaje = '⚠️ LIMITADO: Tu efectivo actual (' + fmtMoney(efectivoActual) + ') te alcanza para ' + mesesPosibles + ' mes(es) viviendo solo. Necesitas incrementar ingresos.';
-              color = 'var(--naranja)';
             } else if (mesesPosibles < 6) {
-              mensaje = '🟡 POSIBLE A CORTO PLAZO: Tu efectivo actual (' + fmtMoney(efectivoActual) + ') te alcanza para ' + mesesPosibles + ' meses viviendo solo. Necesitas un plan de ingresos.';
-              color = 'var(--amarillo)';
+              mensaje = '🔵 POSIBLE A CORTO PLAZO: Tu efectivo actual (' + fmtMoney(efectivoActual) + ') te alcanza para ' + mesesPosibles + ' meses viviendo solo. Necesitas un plan de ingresos.';
+              color = 'var(--azul)';
             } else if (mesesPosibles < 12) {
               mensaje = '🟢 POSIBLE 6+ MESES: Tu efectivo actual (' + fmtMoney(efectivoActual) + ') te alcanza para ' + mesesPosibles + ' meses viviendo solo. Buen respaldo.';
               color = 'var(--verde)';
@@ -320,10 +261,8 @@ export function renderFinanciamiento(state) {
             }
 
             return `
-              <div style="background:rgba(0,0,0,0.4);padding:16px;border-radius:8px;margin-top:16px;border-left:4px solid ${color};">
-                <div style="font-size:12px;line-height:1.6;color:${color};font-weight:bold;">
-                  ${mensaje}
-                </div>
+              <div style="margin-top:16px;">
+                ${card(color, `<div style="font-size:12px;line-height:1.6;color:${color};font-weight:bold;">${mensaje}</div>`)}
               </div>
             `;
           })()
