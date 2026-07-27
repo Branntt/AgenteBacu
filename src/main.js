@@ -16,6 +16,7 @@ import { renderCalendario } from './views/calendario.js';
 import { renderClientes } from './views/clientes.js';
 import { renderFinanciamiento } from './views/financiamiento.js';
 import { renderInventario } from './views/inventario.js';
+import { renderBienestar } from './views/bienestar.js';
 import { renderIAModal } from './views/iaModal.js';
 import { renderRevisionIdeasModal } from './components/revisionIdeasModal.js';
 import { renderNotificacionBacu } from './components/notificacionBacu.js';
@@ -26,7 +27,8 @@ const VIEWS = {
   calendario: renderCalendario,
   clientes: renderClientes,
   financiamiento: renderFinanciamiento,
-  inventario: renderInventario
+  inventario: renderInventario,
+  bienestar: renderBienestar
 };
 
 const root = document.getElementById('app');
@@ -266,6 +268,8 @@ root.addEventListener('click', e => {
     case 'inv-vista': actions.invSetVista(value); break;
     case 'avatar-set': actions.avatarSet(el.dataset.campo, value); break;
     case 'avatar-editor-toggle': actions.avatarEditorToggle(); break;
+    case 'habito-nuevo': actions.habitoNuevo(); break;
+    case 'habito-toggle': actions.habitoToggle(id); break;
     case 'inv-agregar': actions.metaPersonalNueva('inv_' + value); break;
     case 'inv-equipar': {
       const item = state.metasPersonales.find(m => m.id === id);

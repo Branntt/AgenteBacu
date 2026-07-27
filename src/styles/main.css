@@ -1047,6 +1047,76 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
   .drawer textarea, .drawer select, .drawer input { font-size: 13px; }
 }
 
+/* ---------- Bienestar ---------- */
+.estres-card {
+  background: var(--panel); border: 2px solid var(--verde); border-radius: 12px;
+  padding: 28px 24px; text-align: center; margin-bottom: 36px;
+}
+.estres-valor { font-size: 60px; font-weight: bold; line-height: 1; margin: 8px 0 2px; }
+.estres-nivel { font-family: 'IBM Plex Mono', monospace; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 18px; }
+.estres-barra { height: 10px; background: var(--panel2); border-radius: 5px; overflow: hidden; margin-bottom: 12px; }
+.estres-fill { height: 100%; border-radius: 5px; transition: width .4s ease; }
+.estres-nota { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--muted); }
+
+.fuentes-grid { display: grid; grid-template-columns: 1fr; gap: 12px; margin-bottom: 36px; }
+.fuente-row {
+  background: var(--panel); border: 1px solid var(--line); border-radius: 8px;
+  padding: 14px 16px; cursor: pointer;
+}
+.fuente-row:hover { border-color: var(--line2); }
+.fuente-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.fuente-label { font-size: 14px; font-weight: 600; }
+.fuente-pts { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--muted); }
+.fuente-barra { height: 6px; background: var(--panel2); border-radius: 3px; overflow: hidden; margin-bottom: 8px; }
+.fuente-fill { height: 100%; border-radius: 3px; }
+.fuente-detalle { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: var(--muted); }
+
+.clasif-grid { display: grid; grid-template-columns: 1fr; gap: 14px; margin-bottom: 36px; }
+.clasif-col { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px; }
+.clasif-head { display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 600; }
+.clasif-lista { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
+.clasif-item {
+  display: flex; justify-content: space-between; align-items: center; gap: 8px;
+  background: var(--panel2); border-radius: 6px; padding: 9px 11px; cursor: pointer; font-size: 12.5px;
+}
+.clasif-item:hover { background: var(--line); }
+.clasif-item-titulo { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.clasif-item-pts { font-family: 'IBM Plex Mono', monospace; font-weight: bold; flex-shrink: 0; }
+
+.pesos-lista { display: flex; flex-direction: column; gap: 8px; margin-bottom: 36px; }
+.peso-row {
+  display: flex; align-items: center; gap: 12px; cursor: pointer;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px;
+}
+.peso-row:hover { border-color: var(--line2); }
+.peso-num { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--muted); flex-shrink: 0; }
+.peso-cuerpo { flex: 1; min-width: 0; }
+.peso-titulo { font-size: 13px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.peso-motivo { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: var(--muted); margin-top: 2px; }
+.peso-pts { font-family: 'IBM Plex Mono', monospace; font-size: 15px; font-weight: bold; color: var(--rojo); flex-shrink: 0; }
+
+.habitos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; margin-bottom: 40px; }
+.habito {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--panel2); border: 1px solid var(--line); border-radius: 8px; padding: 9px 11px;
+}
+.habito.hecho { border-color: var(--verde); background: rgba(31,175,116,0.08); }
+.habito-check {
+  width: 24px; height: 24px; flex-shrink: 0; border-radius: 6px; cursor: pointer;
+  border: 1.5px solid var(--line2); background: none; color: var(--verde);
+  font-size: 13px; line-height: 1; padding: 0;
+}
+.habito.hecho .habito-check { border-color: var(--verde); background: rgba(31,175,116,0.18); }
+.habito-texto { background: none; border: none; color: inherit; flex: 1; min-width: 0; font-family: inherit; font-size: 13px; padding: 4px; }
+.habito.hecho .habito-texto { color: var(--muted); text-decoration: line-through; }
+.habito-quitar { background: none; border: none; cursor: pointer; color: var(--muted); font-size: 12px; padding: 6px; flex-shrink: 0; }
+.habito-quitar:hover { color: var(--rojo); }
+
+@media (min-width: 600px) {
+  .fuentes-grid { grid-template-columns: repeat(2, 1fr); }
+  .clasif-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
 /* ---------- Inventario (estilo videojuego) ---------- */
 .inv-tabs { display: flex; gap: 8px; margin-bottom: 28px; flex-wrap: wrap; }
 .inv-tab {

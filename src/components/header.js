@@ -7,6 +7,7 @@ const NAV = [
   ['guiones', 'Estrategia', 'Estra'],
   ['financiamiento', 'Finanzas', 'Finanz'],
   ['inventario', 'Inventario', 'Invent'],
+  ['bienestar', 'Bienestar', 'Bienes'],
   ['panorama', 'Panorama', 'Panora']
 ];
 

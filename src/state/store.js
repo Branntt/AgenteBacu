@@ -499,6 +499,15 @@ export const actions = {
   invSetVista: v => setState({ invVista: v }),
   avatarSet: (campo, valor) => setState({ avatar: { ...AVATAR_DEFAULT, ...state.avatar, [campo]: valor } }),
   avatarEditorToggle: () => setState({ avatarEditor: !state.avatarEditor }),
+
+  // Hábitos (Bienestar): `fecha` guarda el último día cumplido — marcar hoy = fecha de hoy
+  habitoNuevo: () => actions.metaPersonalNueva('habito'),
+  habitoToggle: id => {
+    const h = state.metasPersonales.find(m => m.id === id);
+    if (!h) return;
+    const hoy = hoyStr();
+    actions.updMetaPersonal(id, { fecha: h.fecha === hoy ? null : hoy });
+  },
   setFiltroCalendario: v => setState({ filtroCalendario: v }),
   cambiaSemana: delta => setState({ semanaInicio: sumarDias(state.semanaInicio, delta * 7) }),
 

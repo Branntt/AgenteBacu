@@ -104,7 +104,14 @@ export const METAS_EQUIPO_SEED = [
   { categoria: 'personal', titulo: 'Panel de corte' },
   { categoria: 'destreza', titulo: 'Inglés' },
   // Inventario (pestaña Inventario): items con categoria inv_* ; cumplida = equipado
-  { categoria: 'inv_garaje', titulo: 'Best 125' }
+  { categoria: 'inv_garaje', titulo: 'Best 125' },
+  // Bienestar: hábitos diarios. `fecha` guarda el último día cumplido, por eso se reinician solos.
+  { categoria: 'habito', titulo: 'Dormir 7 horas' },
+  { categoria: 'habito', titulo: 'Moverme / entrenar' },
+  { categoria: 'habito', titulo: 'Comer bien' },
+  { categoria: 'habito', titulo: 'Respirar 5 minutos' },
+  { categoria: 'habito', titulo: 'Salir a caminar' },
+  { categoria: 'habito', titulo: 'Sin celular antes de dormir' }
 ];
 
 export const COLORES_TAREA = { verde: 'var(--verde)', brant: 'var(--brant)', novena: 'var(--novena)', rojo: 'var(--rojo)', muted: 'var(--muted)' };
