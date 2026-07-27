@@ -49,17 +49,17 @@ export const state = {
     ingresosMensuales: 0
   },
   gastosVivirSolo: [
-    { id: 'g1', nombre: 'Arriendo', emoji: '🏠', monto: 700000, dia_vencimiento: 5 },
-    { id: 'g2', nombre: 'Luz', emoji: '💡', monto: 150000, dia_vencimiento: 12 },
-    { id: 'g3', nombre: 'Agua', emoji: '💧', monto: 50000, dia_vencimiento: 12 },
-    { id: 'g4', nombre: 'Internet', emoji: '📡', monto: 80000, dia_vencimiento: 8 },
-    { id: 'g5', nombre: 'Teléfono', emoji: '📱', monto: 50000, dia_vencimiento: 15 },
-    { id: 'g6', nombre: 'Comida', emoji: '🍽️', monto: 450000, dia_vencimiento: 1 },
-    { id: 'g7', nombre: 'Transporte', emoji: '🚌', monto: 120000, dia_vencimiento: 1 },
-    { id: 'g8', nombre: 'Gasolina', emoji: '⛽', monto: 100000, dia_vencimiento: 5 },
-    { id: 'g9', nombre: 'Entretenimiento/Salidas', emoji: '🎉', monto: 200000, dia_vencimiento: 1 },
-    { id: 'g10', nombre: 'Ropa', emoji: '👕', monto: 150000, dia_vencimiento: 15 },
-    { id: 'g11', nombre: 'Seguros/Gastos médicos', emoji: '🏥', monto: 100000, dia_vencimiento: 10 }
+    { id: 'g1', nombre: 'Arriendo (CRÍTICO)', emoji: '🏠', monto: 700000, dia_vencimiento: 1 },
+    { id: 'g2', nombre: 'Mercado/Comida (CRÍTICO)', emoji: '🍽️', monto: 450000, dia_vencimiento: 1 },
+    { id: 'g3', nombre: 'Transporte', emoji: '🚌', monto: 120000, dia_vencimiento: 1 },
+    { id: 'g4', nombre: 'Entretenimiento', emoji: '🎉', monto: 200000, dia_vencimiento: 1 },
+    { id: 'g5', nombre: 'Gasolina', emoji: '⛽', monto: 100000, dia_vencimiento: 5 },
+    { id: 'g6', nombre: 'Internet', emoji: '📡', monto: 80000, dia_vencimiento: 8 },
+    { id: 'g7', nombre: 'Seguros/Gastos médicos', emoji: '🏥', monto: 100000, dia_vencimiento: 10 },
+    { id: 'g8', nombre: 'Luz (CRÍTICO)', emoji: '💡', monto: 150000, dia_vencimiento: 12 },
+    { id: 'g9', nombre: 'Agua (CRÍTICO)', emoji: '💧', monto: 50000, dia_vencimiento: 12 },
+    { id: 'g10', nombre: 'Teléfono', emoji: '📱', monto: 50000, dia_vencimiento: 15 },
+    { id: 'g11', nombre: 'Ropa', emoji: '👕', monto: 150000, dia_vencimiento: 15 }
   ],
   gastosRecurrentes: [
     { id: 'gr1', nombre: 'Mango (gato - comida + arena)', emoji: '🐱', monto: 140000, dia_vencimiento: 1 },
