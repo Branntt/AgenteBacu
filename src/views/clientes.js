@@ -6,7 +6,7 @@ const ESTADO_COLORS = {
   conversacion: '#2E55E0',           // azul
   grabacion: '#1FB6CE',              // cian
   proyecto_edicion: '#EFC94C',       // amarillo
-  confirmar_entrega: '#F08A2E',      // naranja
+  confirmar_entrega: '#E8641B',      // naranja fuerte (bien distinto del amarillo)
   por_pagar: '#E0312E',              // rojo (plata pendiente)
   ya_pagos: 'var(--verde)',          // verde Bacu (cerrado)
   entregado: 'var(--verde)',         // verde Bacu (estado viejo, cae en la misma columna)
