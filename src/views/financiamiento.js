@@ -53,9 +53,9 @@ export function renderFinanciamiento(state) {
         <p style="margin:8px 0 0 0;font-size:14px;opacity:0.7;">Tu situación financiera actual</p>
       </div>
 
-      <!-- 📝 FORMULARIO RÁPIDO DE REGISTRO -->
+      <!-- 📝 REGISTRO DE FINANZAS -->
       <div class="finanzas-seccion" style="background:rgba(33,150,243,0.1);border-left:4px solid var(--azul);margin-bottom:24px;">
-        <div class="seccion-titulo">📝 Registrar Movimiento Rápido</div>
+        <div class="seccion-titulo">📝 Registro de Finanzas</div>
         <div style="display:grid;grid-template-columns:120px 200px 120px 120px auto;gap:12px;align-items:end;">
           <div>
             <label style="font-size:12px;opacity:0.7;">Fecha</label>

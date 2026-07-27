@@ -30,9 +30,6 @@ export function renderTablaFinanzas(movimientos) {
       <div class="tabla-titulo">📊 Registro de Finanzas (La verdad absoluta)</div>
       <div class="tabla-subtitulo">Cada movimiento de dinero se registra aquí inmediatamente</div>
 
-      <div class="tabla-acciones">
-        <button class="btn-primary" data-act="movimiento-nuevo-rapido">+ Agregar movimiento</button>
-      </div>
 
       <div class="tabla-container">
         <table class="tabla-movimientos">
