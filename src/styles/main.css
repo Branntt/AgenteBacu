@@ -752,9 +752,8 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
 .cal-entry.is-clase { border: 1px dashed var(--line); cursor: default; opacity: .45; }
 .cal-entry.is-clase:hover { background: var(--panel2); opacity: 1; }
 .cal-entry.is-clase .cal-entry-bar { background: var(--muted) !important; }
-/* Mes y semana: las clases solo muestran hora + materia (sin profesor/salón) */
-.cal-grid .cal-entry.is-clase .cal-entry-meta,
-.cal-week .cal-entry.is-clase .cal-entry-meta { display: none; }
+/* Mes: las clases solo muestran hora + materia (en semana va la info completa) */
+.cal-grid .cal-entry.is-clase .cal-entry-meta { display: none; }
 
 /* Mes: entradas compactas — texto pequeño que cabe en la celda, sin scroll */
 .cal-grid .cal-entry { padding: 4px 6px; min-height: 0; gap: 2px; }
