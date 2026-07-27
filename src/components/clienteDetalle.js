@@ -32,6 +32,11 @@ export function renderClienteDetalle(state) {
         </div>
 
         <div class="field">
+          <label class="field-label">Precio</label>
+          <input data-change="cliente-precio" data-id="${id}" value="${c.precio ? String(c.precio) : ''}" inputmode="numeric" placeholder="Monto que cuesta el proyecto">
+        </div>
+
+        <div class="field">
           <label class="field-label">C.C. / NIT</label>
           <input data-change="cliente-documento" data-id="${id}" value="${escapeHtml(c.documento || '')}" placeholder="Para las cuentas de cobro">
         </div>

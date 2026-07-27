@@ -268,6 +268,7 @@ root.addEventListener('change', e => {
       case 'idea-aprendizaje': actions.updIdea(id, { aprendizaje: value }); break;
       case 'cliente-nombre': actions.updCliente(id, { nombre: value }); break;
       case 'cliente-proyecto': actions.updCliente(id, { proyecto: value }); break;
+      case 'cliente-precio': actions.updCliente(id, { precio: parseN(value) }); break;
       case 'cliente-documento': actions.updCliente(id, { documento: value }); break;
       case 'cliente-nota': actions.updCliente(id, { nota: value }); break;
       case 'cliente-fecha-grabacion': actions.updCliente(id, { fecha_grabacion: value || null }); break;

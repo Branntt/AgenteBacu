@@ -17,11 +17,13 @@ function fmtMoney(n) {
 
 function clienteCardHtml(c, cuentasCliente) {
   const totalCliente = cuentasCliente.reduce((sum, cc) => sum + (Number(cc.total) || 0), 0);
+  const precio = Number(c.precio) || 0;
   return `
     <div class="cliente-card-mini" data-act="cliente-abrir" data-id="${escapeHtml(c.id)}">
       <div class="cliente-mini-nombre">${escapeHtml(c.nombre || 'Sin nombre')}</div>
       <div class="cliente-mini-proyecto">${escapeHtml(c.proyecto || 'Proyecto sin definir')}</div>
-      ${c.estado === 'por_pagar' ? `<div class="cliente-mini-monto">${fmtMoney(totalCliente)}</div>` : ''}
+      ${precio > 0 ? `<div class="cliente-mini-precio">${fmtMoney(precio)}</div>` : ''}
+      ${c.estado === 'por_pagar' && totalCliente > 0 ? `<div class="cliente-mini-monto">Adeudado: ${fmtMoney(totalCliente)}</div>` : ''}
       ${c.nota ? `<div class="cliente-mini-nota">${escapeHtml(c.nota)}</div>` : ''}
     </div>
   `;
