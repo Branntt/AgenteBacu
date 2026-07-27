@@ -176,9 +176,17 @@ export function renderFinanciamiento(state) {
       </div>
       ` : ''}
 
+      <!-- ══════════ SEPARADOR: AQUÍ TERMINA LO REAL ══════════ -->
+      <div style="display:flex;align-items:center;gap:16px;margin:56px 0 24px;">
+        <div style="flex:1;border-top:2px dashed var(--line2);"></div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;opacity:0.6;">Simulación · hipotético</div>
+        <div style="flex:1;border-top:2px dashed var(--line2);"></div>
+      </div>
+
       <!-- 5️⃣ SIMULACIÓN: SI VIVIERAS SOLO -->
-      <div class="finanzas-seccion">
+      <div class="finanzas-seccion" style="border:2px dashed var(--line2);border-radius:12px;padding:20px;">
         <div class="seccion-titulo">🎯 Simulación: Si vivieras solo</div>
+        <p style="margin:0 0 20px;font-size:12px;opacity:0.6;">Esto no es tu situación actual — es lo que costaría el mes si vivieras solo.</p>
 
         <!-- GASTOS BÁSICOS -->
         <div style="margin-bottom:20px;">
