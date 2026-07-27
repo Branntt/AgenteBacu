@@ -128,25 +128,14 @@ export function renderFinanciamiento(state) {
       <div class="finanzas-seccion" style="background:rgba(255,152,0,0.1);border-left:4px solid var(--naranja);margin-bottom:24px;">
         <div class="seccion-titulo">💰 Gastos Mensuales Recurrentes</div>
         <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:12px;margin-bottom:16px;">
-          ${gastosRecurrentes.map(g => {
-            const esAseoPersonal = g.id === 'gr10';
-            return `
+          ${gastosRecurrentes.map(g => `
             <div style="background:rgba(255,255,255,0.05);padding:12px;border-radius:8px;border-left:3px solid var(--naranja);">
               <div style="display:flex;justify-content:space-between;align-items:start;">
                 <div style="flex:1;">
                   <div style="display:flex;align-items:center;gap:6px;">
                     <span style="font-size:16px;">${g.emoji}</span>
-                    <div style="font-weight:bold;font-size:13px;">${escapeHtml(g.nombre.split('\n')[0])}</div>
+                    <div style="font-weight:bold;font-size:13px;">${escapeHtml(g.nombre)}</div>
                   </div>
-                  ${esAseoPersonal ? `
-                    <div style="font-size:11px;opacity:0.8;margin-top:6px;padding-top:6px;border-top:1px solid rgba(255,255,255,0.2);">
-                      <div>🧴 Shampú 15k/2m</div>
-                      <div>🧼 Jabón cara 45k/2m</div>
-                      <div>🪒 Cuchillas 9k/2m</div>
-                      <div>🧴 Desodorante 50k/m</div>
-                      <div>👁️ Contorno 80k/m</div>
-                    </div>
-                  ` : ''}
                   <div style="font-size:10px;opacity:0.6;margin-top:6px;">Día ${g.dia_vencimiento}</div>
                 </div>
                 <div style="text-align:right;">
@@ -154,8 +143,7 @@ export function renderFinanciamiento(state) {
                 </div>
               </div>
             </div>
-            `;
-          }).join('')}
+          `).join('')}
         </div>
 
         <div style="background:rgba(0,0,0,0.3);padding:12px;border-radius:8px;text-align:center;font-size:13px;">
