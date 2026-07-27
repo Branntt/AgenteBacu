@@ -8,7 +8,7 @@ import { MESES, COLORES_TAREA, familiaDeFormato } from '../data/constants.js';
 import { generarIdea } from '../lib/ia.js';
 
 export const state = {
-  view: 'calendario',
+  view: loadValue('app.view', 'calendario'),
   month: mesActual(),
   ideas: [],
   snaps: [],
@@ -281,7 +281,7 @@ function suscribirRealtime() {
 }
 
 export const actions = {
-  setView: v => setState({ view: v }),
+  setView: v => { persistValue('app.view', v); setState({ view: v }); },
   setFiltroGuiones: v => setState({ filtroGuiones: v }),
   setGuionesVista: v => setState({ guionesVista: v }),
   abrirMarca: marca => setState({ view: 'guiones', filtroGuiones: marca, guionesVista: 'general' }),
