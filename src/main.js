@@ -15,6 +15,7 @@ import { renderGuiones } from './views/guiones.js';
 import { renderCalendario } from './views/calendario.js';
 import { renderClientes } from './views/clientes.js';
 import { renderFinanciamiento } from './views/financiamiento.js';
+import { renderInventario } from './views/inventario.js';
 import { renderIAModal } from './views/iaModal.js';
 import { renderRevisionIdeasModal } from './components/revisionIdeasModal.js';
 import { renderNotificacionBacu } from './components/notificacionBacu.js';
@@ -24,7 +25,8 @@ const VIEWS = {
   guiones: renderGuiones,
   calendario: renderCalendario,
   clientes: renderClientes,
-  financiamiento: renderFinanciamiento
+  financiamiento: renderFinanciamiento,
+  inventario: renderInventario
 };
 
 const root = document.getElementById('app');
@@ -261,6 +263,13 @@ root.addEventListener('click', e => {
     case 'pago-mensual-nuevo': actions.pagoMensualNuevo(); break;
     case 'pago-mensual-eliminar': actions.eliminarPagoMensual(id); break;
     case 'meta-personal-nueva': actions.metaPersonalNueva(categoria); break;
+    case 'inv-vista': actions.invSetVista(value); break;
+    case 'inv-agregar': actions.metaPersonalNueva('inv_' + value); break;
+    case 'inv-equipar': {
+      const item = state.metasPersonales.find(m => m.id === id);
+      if (item) actions.updMetaPersonal(id, { cumplida: !item.cumplida });
+      break;
+    }
     case 'meta-personal-eliminar': actions.eliminarMetaPersonal(id); break;
     case 'meta-personal-toggle': {
       const meta = state.metasPersonales.find(m => m.id === id);

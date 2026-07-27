@@ -373,7 +373,7 @@ export function renderPanorama(state) {
           ${statRow('Programadas esta semana', orgSemana.estaSemana)}
           ${statRow('Prioridad alta sin fecha', orgSemana.prioridadSinFecha, orgSemana.prioridadSinFecha > 0 ? 'var(--rojo)' : 'var(--verde)')}
           ${statRow('Tareas cumplidas', tareasHechas + ' / ' + tareas.length, tareas.length && tareasHechas === tareas.length ? 'var(--verde)' : undefined)}
-          ${statRow('Metas cumplidas', (state.metasPersonales || []).filter(m => m.cumplida).length + ' / ' + (state.metasPersonales || []).length)}
+          ${statRow('Metas cumplidas', (state.metasPersonales || []).filter(m => m.cumplida && !(m.categoria || '').startsWith('inv_')).length + ' / ' + (state.metasPersonales || []).filter(m => !(m.categoria || '').startsWith('inv_')).length)}
         </div>
       </div>
 

@@ -20,6 +20,7 @@ export const state = {
   guionesVista: loadValue('ui.guionesVista', 'general'),
   filtroCalendario: loadValue('ui.filtroCalendario', 'todas'),
   calVista: loadValue('ui.calVista', 'mes'),
+  invVista: loadValue('ui.invVista', 'personal'),
   semanaInicio: loadValue('ui.semanaInicio', lunesDe(hoyStr())),
   snapDraft: null,
   rodajeDraft: null,
@@ -106,7 +107,7 @@ export function subscribe(fn) { listeners.push(fn); }
 function notify() { listeners.forEach(fn => fn()); }
 
 // Claves de interfaz que se recuerdan entre sesiones (cada pestaña vuelve donde quedó)
-const UI_PERSIST = ['month', 'filtroGuiones', 'guionesVista', 'filtroCalendario', 'calVista', 'semanaInicio'];
+const UI_PERSIST = ['month', 'filtroGuiones', 'guionesVista', 'filtroCalendario', 'calVista', 'semanaInicio', 'invVista'];
 
 function setState(patch) {
   Object.assign(state, patch);
@@ -492,6 +493,7 @@ export const actions = {
   irAHoy: () => setState({ month: mesActual(), semanaInicio: lunesDe(hoyStr()) }),
 
   setCalVista: v => setState({ calVista: v }),
+  invSetVista: v => setState({ invVista: v }),
   setFiltroCalendario: v => setState({ filtroCalendario: v }),
   cambiaSemana: delta => setState({ semanaInicio: sumarDias(state.semanaInicio, delta * 7) }),
 

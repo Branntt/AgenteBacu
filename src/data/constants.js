@@ -102,7 +102,9 @@ export const METAS_EQUIPO_SEED = [
   { categoria: 'personal', titulo: 'Almohada' },
   { categoria: 'personal', titulo: 'Pantalonetas' },
   { categoria: 'personal', titulo: 'Panel de corte' },
-  { categoria: 'destreza', titulo: 'Inglés' }
+  { categoria: 'destreza', titulo: 'Inglés' },
+  // Inventario (pestaña Inventario): items con categoria inv_* ; cumplida = equipado
+  { categoria: 'inv_garaje', titulo: 'Best 125' }
 ];
 
 export const COLORES_TAREA = { verde: 'var(--verde)', brant: 'var(--brant)', novena: 'var(--novena)', rojo: 'var(--rojo)', muted: 'var(--muted)' };
