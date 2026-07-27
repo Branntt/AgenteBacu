@@ -13,14 +13,14 @@ const ESTADO_COLORS = {
   descartado: 'var(--muted)'         // gris
 };
 const COLUMNAS = [
-  ['prospecto', 'Prospectos', 'Posibles clientes'],
-  ['conversacion', 'En conversación para contratación', 'En negociación'],
+  ['prospecto', 'Prospecto', 'Posibles clientes'],
+  ['conversacion', 'En conversación para desarrollo', 'En negociación'],
   ['grabacion', 'Grabación', 'Por grabar o en grabación'],
   ['proyecto_edicion', 'Proyecto por editar', 'En edición'],
   ['confirmar_entrega', 'Por confirmar entrega', 'Esperando visto bueno'],
   ['por_pagar', 'Por pagar / Por entregar', 'Pendiente de cobro'],
   ['ya_pagos', 'Ya pagos / Entregados', 'Pagados y cerrados'],
-  ['descartado', 'Descartado', 'No avanzó']
+  ['descartado', 'Descartada', 'No avanzó']
 ];
 
 // La columna "Ya pagos / Entregados" agrupa ambos estados (entregado es el nombre viejo)

@@ -54,14 +54,14 @@ export function renderClienteDetalle(state) {
 
         <div class="drawer-footer">
           <select data-change="cliente-estado" data-id="${id}">
-            <option value="prospecto" ${c.estado === 'prospecto' ? 'selected' : ''}>Prospectos</option>
-            <option value="conversacion" ${c.estado === 'conversacion' ? 'selected' : ''}>En conversación para contratación</option>
+            <option value="prospecto" ${c.estado === 'prospecto' ? 'selected' : ''}>Prospecto</option>
+            <option value="conversacion" ${c.estado === 'conversacion' ? 'selected' : ''}>En conversación para desarrollo</option>
             <option value="grabacion" ${c.estado === 'grabacion' ? 'selected' : ''}>Grabación</option>
             <option value="proyecto_edicion" ${c.estado === 'proyecto_edicion' ? 'selected' : ''}>Proyecto por editar</option>
             <option value="confirmar_entrega" ${c.estado === 'confirmar_entrega' ? 'selected' : ''}>Por confirmar entrega</option>
             <option value="por_pagar" ${c.estado === 'por_pagar' ? 'selected' : ''}>Por pagar / Por entregar</option>
             <option value="ya_pagos" ${c.estado === 'ya_pagos' || c.estado === 'entregado' ? 'selected' : ''}>Ya pagos / Entregados</option>
-            <option value="descartado" ${c.estado === 'descartado' ? 'selected' : ''}>Descartado</option>
+            <option value="descartado" ${c.estado === 'descartado' ? 'selected' : ''}>Descartada</option>
           </select>
           <button class="btn-ghost" data-act="cc-abrir" data-id="${id}">Cuenta de cobro</button>
           <button class="btn-delete" data-act="cliente-eliminar" data-id="${id}">Eliminar</button>

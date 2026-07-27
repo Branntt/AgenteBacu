@@ -13,7 +13,7 @@ const PIPELINE_IDEA = [
 ];
 const PIPELINE_CLIENTE = [
   ['prospecto', 'Prospecto'],
-  ['conversacion', 'En conversación'],
+  ['conversacion', 'En conversación para desarrollo'],
   ['grabacion', 'Grabación'],
   ['proyecto_edicion', 'Proyecto por editar'],
   ['confirmar_entrega', 'Por confirmar entrega'],
