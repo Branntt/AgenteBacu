@@ -528,7 +528,6 @@ export const actions = {
   updCliente: (id, patch) => {
     const cliente = state.clientes.find(c => c.id === id);
     state.clientes = state.clientes.map(c => c.id === id ? { ...c, ...patch } : c);
-    notify();
     supabase.from('clientes').update(patch).eq('id', id).then(({ error }) => marcarGuardado(!error));
 
     // Si cambias estado a "ya_pagos" (Ya pagó), crea automáticamente un movimiento de ingreso
@@ -548,7 +547,12 @@ export const actions = {
         };
         state.movimientosFinanciamiento = [movimiento].concat(state.movimientosFinanciamiento);
         supabase.from('movimientos_financiamiento').insert(movimiento).then(({ error }) => marcarGuardado(!error));
+        notify();
+      } else {
+        notify();
       }
+    } else {
+      notify();
     }
   },
   eliminarCliente: id => {
