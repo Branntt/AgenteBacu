@@ -49,7 +49,7 @@ export function renderPanorama(state) {
   const muestraMetricas = !state.modoCalma;
 
   const orgSemana = calcularOrganizacionSemana(ideas);
-  const finTotal = calcularFinanciamiento(state.movimientosFinanciamiento, state.deudas);
+  const finTotal = calcularFinanciamiento(state.movimientosFinanciamiento, state.deudas, state.clientes, state.cuentasCobro);
 
   const tareas = state.tareas || [];
   const tareasHtml = tareas.length ? tareas.map(tareaCintaHtml).join('') : '';

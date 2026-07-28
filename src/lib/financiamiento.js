@@ -4,12 +4,16 @@
 export function calcularFinanciamiento(movimientos, deudas, clientes, cuentasCobro) {
   const efectivo = (movimientos || []).reduce((sum, m) => sum + (m.tipo === 'gasto' ? -1 : 1) * (Number(m.monto) || 0), 0);
   const debes = (deudas || []).filter(d => d.direccion === 'debo' && !d.pagada).reduce((sum, d) => sum + (Number(d.monto) || 0), 0);
-  const teDeben = (deudas || []).filter(d => d.direccion === 'me_deben' && !d.pagada).reduce((sum, d) => sum + (Number(d.monto) || 0), 0);
+  const deudaAFavor = (deudas || []).filter(d => d.direccion === 'me_deben' && !d.pagada).reduce((sum, d) => sum + (Number(d.monto) || 0), 0);
 
-  // Sumar lo que los clientes en "por_pagar" te deben (cuentas de cobro sin pagar)
-  const clientesDeben = (cuentasCobro || []).reduce((sum, cc) => sum + (Number(cc.total) || 0), 0);
+  // Cuentas de cobro de clientes que TODAVÍA están en "por_pagar". Las de clientes en
+  // ya_pagos/entregado no cuentan acá — esa plata ya se sumó a `efectivo` cuando se marcaron
+  // pagadas (ver updCliente en store.js); sumarlas también acá las contaría dos veces.
+  const idsPorPagar = new Set((clientes || []).filter(c => c.estado === 'por_pagar').map(c => c.id));
+  const clientesDeben = (cuentasCobro || []).filter(cc => idsPorPagar.has(cc.cliente_id)).reduce((sum, cc) => sum + (Number(cc.total) || 0), 0);
 
-  return { efectivo, debes, teDeben: teDeben + clientesDeben, patrimonio: efectivo + teDeben + clientesDeben - debes };
+  const teDeben = deudaAFavor + clientesDeben;
+  return { efectivo, debes, teDeben, patrimonio: efectivo + teDeben - debes };
 }
 
 export function calcularFacturado(cuentasCobro) {
