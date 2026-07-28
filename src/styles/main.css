@@ -598,22 +598,20 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
   text-transform: uppercase;
 }
 
-/* Mobile + tablet-portrait: kanban columns become a horizontally-swipeable strip. */
+/* Mobile + tablet-portrait: kanban columns become a vertical grid. */
 .banco-grid {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr;
   gap: 12px;
-  overflow-x: auto;
-  scroll-snap-type: x proximity;
-  -webkit-overflow-scrolling: touch;
-  margin: 0 -16px;
-  padding: 0 16px 8px;
+  margin: 0;
+  padding: 0 0 8px;
 }
 .banco-col {
   background: var(--panel);
   border: 1px solid var(--line);
-  min-height: 300px;
-  flex: 0 0 85%;
-  scroll-snap-align: start;
+  min-height: auto;
+  max-height: 500px;
+  overflow-y: auto;
 }
 .banco-col-head { display: flex; justify-content: space-between; align-items: baseline; padding: 14px 16px; border-bottom: 1px solid var(--line); font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: 1.5px; text-transform: uppercase; }
 .banco-col-count { color: var(--muted); }
@@ -638,11 +636,12 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
 .empty-state { border: 1px dashed var(--line2); }
 
 @media (min-width: 480px) {
-  .banco-col { flex: 0 0 70%; }
+  .banco-grid { grid-template-columns: repeat(2, 1fr); }
+  .banco-col { min-height: 360px; }
 }
 @media (min-width: 900px) {
-  .banco-grid { display: grid; grid-template-columns: repeat(2, 1fr); overflow: visible; margin: 0; padding: 0; gap: 16px; }
-  .banco-col { min-height: 360px; }
+  .banco-grid { grid-template-columns: repeat(2, 1fr); }
+  .banco-col { min-height: 360px; max-height: none; }
 }
 @media (min-width: 1280px) {
   .banco-grid { grid-template-columns: repeat(4, 1fr); align-items: start; }
@@ -653,23 +652,22 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
 }
 
 /* ---------- desarrollo ---------- */
-/* Same horizontally-scrollable-strip-to-grid pattern as .banco-grid, tuned for 6 columns. */
+/* Grid vertical para móvil, se expande en desktop. */
 .desarrollo-grid {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr;
   gap: 12px;
-  overflow-x: auto;
-  scroll-snap-type: x proximity;
-  -webkit-overflow-scrolling: touch;
-  margin: 16px -16px 0;
-  padding: 0 16px 8px;
+  margin: 16px 0 0;
+  padding: 0;
 }
-.desarrollo-grid .banco-col { flex: 0 0 85%; scroll-snap-align: start; }
+.desarrollo-grid .banco-col { max-height: 500px; }
 .desarrollo-col-sub { font-family: 'IBM Plex Mono', monospace; font-size: 10px; line-height: 1.5; color: var(--muted); padding: 10px 16px 0; }
 @media (min-width: 480px) {
-  .desarrollo-grid .banco-col { flex: 0 0 70%; }
+  .desarrollo-grid { grid-template-columns: repeat(2, 1fr); }
 }
 @media (min-width: 900px) {
-  .desarrollo-grid { display: grid; grid-template-columns: repeat(2, 1fr); overflow: visible; margin: 16px 0 0; padding: 0; gap: 16px; }
+  .desarrollo-grid { grid-template-columns: repeat(2, 1fr); }
+  .desarrollo-grid .banco-col { max-height: none; }
 }
 @media (min-width: 1200px) {
   .desarrollo-grid { grid-template-columns: repeat(3, 1fr); }
