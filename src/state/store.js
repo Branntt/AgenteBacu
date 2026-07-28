@@ -531,8 +531,8 @@ export const actions = {
     notify();
     supabase.from('clientes').update(patch).eq('id', id).then(({ error }) => marcarGuardado(!error));
 
-    // Si cambias estado a "cerrado" (Ya pagó), crea automáticamente un movimiento de ingreso
-    if (patch.estado === 'cerrado' && cliente && cliente.estado !== 'cerrado') {
+    // Si cambias estado a "ya_pagos" (Ya pagó), crea automáticamente un movimiento de ingreso
+    if (patch.estado === 'ya_pagos' && cliente && cliente.estado !== 'ya_pagos') {
       const totalCliente = state.cuentasCobro
         .filter(cc => cc.cliente_id === id)
         .reduce((sum, cc) => sum + (Number(cc.total) || 0), 0);
