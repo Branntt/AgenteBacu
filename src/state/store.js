@@ -526,9 +526,30 @@ export const actions = {
     supabase.from('clientes').insert(c).then(({ error }) => marcarGuardado(!error));
   },
   updCliente: (id, patch) => {
+    const cliente = state.clientes.find(c => c.id === id);
     state.clientes = state.clientes.map(c => c.id === id ? { ...c, ...patch } : c);
     notify();
     supabase.from('clientes').update(patch).eq('id', id).then(({ error }) => marcarGuardado(!error));
+
+    // Si cambias estado a "cerrado" (Ya pagó), crea automáticamente un movimiento de ingreso
+    if (patch.estado === 'cerrado' && cliente && cliente.estado !== 'cerrado') {
+      const totalCliente = state.cuentasCobro
+        .filter(cc => cc.cliente_id === id)
+        .reduce((sum, cc) => sum + (Number(cc.total) || 0), 0);
+
+      if (totalCliente > 0) {
+        const movimiento = {
+          id: 'mv' + Date.now(),
+          fecha: hoyStr(),
+          fuente: 'bancolombia',
+          tipo: 'ingreso',
+          monto: totalCliente,
+          nota: `Pago de ${cliente.nombre || 'cliente'} — ${cliente.proyecto || 'proyecto'}`
+        };
+        state.movimientosFinanciamiento = [movimiento].concat(state.movimientosFinanciamiento);
+        supabase.from('movimientos_financiamiento').insert(movimiento).then(({ error }) => marcarGuardado(!error));
+      }
+    }
   },
   eliminarCliente: id => {
     if (!window.confirm('¿Eliminar este cliente?')) return;
