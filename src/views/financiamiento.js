@@ -37,9 +37,10 @@ export function renderFinanciamiento(state) {
   const gastosRecurrentes = state.gastosRecurrentes || [];
 
   // Cálculos financieros
-  const clientesPorPagar = clientes.filter(c => c.estado === 'por_pagar').reduce((sum, c) => sum + (Number(c.precio) || 0), 0);
-  const deudaAFavor = deudas.filter(d => d.direccion === 'me_deben').reduce((sum, d) => sum + (Number(d.monto) || 0), 0);
-  const teDeben = clientesPorPagar + deudaAFavor;
+  // Te deben = cuentas de cobro sin cobrar + deudas personales a tu favor
+  const cuentasCobroSinCobrar = (cuentasCobro || []).reduce((sum, cc) => sum + (Number(cc.total) || 0), 0);
+  const deudaAFavor = deudas.filter(d => d.direccion === 'me_deben' && !d.pagada).reduce((sum, d) => sum + (Number(d.monto) || 0), 0);
+  const teDeben = cuentasCobroSinCobrar + deudaAFavor;
 
   const { efectivo, debes } = calcularFinanciamiento(movimientos, deudas);
   const patrimonio = efectivo + teDeben - debes;
