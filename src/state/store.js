@@ -530,25 +530,14 @@ export const actions = {
     state.clientes = state.clientes.map(c => c.id === id ? { ...c, ...patch } : c);
     supabase.from('clientes').update(patch).eq('id', id).then(({ error }) => marcarGuardado(!error));
 
-    // Si cambias estado a "ya_pagos" (Ya pagó), crea automáticamente un movimiento de ingreso
+    // Si cambias estado a "ya_pagos" (Ya pagó), marca como pagadas todas las cuentas de cobro
+    // de este cliente que sigan pendientes (cada una registra su propio ingreso — ver
+    // toggleCuentaCobroPagada). Las que ya se habían marcado pagadas individualmente no se tocan,
+    // así no se cuentan dos veces con clientes recurrentes.
     if (patch.estado === 'ya_pagos' && cliente && cliente.estado !== 'ya_pagos') {
-      // Buscar todas las cuentas de cobro sin pagar de este cliente
-      const totalCliente = state.cuentasCobro
-        .filter(cc => cc.cliente_id === id)
-        .reduce((sum, cc) => sum + (Number(cc.total) || 0), 0);
-
-      if (totalCliente > 0) {
-        const movimiento = {
-          id: 'mv' + Date.now(),
-          fecha: hoyStr(),
-          fuente: 'bancolombia',
-          tipo: 'ingreso',
-          monto: totalCliente,
-          nota: `Pago de ${cliente.nombre || 'cliente'} — ${cliente.proyecto || 'proyecto'}`
-        };
-        state.movimientosFinanciamiento = [movimiento].concat(state.movimientosFinanciamiento);
-        supabase.from('movimientos_financiamiento').insert(movimiento).then(({ error }) => marcarGuardado(!error));
-      }
+      state.cuentasCobro
+        .filter(cc => cc.cliente_id === id && !cc.pagada)
+        .forEach(cc => actions.toggleCuentaCobroPagada(cc.id));
     }
     notify();
   },
@@ -642,6 +631,32 @@ export const actions = {
       total: cc.total,
       observaciones: cc.observaciones
     });
+  },
+
+  // El estado de pago vive en la factura, no en el cliente (un cliente recurrente puede tener
+  // facturas viejas pagadas y una nueva sin pagar a la vez — ver calcularFinanciamiento).
+  // Al marcar pagada (no al desmarcar) se registra el ingreso automáticamente en Finanzas.
+  toggleCuentaCobroPagada: id => {
+    const cc = state.cuentasCobro.find(c => c.id === id);
+    if (!cc) return;
+    const pagada = !cc.pagada;
+    state.cuentasCobro = state.cuentasCobro.map(c => c.id === id ? { ...c, pagada } : c);
+    notify();
+    supabase.from('cuentas_cobro').update({ pagada }).eq('id', id).then(({ error }) => marcarGuardado(!error));
+
+    if (pagada) {
+      const movimiento = {
+        id: 'mv' + Date.now(),
+        fecha: hoyStr(),
+        fuente: 'bancolombia',
+        tipo: 'ingreso',
+        monto: Number(cc.total) || 0,
+        nota: `Pago de ${cc.cliente_nombre || 'cliente'} — cuenta de cobro ${cc.numero}`
+      };
+      state.movimientosFinanciamiento = [movimiento].concat(state.movimientosFinanciamiento);
+      notify();
+      supabase.from('movimientos_financiamiento').insert(movimiento).then(({ error }) => marcarGuardado(!error));
+    }
   },
 
   movimientoNuevo: () => {

@@ -306,6 +306,7 @@ root.addEventListener('click', e => {
       break;
     }
     case 'movimiento-eliminar': actions.eliminarMovimiento(id); break;
+    case 'cc-toggle-pagada': actions.toggleCuentaCobroPagada(id); break;
     case 'deuda-nueva': actions.deudaNueva(direccion); break;
     case 'deuda-toggle': actions.toggleDeudaPagada(id); break;
     case 'deuda-eliminar': actions.eliminarDeuda(id); break;

@@ -58,7 +58,9 @@ export function renderClientes(state) {
     const items = clientes.filter(c => enColumna(c, estado));
     const itemsHtml = items.length
       ? items.map(c => {
-        const cuentasCliente = cuentasCobro.filter(cc => cc.cliente_id === c.id);
+        // Sin pagar únicamente — "Adeudado" no debe contar facturas viejas ya marcadas pagadas
+        // de un cliente recurrente (ver toggleCuentaCobroPagada en store.js).
+        const cuentasCliente = cuentasCobro.filter(cc => cc.cliente_id === c.id && !cc.pagada);
         return clienteCardHtml(c, cuentasCliente);
       }).join('')
       : `<div class="col-empty">Vacío por ahora.</div>`;
