@@ -532,6 +532,7 @@ export const actions = {
 
     // Si cambias estado a "ya_pagos" (Ya pagó), crea automáticamente un movimiento de ingreso
     if (patch.estado === 'ya_pagos' && cliente && cliente.estado !== 'ya_pagos') {
+      // Buscar todas las cuentas de cobro sin pagar de este cliente
       const totalCliente = state.cuentasCobro
         .filter(cc => cc.cliente_id === id)
         .reduce((sum, cc) => sum + (Number(cc.total) || 0), 0);
@@ -547,13 +548,9 @@ export const actions = {
         };
         state.movimientosFinanciamiento = [movimiento].concat(state.movimientosFinanciamiento);
         supabase.from('movimientos_financiamiento').insert(movimiento).then(({ error }) => marcarGuardado(!error));
-        notify();
-      } else {
-        notify();
       }
-    } else {
-      notify();
     }
+    notify();
   },
   eliminarCliente: id => {
     if (!window.confirm('¿Eliminar este cliente?')) return;
