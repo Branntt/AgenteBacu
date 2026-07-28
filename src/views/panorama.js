@@ -1,4 +1,4 @@
-import { MARCAS, PREGUNTAS, PIPELINE, MESES, COLORES_TAREA, ENFOQUE } from '../data/constants.js';
+import { MARCAS, REGLAS_SISTEMA, PIPELINE, MESES, COLORES_TAREA, ENFOQUE } from '../data/constants.js';
 import { fmtFecha, fmtNum, escapeHtml } from '../lib/format.js';
 import { hoyStr, lunesDe, sumarDias } from '../lib/idea.js';
 import { calcularFinanciamiento } from '../lib/financiamiento.js';
@@ -246,7 +246,7 @@ export function renderPanorama(state) {
     `;
   }).join('');
 
-  const preguntasHtml = PREGUNTAS.map((texto, n) => `
+  const preguntasHtml = REGLAS_SISTEMA.map((texto, n) => `
     <div class="rule-row">
       <span class="rule-num">0${n + 1}</span>
       <span class="rule-text">${escapeHtml(texto)}</span>

@@ -1,4 +1,4 @@
-import { MARCAS, OBJETIVOS, FORMATOS, PIPELINE, ETAPA_HINTS, PREGUNTAS } from '../data/constants.js';
+import { MARCAS, OBJETIVOS, FORMATOS, PIPELINE, ETAPA_HINTS, PREGUNTAS_VALIDACION } from '../data/constants.js';
 import { escapeHtml } from '../lib/format.js';
 import { valida } from '../lib/idea.js';
 
@@ -40,7 +40,7 @@ export function renderDetalle(state) {
     <button class="prio-btn ${selIdea.prioridad === p ? 'active' : ''}" data-act="prio-set" data-id="${id}" data-value="${p}">${p}</button>
   `).join('');
 
-  const pregsHtml = PREGUNTAS.map((texto, qi) => {
+  const pregsHtml = PREGUNTAS_VALIDACION.map((texto, qi) => {
     const v = selIdea.preguntas[qi];
     return `
       <div class="pregunta-row">

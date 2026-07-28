@@ -48,12 +48,25 @@ export const ETAPA_HINTS = [
   'Aprendizajes: escribe qué repites y qué no. Eso alimenta las próximas ideas.'
 ];
 
-// Las 4 reglas del sistema — más fuertes que preguntas: si una se rompe, el sistema deja de decir la verdad
-export const PREGUNTAS = [
+// Las 4 reglas del sistema — más fuertes que preguntas: si una se rompe, el sistema deja de decir la verdad.
+// Panel fijo en Panorama — no confundir con PREGUNTAS_VALIDACION (checklist por idea).
+export const REGLAS_SISTEMA = [
   'Si no está en el sistema, no existe: toda idea, cliente o peso entra aquí el mismo día.',
   'Nada avanza de módulo sin terminar el anterior — cero saltos, cero "después lo muevo".',
   'Cada fecha vencida se responde el mismo día: se mueve, se reagenda o se descarta. Nunca se ignora.',
   'La Tabla de Finanzas es la verdad absoluta: si un número no cuadra ahí, se corrige antes de seguir.'
+];
+
+// Checklist de 4 preguntas por idea de contenido (drawer de detalle) — hay que responder Sí a
+// las 4 (más tener al menos un objetivo marcado) para que la idea quede "✓ Validada" y pueda
+// entrar al Calendario (ver valida() en lib/idea.js). Antes esto reutilizaba por error
+// REGLAS_SISTEMA (preguntaba, por idea, si "la Tabla de Finanzas es la verdad absoluta" — no
+// tenía sentido). Aplica a las 3 marcas por igual.
+export const PREGUNTAS_VALIDACION = [
+  '¿Sabes exactamente qué quieres que sienta o haga quien lo vea?',
+  '¿Se puede grabar con lo que tienes ahora mismo, sin esperar nada?',
+  '¿Es distinto a lo último que publicaste de esta marca?',
+  '¿Vale la pena el tiempo que te va a tomar hacerlo?'
 ];
 
 export const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
