@@ -1,5 +1,5 @@
 import { escapeHtml } from '../lib/format.js';
-import { calcularFinanciamiento, cuentasCobroPendientes } from '../lib/financiamiento.js';
+import { calcularFinanciamiento, cuentasCobroPendientes, esVencida } from '../lib/financiamiento.js';
 import { renderTablaFinanzas } from '../components/tablaFinanzas.js';
 import { hoyStr } from '../lib/idea.js';
 
@@ -80,8 +80,11 @@ export function renderFinanciamiento(state) {
   const gastosRecurrentes = state.gastosRecurrentes || [];
   const hoy = hoyStr();
 
-  // Cálculos financieros — misma función que usa Panorama, para que ambas pantallas concuerden
-  const { efectivo, porFuente, debes, teDeben, futuroPago, patrimonio } = calcularFinanciamiento(movimientos, deudas, cuentasCobro, hoy);
+  // Cálculos financieros — misma función que usa Panorama, para que ambas pantallas concuerden.
+  // teDeben/patrimonio YA excluyen lo vencido (ver esVencida en lib/financiamiento.js) — una
+  // factura o deuda a tu favor que se pasó de fecha deja de sumarse sola al número de confianza
+  // hasta que decidas qué pasó con ella (renegociar la fecha o eliminarla).
+  const { efectivo, porFuente, debes, teDeben, teDebenVencido, futuroPago, patrimonio } = calcularFinanciamiento(movimientos, deudas, cuentasCobro, hoy);
 
   // Quién te debe: cuentas de cobro sin pagar (por cliente) + deudas personales a tu favor.
   // El estado de pago vive en cada factura, no en el cliente — ver calcularFinanciamiento.
@@ -90,15 +93,12 @@ export function renderFinanciamiento(state) {
 
   // Ya deberían pagar (fecha límite vencida) vs. aún no vence — no es la misma urgencia. Aplica
   // por igual a facturas de clientes y a deudas personales a favor (ej. Sol vs. Sebastián: una
-  // lleva rato vencida, la otra tiene fecha futura acordada).
-  const vencida = f => {
-    const f2 = f.fecha_vencimiento || f.fecha_limite;
-    return f2 && f2 < hoy;
-  };
-  const facturasVencidas = facturasPendientes.filter(vencida);
-  const facturasPorVencer = facturasPendientes.filter(cc => !vencida(cc));
-  const deudasVencidas = meDebenHtml.filter(vencida);
-  const deudasPorVencer = meDebenHtml.filter(d => !vencida(d));
+  // lleva rato vencida, la otra tiene fecha futura acordada). Esta separación visual es también
+  // la separación que usa el cálculo del patrimonio — misma función esVencida en ambos lados.
+  const facturasVencidas = facturasPendientes.filter(cc => esVencida(cc, hoy));
+  const facturasPorVencer = facturasPendientes.filter(cc => !esVencida(cc, hoy));
+  const deudasVencidas = meDebenHtml.filter(d => esVencida(d, hoy));
+  const deudasPorVencer = meDebenHtml.filter(d => !esVencida(d, hoy));
 
   // Deudas que tú debes pagar
   const yoDeboHtml = deudas.filter(d => d.direccion === 'debo' && !d.pagada);
@@ -130,7 +130,7 @@ export function renderFinanciamiento(state) {
         <button class="btn-ghost" data-act="deuda-nueva" data-direccion="me_deben">+ Deuda a mi favor</button>
       </div>
       ${facturasVencidas.length || deudasVencidas.length ? `
-        <div class="mono-label" style="color:var(--rojo);margin-bottom:6px;">⏰ Ya deberían haberte pagado · ${fmtMoney(facturasVencidas.reduce((s, cc) => s + (Number(cc.total) || 0), 0) + deudasVencidas.reduce((s, d) => s + (Number(d.monto) || 0), 0))}</div>
+        <div class="mono-label" style="color:var(--rojo);margin-bottom:6px;">⏰ Ya deberían haberte pagado · ${fmtMoney(teDebenVencido)} <span style="opacity:0.7;font-weight:normal;">(no cuenta en tu patrimonio)</span></div>
         ${card('var(--rojo)', facturasVencidas.map(filaFacturaHtml).join('') + deudasVencidas.map(deudaCardHtml).join(''), 'margin-bottom:16px;')}
       ` : ''}
       ${facturasPorVencer.length || deudasPorVencer.length ? `
