@@ -423,6 +423,7 @@ root.addEventListener('change', e => {
       case 'guion-item-campo': actions.updGuionItem(id, Number(idx), campo, value); break;
       case 'rodaje-rapido-campo': actions.rodajeRapidoSetCampo(campo, campo === 'precio' ? parseN(value) : value); break;
       case 'cc-campo': actions.cuentaCobroSetCampo(campo, value); break;
+      case 'cc-fecha-vencimiento': actions.updCuentaCobro(id, { fecha_vencimiento: value || null }); break;
       case 'cc-item-campo': actions.cuentaCobroUpdItem(Number(idx), campo, value); break;
       case 'historial-busqueda': actions.historialSetBusqueda(value); break;
       case 'movimiento-fuente': actions.updMovimiento(id, { fuente: value }); break;

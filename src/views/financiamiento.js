@@ -1,6 +1,7 @@
 import { escapeHtml } from '../lib/format.js';
 import { calcularFinanciamiento, cuentasCobroPendientes } from '../lib/financiamiento.js';
 import { renderTablaFinanzas } from '../components/tablaFinanzas.js';
+import { hoyStr } from '../lib/idea.js';
 
 function fmtMoney(n) {
   const v = Number(n) || 0;
@@ -19,13 +20,17 @@ function card(accent, contenido, extra = '') {
   return `<div style="background:var(--panel2);border:1px solid var(--line);border-left:3px solid ${accent};border-radius:8px;padding:16px;${extra}">${contenido}</div>`;
 }
 
-function filaMonto(etiqueta, monto, color, accionHtml = '') {
+// Fila de una cuenta de cobro pendiente, con su propia fecha límite editable
+// (antes solo se podía fijar al crearla — nunca después).
+function filaFacturaHtml(cc) {
+  const id = escapeHtml(cc.id);
   return `
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;font-size:13px;border-bottom:1px solid var(--line);gap:12px;">
-      <span>${etiqueta}</span>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;font-size:13px;border-bottom:1px solid var(--line);gap:12px;flex-wrap:wrap;">
+      <span>${escapeHtml(cc.cliente_nombre || 'Sin nombre')} <span style="opacity:0.5;font-size:11px;">· cuenta ${escapeHtml(cc.numero)} · ${fmtFecha(cc.fecha)}</span></span>
       <span style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
-        <span style="font-weight:bold;color:${color};">${monto}</span>
-        ${accionHtml}
+        <input type="date" data-change="cc-fecha-vencimiento" data-id="${id}" value="${escapeHtml(cc.fecha_vencimiento || '')}" min="2026-01-01" title="Fecha límite de pago" style="background:none;border:none;color:inherit;font-family:'IBM Plex Mono',monospace;font-size:11px;opacity:0.8;color-scheme:dark;">
+        <span style="font-weight:bold;color:var(--azul);">${fmtMoney(cc.total)}</span>
+        ${botonMarcarPagada('cc-toggle-pagada', cc.id)}
       </span>
     </div>
   `;
@@ -63,6 +68,10 @@ export function renderFinanciamiento(state) {
   // Quién te debe: cuentas de cobro sin pagar (por cliente) + deudas personales a tu favor.
   // El estado de pago vive en cada factura, no en el cliente — ver calcularFinanciamiento.
   const facturasPendientes = cuentasCobroPendientes(cuentasCobro);
+  const hoy = hoyStr();
+  // Ya deberían pagar (fecha límite vencida) vs. aún no vence — no es la misma urgencia.
+  const facturasVencidas = facturasPendientes.filter(cc => cc.fecha_vencimiento && cc.fecha_vencimiento < hoy);
+  const facturasPorVencer = facturasPendientes.filter(cc => !(cc.fecha_vencimiento && cc.fecha_vencimiento < hoy));
   const meDebenHtml = deudas.filter(d => d.direccion === 'me_deben' && !d.pagada);
 
   // Deudas que tú debes pagar
@@ -85,13 +94,14 @@ export function renderFinanciamiento(state) {
         <div class="seccion-titulo" style="margin-bottom:0;">🔵 Quién te debe · ${fmtMoney(teDeben)}</div>
         <button class="btn-ghost" data-act="deuda-nueva" data-direccion="me_deben">+ Deuda a mi favor</button>
       </div>
-      ${facturasPendientes.length === 0 ? '' : card('var(--azul)', `
-        ${facturasPendientes.map(cc => filaMonto(
-          `${escapeHtml(cc.cliente_nombre || 'Sin nombre')} <span style="opacity:0.5;font-size:11px;">· cuenta ${escapeHtml(cc.numero)} · ${fmtFecha(cc.fecha)}</span>`,
-          fmtMoney(cc.total), 'var(--azul)',
-          botonMarcarPagada('cc-toggle-pagada', cc.id)
-        )).join('')}
-      `, 'margin-bottom:10px;')}
+      ${facturasVencidas.length ? `
+        <div class="mono-label" style="color:var(--rojo);margin-bottom:6px;">⏰ Ya deberían haberte pagado · ${fmtMoney(facturasVencidas.reduce((s, cc) => s + (Number(cc.total) || 0), 0))}</div>
+        ${card('var(--rojo)', facturasVencidas.map(filaFacturaHtml).join(''), 'margin-bottom:16px;')}
+      ` : ''}
+      ${facturasPorVencer.length ? `
+        <div class="mono-label" style="color:var(--azul);margin-bottom:6px;">🔵 Aún no vence · ${fmtMoney(facturasPorVencer.reduce((s, cc) => s + (Number(cc.total) || 0), 0))}</div>
+        ${card('var(--azul)', facturasPorVencer.map(filaFacturaHtml).join(''), 'margin-bottom:10px;')}
+      ` : ''}
       ${meDebenHtml.length ? meDebenHtml.map(deudaCardHtml).join('') : (facturasPendientes.length === 0 ? '<div style="opacity:0.5;font-size:12px;">Nadie te debe ahora mismo 🎉</div>' : '')}
     </div>
     <div class="finanzas-seccion" style="margin-bottom:24px;">${renderTablaFinanzas(movimientos, 'entrada')}</div>

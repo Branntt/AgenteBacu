@@ -635,6 +635,14 @@ export const actions = {
     });
   },
 
+  // Edita una cuenta de cobro ya guardada (hoy solo se usa para fecha_vencimiento,
+  // que antes solo se podía fijar al crearla y nunca después).
+  updCuentaCobro: (id, patch) => {
+    state.cuentasCobro = state.cuentasCobro.map(c => c.id === id ? { ...c, ...patch } : c);
+    notify();
+    supabase.from('cuentas_cobro').update(patch).eq('id', id).then(({ error }) => marcarGuardado(!error));
+  },
+
   // El estado de pago vive en la factura, no en el cliente (un cliente recurrente puede tener
   // facturas viejas pagadas y una nueva sin pagar a la vez — ver calcularFinanciamiento).
   // Al marcar pagada (no al desmarcar) se registra el ingreso automáticamente en Finanzas.
