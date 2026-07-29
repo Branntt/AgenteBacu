@@ -143,8 +143,15 @@ export function renderFinanciamiento(state) {
   const porPagarLista = facturasPendientes.map(cc => ({ nombre: cc.cliente_nombre || 'Sin nombre', monto: cc.total }))
     .concat(meDebenHtml.map(d => ({ nombre: d.persona || 'Sin nombre', monto: d.monto })));
   const porPagarHtml = porPagarLista.length ? `
-    <div style="display:flex;justify-content:center;gap:20px;flex-wrap:wrap;margin-top:10px;font-family:'IBM Plex Mono',monospace;font-size:11px;opacity:0.75;">
-      ${porPagarLista.map(p => `<span>${escapeHtml(p.nombre)} <b style="color:var(--azul);">${fmtMoney(p.monto)}</b></span>`).join('')}
+    <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--line);">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;opacity:0.6;margin-bottom:8px;">Por cobrar</div>
+      <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:8px;">
+        ${porPagarLista.map(p => `
+          <span style="display:inline-flex;align-items:center;gap:6px;background:rgba(46,85,224,0.12);border:1px solid rgba(46,85,224,0.3);border-radius:20px;padding:5px 12px;font-size:12px;max-width:100%;min-width:0;">
+            <span style="overflow-wrap:break-word;min-width:0;">${escapeHtml(p.nombre)}</span> <b style="color:var(--azul);white-space:nowrap;">${fmtMoney(p.monto)}</b>
+          </span>
+        `).join('')}
+      </div>
     </div>
   ` : '';
 
@@ -241,12 +248,16 @@ export function renderFinanciamiento(state) {
             `, 'padding:12px 16px;')}
           </div>
 
-          <div style="display:flex;justify-content:center;gap:20px;flex-wrap:wrap;margin-top:20px;font-family:'IBM Plex Mono',monospace;font-size:11px;opacity:0.75;">
-            <span>Bancolombia <b style="color:var(--verde);">${fmtMoney(porFuente.bancolombia)}</b></span>
-            <span>Nequi <b style="color:var(--verde);">${fmtMoney(porFuente.nequi)}</b></span>
-            <span>Efectivo <b style="color:var(--verde);">${fmtMoney(porFuente.efectivo)}</b></span>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:20px;">
+            ${[['🏦', 'Bancolombia', porFuente.bancolombia], ['📱', 'Nequi', porFuente.nequi], ['💵', 'Efectivo', porFuente.efectivo]].map(([icono, label, monto]) => `
+              <div style="background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 4px;text-align:center;min-width:0;">
+                <div style="font-size:16px;margin-bottom:4px;">${icono}</div>
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:0.5px;text-transform:uppercase;opacity:0.6;margin-bottom:3px;">${label}</div>
+                <div style="font-family:'IBM Plex Mono',monospace;font-weight:bold;font-size:11px;overflow-wrap:break-word;color:var(--verde);">${fmtMoney(monto)}</div>
+              </div>
+            `).join('')}
           </div>
-          ${futuroPago > 0 ? `<div style="margin-top:10px;font-family:'IBM Plex Mono',monospace;font-size:11px;opacity:0.75;">🗓️ Futuro pago (ya con fecha) <b style="color:var(--azul);">${fmtMoney(futuroPago)}</b></div>` : ''}
+          ${futuroPago > 0 ? `<div style="margin-top:14px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:11px;opacity:0.75;">🗓️ Futuro pago (ya con fecha) <b style="color:var(--azul);">${fmtMoney(futuroPago)}</b></div>` : ''}
           ${porPagarHtml}
         </div>
       </div>
