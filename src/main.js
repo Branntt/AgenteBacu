@@ -20,6 +20,7 @@ import { renderBienestar } from './views/bienestar.js';
 import { renderMetas } from './views/metas.js';
 import { renderUniversidad } from './views/universidad.js';
 import { renderPared } from './views/pared.js';
+import { renderConfiguraciones } from './views/configuraciones.js';
 import { renderIAModal } from './views/iaModal.js';
 import { renderRevisionIdeasModal } from './components/revisionIdeasModal.js';
 import { renderNotificacionBacu } from './components/notificacionBacu.js';
@@ -34,7 +35,8 @@ const VIEWS = {
   bienestar: renderBienestar,
   metas: renderMetas,
   universidad: renderUniversidad,
-  pared: renderPared
+  pared: renderPared,
+  configuraciones: renderConfiguraciones
 };
 
 const root = document.getElementById('app');
