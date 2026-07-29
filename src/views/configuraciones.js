@@ -6,6 +6,7 @@ export function renderConfiguraciones(state) {
 
   return `
     <main class="configuraciones">
+      <button class="btn-ghost" data-act="nav-go" data-view="${escapeHtml(state.vistaPreviaConfig || 'panorama')}" style="margin-bottom:20px;">← Volver</button>
       <h2 class="serif" style="margin:0;font-size:32px;">Configuraciones</h2>
       <div class="vista-sub">Ajustes de la app — antes vivían sueltos en el encabezado de todas las pestañas.</div>
 

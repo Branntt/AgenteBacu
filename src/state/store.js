@@ -349,7 +349,16 @@ function suscribirRealtime() {
 }
 
 export const actions = {
-  setView: v => { persistValue('app.view', v); setState({ view: v }); },
+  // Configuraciones no tiene su propio botón de nav (vive aparte, ícono ⚙️) — al entrar
+  // se guarda de dónde veníamos para que su botón "← Volver" sepa a dónde mandarte
+  // (no queda ningún tab marcado "activo" mientras estás ahí, así que sin esto no hay
+  // manera obvia de salir sin adivinar cuál pestaña tocar).
+  setView: v => {
+    const patch = { view: v };
+    if (v === 'configuraciones' && state.view !== 'configuraciones') patch.vistaPreviaConfig = state.view;
+    persistValue('app.view', v);
+    setState(patch);
+  },
   menuToggle: () => setState({ menuAbierto: !state.menuAbierto }),
   menuCerrar: () => setState({ menuAbierto: false }),
   setFiltroGuiones: v => setState({ filtroGuiones: v }),
