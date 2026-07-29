@@ -315,6 +315,7 @@ root.addEventListener('click', e => {
     case 'deuda-nueva': actions.deudaNueva(direccion); break;
     case 'deuda-toggle': actions.toggleDeudaPagada(id); break;
     case 'deuda-eliminar': actions.eliminarDeuda(id); break;
+    case 'cc-eliminar': actions.eliminarCuentaCobro(id); break;
     case 'gasto-nuevo': actions.gastoNuevo(); break;
     case 'gasto-eliminar': actions.eliminarGasto(id); break;
     case 'pago-mensual-nuevo': actions.pagoMensualNuevo(); break;

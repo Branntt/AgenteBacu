@@ -642,6 +642,12 @@ export const actions = {
     notify();
     supabase.from('cuentas_cobro').update(patch).eq('id', id).then(({ error }) => marcarGuardado(!error));
   },
+  // Deshacer una cuenta de cobro creada por error (ej. desde Rodaje rápido con el monto mal puesto).
+  eliminarCuentaCobro: id => {
+    state.cuentasCobro = state.cuentasCobro.filter(c => c.id !== id);
+    notify();
+    supabase.from('cuentas_cobro').delete().eq('id', id).then(({ error }) => marcarGuardado(!error));
+  },
 
   // El estado de pago vive en la factura, no en el cliente (un cliente recurrente puede tener
   // facturas viejas pagadas y una nueva sin pagar a la vez — ver calcularFinanciamiento).

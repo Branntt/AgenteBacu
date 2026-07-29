@@ -923,6 +923,23 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
 .deuda-footer { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
 .deuda-monto-label { font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-weight: 600; }
 
+/* Form de registro rápido (Ingresos/Gastos). Mobile-first: 2 columnas con Concepto
+   y el botón Guardar ocupando la fila completa; desde 600px se restaura la fila
+   de columnas fijas (antes esas columnas fijas eran inline y sumaban más de
+   375px sin importar el ancho de pantalla — se salían siempre en celular). */
+.mov-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: end; }
+.mov-form-grid > .mov-field-full, .mov-form-grid > button { grid-column: 1 / -1; }
+@media (min-width: 600px) {
+  .mov-form-grid { grid-template-columns: 110px 160px 110px 110px 120px auto; }
+  .mov-form-grid.mov-form-grid-solo { grid-template-columns: 110px 1fr 110px 120px auto; }
+  .mov-form-grid > .mov-field-full, .mov-form-grid > button { grid-column: auto; }
+}
+
+/* La tabla de movimientos tiene un ancho mínimo (por sus columnas) que en
+   celulares angostos (~320-360px) supera el viewport; igual que .cal-week y
+   .cc-conceptos, el scroll horizontal queda contenido acá, no en la página. */
+.tabla-container { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
 .pago-card { background: var(--panel); border: 1px solid var(--line); padding: 16px; display: flex; flex-direction: column; gap: 10px; }
 .pago-nombre { background: none; border: none; color: var(--text); font-size: 14px; font-weight: 600; padding: 0; width: 100%; }
 .pago-footer { display: flex; justify-content: space-between; align-items: center; gap: 10px; }

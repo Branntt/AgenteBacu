@@ -53,8 +53,6 @@ export function renderTablaFinanzas(movimientos, soloTipo = null) {
     </div>
   `;
 
-  const filaCampos = soloTipo ? '110px 1fr 110px 120px auto' : '110px 160px 110px 110px 120px auto';
-
   const columnasTabla = soloTipo ? `
     <th>Fecha</th>
     <th>Concepto</th>
@@ -121,12 +119,12 @@ export function renderTablaFinanzas(movimientos, soloTipo = null) {
       <!-- FORMULARIO DE REGISTRO -->
       <div style="background:rgba(33,150,243,0.1);padding:16px;border-radius:8px;margin-bottom:16px;">
         <div style="font-size:13px;font-weight:bold;margin-bottom:12px;color:var(--azul);">📝 Registrar ${soloTipo === 'entrada' ? 'ingreso' : soloTipo === 'salida' ? 'gasto' : 'movimiento'}</div>
-        <div style="display:grid;grid-template-columns:${filaCampos};gap:10px;align-items:end;">
+        <div class="mov-form-grid${soloTipo ? ' mov-form-grid-solo' : ''}">
           <div>
             <label style="font-size:11px;opacity:0.7;">Fecha</label>
             <input type="date" data-change="mov-fecha" value="${hoyStr()}" style="width:100%;padding:6px;border-radius:6px;border:1px solid rgba(255,255,255,0.2);background:rgba(0,0,0,0.3);color:inherit;font-family:inherit;font-size:12px;" />
           </div>
-          <div>
+          <div class="mov-field-full">
             <label style="font-size:11px;opacity:0.7;">Concepto</label>
             <input type="text" data-change="mov-nota" placeholder="Ej: Comida..." style="width:100%;padding:6px;border-radius:6px;border:1px solid rgba(255,255,255,0.2);background:rgba(0,0,0,0.3);color:inherit;font-family:inherit;font-size:12px;" />
           </div>

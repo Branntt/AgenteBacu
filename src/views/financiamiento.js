@@ -15,22 +15,36 @@ function fmtFecha(fecha) {
   return `${día}/${mes}`;
 }
 
-// Paleta única de Finanzas: verde = entra plata, rojo = sale plata/deudas, azul = informativo
+// Paleta única de Finanzas: verde = entra plata, rojo = sale plata/deudas, azul = informativo.
+// min-width:0 es necesario porque este helper se usa como hijo de grids de 3
+// columnas iguales (1fr 1fr 1fr) — sin esto, un monto largo (ej. $12.345.678)
+// fuerza su columna a crecer más de lo que el grid le asignó y el recuadro
+// termina saliéndose del contenedor en pantallas angostas.
 function card(accent, contenido, extra = '') {
-  return `<div style="background:var(--panel2);border:1px solid var(--line);border-left:3px solid ${accent};border-radius:8px;padding:16px;${extra}">${contenido}</div>`;
+  return `<div style="background:var(--panel2);border:1px solid var(--line);border-left:3px solid ${accent};border-radius:8px;padding:16px;min-width:0;${extra}">${contenido}</div>`;
+}
+
+// Fecha límite: input más grande y con borde propio (el anterior, sin borde y
+// diminuto, era fácil de tocar mal en celular y confundía "esto es editable").
+const FECHA_LIMITE_STYLE = "background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:6px 8px;color:inherit;font-family:'IBM Plex Mono',monospace;font-size:12px;color-scheme:dark;min-height:32px;";
+
+function botonEliminar(act, id) {
+  return `<button data-act="${act}" data-id="${escapeHtml(id)}" title="Quitar" style="font-size:11px;padding:4px 10px;border-radius:6px;border:1px solid var(--line);background:var(--panel);cursor:pointer;color:var(--muted);white-space:nowrap;">✕</button>`;
 }
 
 // Fila de una cuenta de cobro pendiente, con su propia fecha límite editable
-// (antes solo se podía fijar al crearla — nunca después).
+// (antes solo se podía fijar al crearla — nunca después) y un botón para
+// deshacerla si se creó por error (ej. desde Rodaje rápido).
 function filaFacturaHtml(cc) {
   const id = escapeHtml(cc.id);
   return `
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;font-size:13px;border-bottom:1px solid var(--line);gap:12px;flex-wrap:wrap;">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;font-size:13px;border-bottom:1px solid var(--line);gap:10px;flex-wrap:wrap;">
       <span>${escapeHtml(cc.cliente_nombre || 'Sin nombre')} <span style="opacity:0.5;font-size:11px;">· cuenta ${escapeHtml(cc.numero)} · ${fmtFecha(cc.fecha)}</span></span>
-      <span style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
-        <input type="date" data-change="cc-fecha-vencimiento" data-id="${id}" value="${escapeHtml(cc.fecha_vencimiento || '')}" min="2026-01-01" title="Fecha límite de pago" style="background:none;border:none;color:inherit;font-family:'IBM Plex Mono',monospace;font-size:11px;opacity:0.8;color-scheme:dark;">
+      <span style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0;">
+        <input type="date" data-change="cc-fecha-vencimiento" data-id="${id}" value="${escapeHtml(cc.fecha_vencimiento || '')}" min="2026-01-01" title="Fecha límite de pago" style="${FECHA_LIMITE_STYLE}">
         <span style="font-weight:bold;color:var(--azul);">${fmtMoney(cc.total)}</span>
         ${botonMarcarPagada('cc-toggle-pagada', cc.id)}
+        ${botonEliminar('cc-eliminar', cc.id)}
       </span>
     </div>
   `;
@@ -42,15 +56,18 @@ function botonMarcarPagada(act, id) {
 
 // Tarjeta editable de deuda personal — persona, monto y fecha límite (esta
 // última alimenta el peso de estrés en Bienestar: entre más atrasada, más pesa).
+// El monto se muestra formateado ($ y separador de miles); parseN ya limpia
+// cualquier símbolo al guardar, así que escribir encima sigue funcionando.
 function deudaCardHtml(d) {
   const id = escapeHtml(d.id);
   return `
     <div class="deuda-card ${d.pagada ? 'pagada' : ''}">
       <input class="deuda-persona" data-change="deuda-persona" data-id="${id}" value="${escapeHtml(d.persona || '')}" placeholder="¿Con quién es esta deuda?">
-      <div class="deuda-footer">
-        <input class="deuda-monto-label" data-change="deuda-monto" data-id="${id}" value="${d.monto ? String(d.monto) : ''}" placeholder="Monto" inputmode="numeric" style="background:none;border:none;width:110px;color:inherit;">
-        <input type="date" data-change="deuda-fecha-limite" data-id="${id}" value="${escapeHtml(d.fecha_limite || '')}" min="2026-01-01" title="Fecha límite" style="background:none;border:none;color:inherit;font-family:'IBM Plex Mono',monospace;font-size:11px;opacity:0.8;color-scheme:dark;">
+      <div class="deuda-footer" style="flex-wrap:wrap;">
+        <input class="deuda-monto-label" data-change="deuda-monto" data-id="${id}" value="${d.monto ? fmtMoney(d.monto) : ''}" placeholder="Monto" inputmode="numeric" style="background:none;border:none;width:110px;color:inherit;">
+        <input type="date" data-change="deuda-fecha-limite" data-id="${id}" value="${escapeHtml(d.fecha_limite || '')}" min="2026-01-01" title="Fecha límite" style="${FECHA_LIMITE_STYLE}">
         ${botonMarcarPagada('deuda-toggle', d.id)}
+        ${botonEliminar('deuda-eliminar', d.id)}
       </div>
     </div>
   `;
@@ -173,22 +190,22 @@ export function renderFinanciamiento(state) {
       <div class="finanzas-seccion" style="margin-bottom:24px;">
         <div class="seccion-titulo">📊 Tu Situación Hoy</div>
 
-        <div style="background:var(--panel2);border:2px solid ${patrimonio >= 0 ? 'var(--verde)' : 'var(--rojo)'};box-shadow:0 0 24px ${patrimonio >= 0 ? 'rgba(31,175,116,0.25)' : 'rgba(217,54,46,0.25)'};padding:40px 32px;border-radius:12px;text-align:center;">
+        <div style="background:var(--panel2);border:2px solid ${patrimonio >= 0 ? 'var(--verde)' : 'var(--rojo)'};box-shadow:0 0 24px ${patrimonio >= 0 ? 'rgba(31,175,116,0.25)' : 'rgba(217,54,46,0.25)'};padding:clamp(20px,6vw,40px) clamp(14px,5vw,32px);border-radius:12px;text-align:center;">
           <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;opacity:0.7;margin-bottom:12px;">Patrimonio Neto</div>
-          <div style="font-size:64px;font-weight:bold;margin-bottom:32px;line-height:1;color:${patrimonio >= 0 ? 'var(--verde)' : 'var(--rojo)'};">${fmtMoney(patrimonio)}</div>
+          <div style="font-size:clamp(32px,9vw,64px);font-weight:bold;margin-bottom:32px;line-height:1.15;overflow-wrap:break-word;color:${patrimonio >= 0 ? 'var(--verde)' : 'var(--rojo)'};">${fmtMoney(patrimonio)}</div>
 
           <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;font-size:13px;">
             ${card('var(--verde)', `
               <div style="opacity:0.7;margin-bottom:6px;">En bolsillo</div>
-              <div style="font-size:18px;font-weight:bold;color:var(--verde);">${fmtMoney(efectivo)}</div>
+              <div style="font-size:clamp(14px,4vw,18px);font-weight:bold;overflow-wrap:break-word;color:var(--verde);">${fmtMoney(efectivo)}</div>
             `)}
             ${card('var(--azul)', `
               <div style="opacity:0.7;margin-bottom:6px;">Te deben</div>
-              <div style="font-size:18px;font-weight:bold;color:var(--azul);">${fmtMoney(teDeben)}</div>
+              <div style="font-size:clamp(14px,4vw,18px);font-weight:bold;overflow-wrap:break-word;color:var(--azul);">${fmtMoney(teDeben)}</div>
             `)}
             ${card('var(--rojo)', `
               <div style="opacity:0.7;margin-bottom:6px;">Debes</div>
-              <div style="font-size:18px;font-weight:bold;color:var(--rojo);">${fmtMoney(debes)}</div>
+              <div style="font-size:clamp(14px,4vw,18px);font-weight:bold;overflow-wrap:break-word;color:var(--rojo);">${fmtMoney(debes)}</div>
             `)}
           </div>
 
