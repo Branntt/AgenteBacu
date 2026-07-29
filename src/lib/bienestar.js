@@ -127,25 +127,33 @@ export function calcularEstres(state) {
     if (puntosCobrar) items.push({ titulo: 'Plata por cobrar', puntos: puntosCobrar, motivo: '$' + porCobrar.toLocaleString('es-CO') + ' sin recibir', view: 'financiamiento' });
   }
 
-  // ---- Universidad ----
+  // ---- Universidad (solo clases — las tareas ya tienen su propia fuente abajo) ----
   const nClases = clasesEstaSemana();
-  const tareas = state.tareas || [];
-  const tareasPend = tareas.filter(t => !t.hecha && t.fecha);
-  const tareasVencidas = tareasPend.filter(t => t.fecha < hoy);
-  const puntosUni = nClases * PESO_CLASE
-    + (tareasPend.length - tareasVencidas.length) * PESO_TAREA
-    + tareasVencidas.length * PESO_TAREA_VENCIDA;
+  const puntosUni = nClases * PESO_CLASE;
   if (puntosUni > 0) {
     fuentes.push({
       clave: 'universidad', label: 'Universidad', emoji: '🎓', puntos: puntosUni, view: 'calendario',
-      detalle: `${nClases} clase${nClases === 1 ? '' : 's'} esta semana${tareasPend.length ? ` · ${tareasPend.length} entrega${tareasPend.length === 1 ? '' : 's'}` : ''}`
+      detalle: `${nClases} clase${nClases === 1 ? '' : 's'} esta semana`
+    });
+  }
+
+  // ---- Pared (tus cintas — antes se contaban como "Universidad" por error) ----
+  const tareas = state.tareas || [];
+  const tareasPend = tareas.filter(t => !t.hecha && t.fecha);
+  const tareasVencidas = tareasPend.filter(t => t.fecha < hoy);
+  const puntosPared = (tareasPend.length - tareasVencidas.length) * PESO_TAREA
+    + tareasVencidas.length * PESO_TAREA_VENCIDA;
+  if (puntosPared > 0) {
+    fuentes.push({
+      clave: 'pared', label: 'Pared', emoji: '📌', puntos: puntosPared, view: 'pared',
+      detalle: `${tareasPend.length} cinta${tareasPend.length === 1 ? '' : 's'} con fecha${tareasVencidas.length ? ` · ${tareasVencidas.length} atrasada${tareasVencidas.length === 1 ? '' : 's'}` : ''}`
     });
   }
   tareasPend.forEach(t => items.push({
-    titulo: t.texto || 'Entrega sin nombre',
+    titulo: t.texto || 'Cinta sin nombre',
     puntos: t.fecha < hoy ? PESO_TAREA_VENCIDA : PESO_TAREA,
-    motivo: t.fecha < hoy ? 'entrega vencida' : 'entrega para el ' + t.fecha.slice(8) + '/' + t.fecha.slice(5, 7),
-    view: 'panorama'
+    motivo: t.fecha < hoy ? 'cinta atrasada' : 'cinta para el ' + t.fecha.slice(8) + '/' + t.fecha.slice(5, 7),
+    view: 'pared'
   }));
 
   // ---- Hábitos: alivian ----

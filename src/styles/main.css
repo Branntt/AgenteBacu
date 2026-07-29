@@ -9,6 +9,12 @@
 */
 
 /* ---------- base ---------- */
+/* Nunca permitir que la página entera se desplace en horizontal en celular
+   (rebote de iOS Safari incluido), sin importar qué componente interno se
+   pase de ancho. Los que sí necesitan scroll horizontal propio (kanban,
+   chips de conceptos, semana del calendario) lo tienen en su propio
+   contenedor con overflow-x:auto — esto no los afecta. */
+html, body { overflow-x: hidden; width: 100%; }
 html { -webkit-text-size-adjust: 100%; }
 body {
   font-family: 'Space Grotesk', sans-serif;
