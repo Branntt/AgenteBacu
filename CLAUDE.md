@@ -37,6 +37,7 @@ Los scripts SQL de setup están en la raíz del repo:
 - `supabase-migracion-pagos-mensuales.sql` — tabla `pagos_mensuales` (suscripciones/pagos recurrentes: nombre, monto, día del mes; **puede que el usuario todavía no la haya corrido** — agregada el 2026-07-25, es solo referencia, no afecta el cálculo de patrimonio).
 - `supabase-migracion-tareas-fecha.sql` — agrega `fecha` (date, opcional) a `tareas`.
 - `supabase-migracion-cuenta-cobro-pagada.sql` — agrega `pagada` (bool, default false) a `cuentas_cobro` (**puede que el usuario todavía no la haya corrido** — agregada el 2026-07-27; si "Marcar pagada" en una cuenta de cobro no persiste, es por esto, no un bug de código).
+- `supabase-migracion-deuda-fecha-limite.sql` — agrega `fecha_limite` (date, opcional) a `deudas`. **Casi seguro que el usuario todavía no la ha corrido** — agregada el 2026-07-28, junto con el peso de estrés por deuda atrasada en `lib/bienestar.js`. Sin correr esto, el campo de fecha límite en la tarjeta de deuda (Financiamiento) falla al guardar (banner de error), no es un bug de código.
 
 Credenciales (URL + anon key) están hardcodeadas en `src/lib/supabaseClient.js` — es intencional, la anon key es pública/segura para frontend, protegida por RLS. **Nunca pedir ni usar la `service_role` key** — es privada, el usuario no debe compartirla.
 

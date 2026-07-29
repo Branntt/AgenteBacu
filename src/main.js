@@ -430,6 +430,7 @@ root.addEventListener('change', e => {
       case 'deuda-persona': actions.updDeuda(id, { persona: value }); break;
       case 'deuda-monto': actions.updDeuda(id, { monto: parseN(value) }); break;
       case 'deuda-nota': actions.updDeuda(id, { nota: value }); break;
+      case 'deuda-fecha-limite': actions.updDeuda(id, { fecha_limite: value || null }); break;
       case 'pago-mensual-nombre': actions.updPagoMensual(id, { nombre: value }); break;
       case 'pago-mensual-monto': actions.updPagoMensual(id, { monto: parseN(value) }); break;
       case 'pago-mensual-dia': actions.updPagoMensual(id, { dia_pago: parseN(value) || null }); break;

@@ -35,6 +35,22 @@ function botonMarcarPagada(act, id) {
   return `<button data-act="${act}" data-id="${escapeHtml(id)}" style="font-size:11px;padding:4px 10px;border-radius:6px;border:1px solid var(--line);background:var(--panel);cursor:pointer;color:var(--verde);white-space:nowrap;">Marcar pagada</button>`;
 }
 
+// Tarjeta editable de deuda personal — persona, monto y fecha límite (esta
+// última alimenta el peso de estrés en Bienestar: entre más atrasada, más pesa).
+function deudaCardHtml(d) {
+  const id = escapeHtml(d.id);
+  return `
+    <div class="deuda-card ${d.pagada ? 'pagada' : ''}">
+      <input class="deuda-persona" data-change="deuda-persona" data-id="${id}" value="${escapeHtml(d.persona || '')}" placeholder="¿Con quién es esta deuda?">
+      <div class="deuda-footer">
+        <input class="deuda-monto-label" data-change="deuda-monto" data-id="${id}" value="${d.monto ? String(d.monto) : ''}" placeholder="Monto" inputmode="numeric" style="background:none;border:none;width:110px;color:inherit;">
+        <input type="date" data-change="deuda-fecha-limite" data-id="${id}" value="${escapeHtml(d.fecha_limite || '')}" min="2026-01-01" title="Fecha límite" style="background:none;border:none;color:inherit;font-family:'IBM Plex Mono',monospace;font-size:11px;opacity:0.8;color-scheme:dark;">
+        ${botonMarcarPagada('deuda-toggle', d.id)}
+      </div>
+    </div>
+  `;
+}
+
 export function renderFinanciamiento(state) {
   const movimientos = state.movimientosFinanciamiento || [];
   const deudas = state.deudas || [];
@@ -123,21 +139,18 @@ export function renderFinanciamiento(state) {
 
       <!-- 2️⃣ QUIÉN TE DEBE -->
       <div class="finanzas-seccion" style="margin-bottom:24px;">
-        <div class="seccion-titulo">🔵 Quién te debe · ${fmtMoney(teDeben)}</div>
-        ${facturasPendientes.length === 0 && meDebenHtml.length === 0 ? `
-          <div style="opacity:0.5;font-size:12px;">Nadie te debe ahora mismo 🎉</div>
-        ` : card('var(--azul)', `
+        <div class="financ-deudas-head">
+          <div class="seccion-titulo" style="margin-bottom:0;">🔵 Quién te debe · ${fmtMoney(teDeben)}</div>
+          <button class="btn-ghost" data-act="deuda-nueva" data-direccion="me_deben">+ Deuda a mi favor</button>
+        </div>
+        ${facturasPendientes.length === 0 ? '' : card('var(--azul)', `
           ${facturasPendientes.map(cc => filaMonto(
             `${escapeHtml(cc.cliente_nombre || 'Sin nombre')} <span style="opacity:0.5;font-size:11px;">· cuenta ${escapeHtml(cc.numero)} · ${fmtFecha(cc.fecha)}</span>`,
             fmtMoney(cc.total), 'var(--azul)',
             botonMarcarPagada('cc-toggle-pagada', cc.id)
           )).join('')}
-          ${meDebenHtml.map(d => filaMonto(
-            `${escapeHtml(d.persona || 'Sin nombre')} <span style="opacity:0.5;font-size:11px;">· deuda personal</span>`,
-            fmtMoney(d.monto), 'var(--azul)',
-            botonMarcarPagada('deuda-toggle', d.id)
-          )).join('')}
-        `)}
+        `, 'margin-bottom:10px;')}
+        ${meDebenHtml.length ? meDebenHtml.map(deudaCardHtml).join('') : (facturasPendientes.length === 0 ? '<div style="opacity:0.5;font-size:12px;">Nadie te debe ahora mismo 🎉</div>' : '')}
       </div>
 
       <!-- 3️⃣ REGISTRO DE FINANZAS -->
@@ -168,15 +181,13 @@ export function renderFinanciamiento(state) {
       </div>
 
       <!-- 5️⃣ DEUDAS PERSONALES -->
-      ${yoDeboHtml.length > 0 ? `
       <div class="finanzas-seccion" style="margin-bottom:24px;">
-        <div class="seccion-titulo">⚠️ Debes Pagar · ${fmtMoney(yoDebenTotal)}</div>
-        ${card('var(--rojo)', yoDeboHtml.map(d => filaMonto(
-          escapeHtml(d.persona), fmtMoney(d.monto), 'var(--rojo)',
-          botonMarcarPagada('deuda-toggle', d.id)
-        )).join(''))}
+        <div class="financ-deudas-head">
+          <div class="seccion-titulo" style="margin-bottom:0;">⚠️ Debes Pagar · ${fmtMoney(yoDebenTotal)}</div>
+          <button class="btn-ghost" data-act="deuda-nueva" data-direccion="debo">+ Debo</button>
+        </div>
+        ${yoDeboHtml.length ? yoDeboHtml.map(deudaCardHtml).join('') : '<div style="opacity:0.5;font-size:12px;">No debes nada registrado ahora mismo</div>'}
       </div>
-      ` : ''}
 
     </main>
   `;

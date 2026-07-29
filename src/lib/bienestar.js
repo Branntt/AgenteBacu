@@ -113,17 +113,32 @@ export function calcularEstres(state) {
 
   // ---- Dinero ----
   const deudas = state.deudas || [];
-  const debes = deudas.filter(d => d.direccion === 'debo' && !d.pagada).reduce((s, d) => s + (Number(d.monto) || 0), 0);
+  const deudasDebo = deudas.filter(d => d.direccion === 'debo' && !d.pagada);
+  const debes = deudasDebo.reduce((s, d) => s + (Number(d.monto) || 0), 0);
   const porCobrar = (state.clientes || []).filter(c => c.estado === 'por_pagar').reduce((s, c) => s + (Number(c.precio) || 0), 0);
-  const puntosDebes = Math.min(25, Math.round(debes / 40000));
+  const puntosDebesBase = Math.min(25, Math.round(debes / 40000));
+  // Una deuda con fecha límite vencida pesa tanto como cualquier otra fecha
+  // vencida en el sistema (PESO_VENCIDA) — antes solo pesaba por el monto,
+  // sin importar si llevaba 3 semanas atrasada o vencía mañana.
+  const deudasVencidas = deudasDebo.filter(d => d.fecha_limite && d.fecha_limite < hoy);
+  const puntosDebesAtraso = deudasVencidas.length * PESO_VENCIDA;
+  const puntosDebes = puntosDebesBase + puntosDebesAtraso;
   const puntosCobrar = Math.min(15, Math.round(porCobrar / 60000));
   const puntosDinero = puntosDebes + puntosCobrar;
   if (puntosDinero > 0) {
     const partes = [];
-    if (puntosDebes) partes.push('debes $' + debes.toLocaleString('es-CO'));
+    if (puntosDebes) partes.push('debes $' + debes.toLocaleString('es-CO') + (deudasVencidas.length ? ` · ${deudasVencidas.length} atrasada${deudasVencidas.length === 1 ? '' : 's'}` : ''));
     if (puntosCobrar) partes.push('te deben $' + porCobrar.toLocaleString('es-CO'));
     fuentes.push({ clave: 'dinero', label: 'Dinero', emoji: '💰', puntos: puntosDinero, view: 'financiamiento', detalle: partes.join(' · ') });
-    if (puntosDebes) items.push({ titulo: 'Deudas por pagar', puntos: puntosDebes, motivo: '$' + debes.toLocaleString('es-CO') + ' pendientes', view: 'financiamiento' });
+    // Cada deuda atrasada sale con su propio nombre en "lo que más pesa" — no se
+    // diluye dentro del total genérico, igual que ideas/clientes/cintas vencidas.
+    deudasVencidas.forEach(d => items.push({
+      titulo: (d.persona || 'Deuda sin nombre') + ' — $' + (Number(d.monto) || 0).toLocaleString('es-CO'),
+      puntos: PESO_VENCIDA,
+      motivo: 'deuda atrasada',
+      view: 'financiamiento'
+    }));
+    if (puntosDebesBase) items.push({ titulo: 'Deudas por pagar', puntos: puntosDebesBase, motivo: '$' + debes.toLocaleString('es-CO') + ' pendientes', view: 'financiamiento' });
     if (puntosCobrar) items.push({ titulo: 'Plata por cobrar', puntos: puntosCobrar, motivo: '$' + porCobrar.toLocaleString('es-CO') + ' sin recibir', view: 'financiamiento' });
   }
 
