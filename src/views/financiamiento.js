@@ -81,6 +81,15 @@ export function renderFinanciamiento(state) {
   // Gastos recurrentes totales
   const gastosRecurrentesTotal = gastosRecurrentes.reduce((sum, g) => sum + (Number(g.monto) || 0), 0);
 
+  // Por pagar — quién te debe qué, en una sola línea bajo el resumen (no solo el total).
+  const porPagarLista = facturasPendientes.map(cc => ({ nombre: cc.cliente_nombre || 'Sin nombre', monto: cc.total }))
+    .concat(meDebenHtml.map(d => ({ nombre: d.persona || 'Sin nombre', monto: d.monto })));
+  const porPagarHtml = porPagarLista.length ? `
+    <div style="display:flex;justify-content:center;gap:20px;flex-wrap:wrap;margin-top:10px;font-family:'IBM Plex Mono',monospace;font-size:11px;opacity:0.75;">
+      ${porPagarLista.map(p => `<span>${escapeHtml(p.nombre)} <b style="color:var(--azul);">${fmtMoney(p.monto)}</b></span>`).join('')}
+    </div>
+  ` : '';
+
   const vista = state.finanzasVista || 'ingresos';
   const TABS = [['ingresos', '💵 Ingresos'], ['gastos', '💸 Gastos'], ['deudas', '⚠️ Deudas']];
   const tabsHtml = TABS.map(([v, label]) => `
@@ -180,6 +189,7 @@ export function renderFinanciamiento(state) {
             <span>Efectivo <b style="color:var(--verde);">${fmtMoney(porFuente.efectivo)}</b></span>
           </div>
           ${futuroPago > 0 ? `<div style="margin-top:10px;font-family:'IBM Plex Mono',monospace;font-size:11px;opacity:0.75;">🗓️ Futuro pago (ya con fecha) <b style="color:var(--azul);">${fmtMoney(futuroPago)}</b></div>` : ''}
+          ${porPagarHtml}
         </div>
       </div>
 
