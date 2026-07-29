@@ -1,4 +1,4 @@
-import { MARCAS, REGLAS_SISTEMA, PIPELINE, MESES, COLORES_TAREA, ENFOQUE } from '../data/constants.js';
+import { MARCAS, REGLAS_SISTEMA, PIPELINE, MESES, ENFOQUE } from '../data/constants.js';
 import { fmtFecha, fmtNum, escapeHtml } from '../lib/format.js';
 import { hoyStr, lunesDe, sumarDias } from '../lib/idea.js';
 import { calcularFinanciamiento } from '../lib/financiamiento.js';
@@ -27,18 +27,6 @@ function calcularOrganizacionSemana(ideas) {
   return { estaSemana, prioridadSinFecha, label, clase };
 }
 
-function tareaCintaHtml(t) {
-  const color = COLORES_TAREA[t.color] || COLORES_TAREA.verde;
-  return `
-    <div class="tarea-cinta ${t.hecha ? 'hecha' : ''}" style="background:${color};">
-      <button class="tarea-check" data-act="tarea-toggle" data-id="${escapeHtml(t.id)}" title="${t.hecha ? 'Marcar pendiente' : 'Marcar hecha'}">${t.hecha ? '✓' : ''}</button>
-      <input class="tarea-texto" data-change="tarea-texto" data-id="${escapeHtml(t.id)}" value="${escapeHtml(t.texto)}" placeholder="¿Qué hay que hacer?">
-      <input type="date" class="tarea-fecha" data-change="tarea-fecha" data-id="${escapeHtml(t.id)}" value="${escapeHtml(t.fecha || '')}" min="2026-01-01" title="Fecha de entrega (aparece en el Calendario)" style="color-scheme:dark;">
-      <button class="tarea-quitar" data-act="tarea-eliminar" data-id="${escapeHtml(t.id)}" title="Quitar">✕</button>
-    </div>
-  `;
-}
-
 export function renderPanorama(state) {
   const ideas = state.ideas;
   const [anio, mesNum] = state.month.split('-').map(Number);
@@ -50,10 +38,6 @@ export function renderPanorama(state) {
 
   const orgSemana = calcularOrganizacionSemana(ideas);
   const finTotal = calcularFinanciamiento(state.movimientosFinanciamiento, state.deudas, state.cuentasCobro);
-
-  const tareas = state.tareas || [];
-  const tareasHtml = tareas.length ? tareas.map(tareaCintaHtml).join('') : '';
-
 
   // ---- seguimiento: registros de seguidores/alcance, fusionado desde la vieja pestaña Seguimiento ----
   const snapsOrdenados = (state.snaps || []).slice().sort((a, b) => a.fecha < b.fecha ? -1 : 1);
@@ -82,8 +66,9 @@ export function renderPanorama(state) {
   const totalSegAntes = sumaSeg(penultimoSnap);
   const deltaTotalSeg = totalSeg != null && totalSegAntes != null ? totalSeg - totalSegAntes : null;
 
-  // Seguimiento de hábitos: las cintas de tareas cumplidas
-  const tareasHechas = tareas.filter(t => t.hecha).length;
+  // Tareas ahora se administran en la pestaña Pared; aquí solo se cuenta lo
+  // pendiente con fecha para la tarjeta de Calendario de abajo.
+  const tareas = state.tareas || [];
 
   // Calendario: qué hay este mes
   const rodajesMes = ideas.filter(i => i.fechaRodaje && i.fechaRodaje.startsWith(state.month) && i.estado !== 'descartada').length;
@@ -387,14 +372,6 @@ export function renderPanorama(state) {
           ${statRow('Cursos pendientes', uniPendientes, 'var(--rojo)')}
         </div>
       </div>
-
-      <div class="section-title">Tareas</div>
-      <div class="vista-sub">Tu sistema de cintas en la pared, pero digital. Tócalas para marcarlas hechas.</div>
-      <div class="tareas-pared">
-        ${tareasHtml}
-        <button class="tarea-agregar" data-act="tarea-nueva">+ Tarea</button>
-      </div>
-
 
       <div class="seg-head">
         <div class="section-title" style="margin-bottom:0;">Las marcas — pipeline y seguimiento</div>

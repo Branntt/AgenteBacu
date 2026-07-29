@@ -10,7 +10,8 @@ const NAV = [
   ['bienestar', 'Bienestar'],
   ['metas', 'Metas'],
   ['universidad', 'Universidad'],
-  ['panorama', 'Panorama']
+  ['panorama', 'Panorama'],
+  ['pared', 'Pared']
 ];
 
 export function renderHeader(state) {

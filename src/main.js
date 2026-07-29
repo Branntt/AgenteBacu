@@ -19,6 +19,7 @@ import { renderInventario } from './views/inventario.js';
 import { renderBienestar } from './views/bienestar.js';
 import { renderMetas } from './views/metas.js';
 import { renderUniversidad } from './views/universidad.js';
+import { renderPared } from './views/pared.js';
 import { renderIAModal } from './views/iaModal.js';
 import { renderRevisionIdeasModal } from './components/revisionIdeasModal.js';
 import { renderNotificacionBacu } from './components/notificacionBacu.js';
@@ -32,7 +33,8 @@ const VIEWS = {
   inventario: renderInventario,
   bienestar: renderBienestar,
   metas: renderMetas,
-  universidad: renderUniversidad
+  universidad: renderUniversidad,
+  pared: renderPared
 };
 
 const root = document.getElementById('app');
@@ -334,6 +336,7 @@ root.addEventListener('click', e => {
       break;
     }
     case 'tarea-nueva': actions.tareaNueva(); break;
+    case 'tarea-aceptar-sugerencia': actions.tareaCrearDesdeSugerencia(el.dataset.texto, el.dataset.fecha); break;
     case 'tarea-toggle': actions.toggleTarea(id); break;
     case 'tarea-eliminar': actions.eliminarTarea(id); break;
     case 'historial-abrir': actions.historialAbrir(); break;

@@ -755,6 +755,18 @@ export const actions = {
     notify();
     supabase.from('tareas').insert(t).then(({ error }) => marcarGuardado(!error));
   },
+  // Convierte una cinta sugerida (calculada en Pared a partir de una grabación
+  // agendada) en una tarea real. No hay vínculo guardado con la idea/cliente de
+  // origen — si luego cambian su fecha, la sugerencia se recalcula sola y esta
+  // cinta ya aceptada se queda como quedó, para editarla o borrarla a mano.
+  tareaCrearDesdeSugerencia: (texto, fecha) => {
+    const colores = Object.keys(COLORES_TAREA);
+    const color = colores[state.tareas.length % colores.length];
+    const t = { id: 'tk' + Date.now(), texto, color, hecha: false, fecha: fecha || null };
+    state.tareas = state.tareas.concat([t]);
+    notify();
+    supabase.from('tareas').insert(t).then(({ error }) => marcarGuardado(!error));
+  },
   updTarea: (id, patch) => {
     state.tareas = state.tareas.map(t => t.id === id ? { ...t, ...patch } : t);
     notify();
