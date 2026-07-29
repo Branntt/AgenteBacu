@@ -37,7 +37,7 @@ export function renderPanorama(state) {
   const muestraMetricas = !state.modoCalma;
 
   const orgSemana = calcularOrganizacionSemana(ideas);
-  const finTotal = calcularFinanciamiento(state.movimientosFinanciamiento, state.deudas, state.cuentasCobro);
+  const finTotal = calcularFinanciamiento(state.movimientosFinanciamiento, state.deudas, state.cuentasCobro, hoy);
 
   // ---- seguimiento: registros de seguidores/alcance, fusionado desde la vieja pestaña Seguimiento ----
   const snapsOrdenados = (state.snaps || []).slice().sort((a, b) => a.fecha < b.fecha ? -1 : 1);

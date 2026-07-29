@@ -301,8 +301,9 @@ root.addEventListener('click', e => {
       const nota = document.querySelector('[data-change="mov-nota"]')?.value;
       const monto = parseN(document.querySelector('[data-change="mov-monto"]')?.value);
       const tipo = document.querySelector('[data-change="mov-tipo"]')?.value;
+      const fuente = document.querySelector('[data-change="mov-fuente"]')?.value || 'bancolombia';
       if (fecha && monto > 0 && tipo) {
-        actions.movimientoAgregar({ fecha, nota: nota || '', monto, tipo });
+        actions.movimientoAgregar({ fecha, nota: nota || '', monto, tipo, fuente });
         document.querySelector('[data-change="mov-fecha"]').value = '';
         document.querySelector('[data-change="mov-nota"]').value = '';
         document.querySelector('[data-change="mov-monto"]').value = '';

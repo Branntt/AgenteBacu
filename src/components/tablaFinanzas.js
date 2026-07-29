@@ -42,7 +42,18 @@ export function renderTablaFinanzas(movimientos, soloTipo = null) {
     </div>
   `;
 
-  const filaCampos = soloTipo ? '110px 1fr 110px auto' : '110px 180px 110px 110px auto';
+  const fuenteFieldHtml = `
+    <div>
+      <label style="font-size:11px;opacity:0.7;">Fuente</label>
+      <select data-change="mov-fuente" style="width:100%;padding:6px;border-radius:6px;border:1px solid rgba(255,255,255,0.2);background:rgba(0,0,0,0.3);color:inherit;font-family:inherit;font-size:12px;">
+        <option value="bancolombia">Bancolombia</option>
+        <option value="nequi">Nequi</option>
+        <option value="efectivo">Efectivo</option>
+      </select>
+    </div>
+  `;
+
+  const filaCampos = soloTipo ? '110px 1fr 110px 120px auto' : '110px 160px 110px 110px 120px auto';
 
   const columnasTabla = soloTipo ? `
     <th>Fecha</th>
@@ -124,6 +135,7 @@ export function renderTablaFinanzas(movimientos, soloTipo = null) {
             <input type="number" data-change="mov-monto" placeholder="0" min="0" step="100" style="width:100%;padding:6px;border-radius:6px;border:1px solid rgba(255,255,255,0.2);background:rgba(0,0,0,0.3);color:inherit;font-family:inherit;font-size:12px;" />
           </div>
           ${tipoFieldHtml}
+          ${fuenteFieldHtml}
           <button class="btn-primary" data-act="movimiento-agregar-rapido" style="white-space:nowrap;font-size:12px;padding:6px 12px;">Guardar</button>
         </div>
       </div>

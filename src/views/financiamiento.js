@@ -61,14 +61,14 @@ export function renderFinanciamiento(state) {
   const deudas = state.deudas || [];
   const cuentasCobro = state.cuentasCobro || [];
   const gastosRecurrentes = state.gastosRecurrentes || [];
+  const hoy = hoyStr();
 
   // Cálculos financieros — misma función que usa Panorama, para que ambas pantallas concuerden
-  const { efectivo, debes, teDeben, patrimonio } = calcularFinanciamiento(movimientos, deudas, cuentasCobro);
+  const { efectivo, porFuente, debes, teDeben, futuroPago, patrimonio } = calcularFinanciamiento(movimientos, deudas, cuentasCobro, hoy);
 
   // Quién te debe: cuentas de cobro sin pagar (por cliente) + deudas personales a tu favor.
   // El estado de pago vive en cada factura, no en el cliente — ver calcularFinanciamiento.
   const facturasPendientes = cuentasCobroPendientes(cuentasCobro);
-  const hoy = hoyStr();
   // Ya deberían pagar (fecha límite vencida) vs. aún no vence — no es la misma urgencia.
   const facturasVencidas = facturasPendientes.filter(cc => cc.fecha_vencimiento && cc.fecha_vencimiento < hoy);
   const facturasPorVencer = facturasPendientes.filter(cc => !(cc.fecha_vencimiento && cc.fecha_vencimiento < hoy));
@@ -173,6 +173,13 @@ export function renderFinanciamiento(state) {
               <div style="font-size:18px;font-weight:bold;color:var(--rojo);">${fmtMoney(debes)}</div>
             `)}
           </div>
+
+          <div style="display:flex;justify-content:center;gap:20px;flex-wrap:wrap;margin-top:20px;font-family:'IBM Plex Mono',monospace;font-size:11px;opacity:0.75;">
+            <span>Bancolombia <b style="color:var(--verde);">${fmtMoney(porFuente.bancolombia)}</b></span>
+            <span>Nequi <b style="color:var(--verde);">${fmtMoney(porFuente.nequi)}</b></span>
+            <span>Efectivo <b style="color:var(--verde);">${fmtMoney(porFuente.efectivo)}</b></span>
+          </div>
+          ${futuroPago > 0 ? `<div style="margin-top:10px;font-family:'IBM Plex Mono',monospace;font-size:11px;opacity:0.75;">🗓️ Futuro pago (ya con fecha) <b style="color:var(--azul);">${fmtMoney(futuroPago)}</b></div>` : ''}
         </div>
       </div>
 

@@ -676,7 +676,7 @@ export const actions = {
     supabase.from('movimientos_financiamiento').insert(m).then(({ error }) => marcarGuardado(!error));
   },
   movimientoAgregar: (mov) => {
-    const m = { id: 'mv' + Date.now(), fecha: mov.fecha, fuente: 'bancolombia', tipo: mov.tipo, monto: mov.monto, nota: mov.nota };
+    const m = { id: 'mv' + Date.now(), fecha: mov.fecha, fuente: mov.fuente || 'bancolombia', tipo: mov.tipo, monto: mov.monto, nota: mov.nota };
     state.movimientosFinanciamiento = [m].concat(state.movimientosFinanciamiento);
     notify();
     supabase.from('movimientos_financiamiento').insert(m).then(({ error }) => marcarGuardado(!error));
