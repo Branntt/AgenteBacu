@@ -71,6 +71,11 @@
   /* Espaciado general */
   gap { gap: 12px !important; }
 
+  /* Pared: cinta sugerida — botón "+ A la pared" pasa a ocupar toda la fila,
+     debajo del texto/fecha, para no apretujarse en una pantalla angosta. */
+  .tarea-cinta.sugerida { padding: 10px; }
+  .tarea-cinta.sugerida .tarea-agregar { flex: 1 0 100%; text-align: center; margin-top: 6px; }
+
   /* Avatar: los swatches de color mantienen su forma redonda */
   .avatar-swatch { min-height: 34px; width: 34px; height: 34px; padding: 0; }
   .avatar-opt { min-height: 40px; padding: 8px 12px; font-size: 12px; }

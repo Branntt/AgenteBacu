@@ -16,9 +16,9 @@ function cintaRealHtml(t) {
 
 function cintaSugeridaHtml(s) {
   return `
-    <div class="tarea-cinta sugerida" style="background:none;border:1px dashed var(--line2);color:var(--muted);">
-      <span class="tarea-texto" style="width:auto;max-width:220px;white-space:normal;">${escapeHtml(s.texto)}</span>
-      <span class="tarea-fecha" style="width:auto;">${escapeHtml(s.fecha || '')}</span>
+    <div class="tarea-cinta sugerida">
+      <span class="tarea-texto-sug">${escapeHtml(s.texto)}</span>
+      <span class="tarea-fecha-sug">${escapeHtml(s.fecha || '')}</span>
       <button class="tarea-agregar" style="padding:4px 8px;margin:0;" data-act="tarea-aceptar-sugerencia" data-texto="${escapeHtml(s.texto)}" data-fecha="${escapeHtml(s.fecha || '')}">+ A la pared</button>
     </div>
   `;
