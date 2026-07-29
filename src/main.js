@@ -334,12 +334,17 @@ root.addEventListener('click', e => {
       if (item) actions.updMetaPersonal(id, { cumplida: !item.cumplida });
       break;
     }
+    case 'equipo-nuevo': actions.equipoNuevo(); break;
+    case 'equipo-eliminar': actions.eliminarEquipo(id); break;
     case 'meta-personal-eliminar': actions.eliminarMetaPersonal(id); break;
     case 'meta-personal-toggle': {
       const meta = state.metasPersonales.find(m => m.id === id);
       if (meta) actions.updMetaPersonal(id, { cumplida: !meta.cumplida });
       break;
     }
+    case 'meta-paso-agregar': actions.metaPasoAgregar(id); break;
+    case 'meta-paso-toggle': actions.metaPasoToggle(id, Number(idx)); break;
+    case 'meta-paso-eliminar': actions.metaPasoEliminar(id, Number(idx)); break;
     case 'tarea-nueva': actions.tareaNueva(); break;
     case 'tarea-aceptar-sugerencia': actions.tareaCrearDesdeSugerencia(el.dataset.texto, el.dataset.fecha); break;
     case 'tarea-toggle': actions.toggleTarea(id); break;
@@ -442,6 +447,10 @@ root.addEventListener('change', e => {
       case 'pago-mensual-dia': actions.updPagoMensual(id, { dia_pago: parseN(value) || null }); break;
       case 'meta-personal-titulo': actions.updMetaPersonal(id, { titulo: value }); break;
       case 'meta-personal-fecha': actions.updMetaPersonal(id, { fecha: value || null }); break;
+      case 'meta-paso-texto': actions.metaPasoTexto(id, Number(idx), value); break;
+      case 'equipo-nombre': actions.updEquipo(id, { nombre: value }); break;
+      case 'equipo-categoria': actions.updEquipo(id, { categoria: value }); break;
+      case 'equipo-prestado': actions.updEquipo(id, { prestado_a: value }); break;
       case 'meta-mensual-set': actions.setMetaMensual(marca, state.month, parseN(value)); break;
       case 'tarea-texto': actions.updTarea(id, { texto: value }); break;
       case 'presupuesto-ingresos': actions.updPresupuesto('ingresosMensuales', value); break;

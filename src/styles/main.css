@@ -523,11 +523,17 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
 
 /* metas personales — agrupadas por tipo */
 .metas-grid { display: grid; grid-template-columns: 1fr; gap: 20px; margin-bottom: 32px; }
+/* min-width:0 necesario: sin esto, el input .meta-titulo (flex:1) hereda su ancho
+   por defecto de <input> (~200px) como mínimo del grid item completo, y la columna
+   se sale de su track de 1fr en pantallas angostas — mismo patrón que ya se corrigió
+   en Financiamiento (ver card() en financiamiento.js), acá vía input en vez de texto. */
+.metas-columna { min-width: 0; }
 .metas-columna-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
 .metas-lista { display: flex; flex-direction: column; gap: 8px; }
-.meta-personal { display: flex; align-items: center; gap: 8px; background: var(--panel); border: 1px solid var(--line); padding: 10px 12px; }
+.meta-personal { display: flex; flex-direction: column; gap: 8px; background: var(--panel); border: 1px solid var(--line); padding: 10px 12px; }
 .meta-personal.cumplida { border-color: var(--verde); }
 .meta-personal.cumplida .meta-titulo { color: var(--muted); text-decoration: line-through; }
+.meta-personal-fila { display: flex; align-items: center; gap: 8px; }
 .meta-check {
   flex-shrink: 0;
   width: 20px; height: 20px;
@@ -541,6 +547,27 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
 }
 .meta-titulo { background: none; border: none; color: var(--text); font-size: 13px; flex: 1; min-width: 0; }
 .meta-fecha { background: none; border: none; color: var(--muted); font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; flex-shrink: 0; width: 112px; }
+
+/* Pasos del plan de una meta — desglose simple, no solo un check de golpe */
+.meta-pasos { display: flex; flex-direction: column; gap: 4px; padding-left: 28px; }
+.meta-paso { display: flex; align-items: center; gap: 6px; }
+.meta-paso.hecho .meta-paso-texto { color: var(--muted); text-decoration: line-through; }
+.meta-paso-check {
+  flex-shrink: 0;
+  width: 15px; height: 15px;
+  border: 1.5px solid var(--line2);
+  border-radius: 50%;
+  background: none;
+  cursor: pointer;
+  font-size: 9px;
+  color: var(--verde);
+  display: flex; align-items: center; justify-content: center;
+  padding: 0;
+}
+.meta-paso-texto { background: none; border: none; color: var(--text); font-size: 12px; flex: 1; min-width: 0; }
+.meta-paso-quitar { font-size: 10px; opacity: 0.6; flex-shrink: 0; }
+.meta-paso-agregar { align-self: flex-start; background: none; border: none; color: var(--muted); font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; cursor: pointer; padding: 3px 0 0 0; }
+.meta-paso-agregar:hover { color: var(--text); }
 
 @media (min-width: 700px) {
   .metas-grid { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
@@ -1328,6 +1355,17 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
 }
 .inv-vehiculo .inv-quitar { position: absolute; top: 8px; right: 8px; }
 .inv-vehiculo-icono { font-size: 64px; margin-bottom: 10px; }
+
+.equipo-lista { display: flex; flex-direction: column; gap: 10px; }
+.equipo-card { background: var(--panel2); border: 1px solid var(--line); border-left: 3px solid var(--verde); border-radius: 8px; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
+.equipo-card.prestado { border-left-color: var(--rojo); }
+.equipo-fila { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.equipo-categoria { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; color: inherit; font-family: inherit; font-size: 12px; padding: 6px 8px; flex-shrink: 0; }
+.equipo-nombre { background: none; border: none; color: inherit; flex: 1; min-width: 120px; font-family: inherit; font-size: 13px; font-weight: 600; padding: 4px; }
+.equipo-estado { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: 0.5px; flex-shrink: 0; white-space: nowrap; }
+.equipo-estado.verde { color: var(--verde); }
+.equipo-estado.rojo { color: var(--rojo); }
+.equipo-prestado { background: none; border: none; color: var(--muted); flex: 1; min-width: 140px; font-family: inherit; font-size: 12px; padding: 4px; }
 
 @media (max-width: 600px) {
   .inv-escena { grid-template-columns: 1fr; }

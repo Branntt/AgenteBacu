@@ -36,13 +36,34 @@ const GRUPOS = [
   }
 ];
 
+// Un paso suelto del plan de una meta — texto libre + su propio check, para que
+// "alcanzar la meta" sea una serie de pasos marcables y no un solo check de golpe.
+function pasoHtml(metaId, paso, idx) {
+  const mid = escapeHtml(metaId);
+  return `
+    <div class="meta-paso ${paso.hecho ? 'hecho' : ''}">
+      <button class="meta-paso-check" data-act="meta-paso-toggle" data-id="${mid}" data-idx="${idx}" title="${paso.hecho ? 'Marcar pendiente' : 'Marcar hecho'}">${paso.hecho ? '✓' : ''}</button>
+      <input class="meta-paso-texto" data-change="meta-paso-texto" data-id="${mid}" data-idx="${idx}" value="${escapeHtml(paso.texto || '')}" placeholder="Paso del plan…">
+      <button class="btn-text-muted meta-paso-quitar" data-act="meta-paso-eliminar" data-id="${mid}" data-idx="${idx}">✕</button>
+    </div>
+  `;
+}
+
 function metaHtml(m) {
+  const pasos = m.pasos || [];
+  const hechos = pasos.filter(p => p.hecho).length;
   return `
     <div class="meta-personal ${m.cumplida ? 'cumplida' : ''}">
-      <button class="meta-check" data-act="meta-personal-toggle" data-id="${escapeHtml(m.id)}" title="${m.cumplida ? 'Marcar pendiente' : 'Marcar cumplida'}">${m.cumplida ? '✓' : ''}</button>
-      <input class="meta-titulo" data-change="meta-personal-titulo" data-id="${escapeHtml(m.id)}" value="${escapeHtml(m.titulo)}" placeholder="Nombre…">
-      <input type="date" class="meta-fecha" data-change="meta-personal-fecha" data-id="${escapeHtml(m.id)}" value="${escapeHtml(m.fecha || '')}" min="2026-01-01" style="color-scheme:dark;">
-      <button class="btn-text-muted" data-act="meta-personal-eliminar" data-id="${escapeHtml(m.id)}">✕</button>
+      <div class="meta-personal-fila">
+        <button class="meta-check" data-act="meta-personal-toggle" data-id="${escapeHtml(m.id)}" title="${m.cumplida ? 'Marcar pendiente' : 'Marcar cumplida'}">${m.cumplida ? '✓' : ''}</button>
+        <input class="meta-titulo" data-change="meta-personal-titulo" data-id="${escapeHtml(m.id)}" value="${escapeHtml(m.titulo)}" placeholder="Nombre…">
+        <input type="date" class="meta-fecha" data-change="meta-personal-fecha" data-id="${escapeHtml(m.id)}" value="${escapeHtml(m.fecha || '')}" min="2026-01-01" style="color-scheme:dark;">
+        <button class="btn-text-muted" data-act="meta-personal-eliminar" data-id="${escapeHtml(m.id)}">✕</button>
+      </div>
+      <div class="meta-pasos">
+        ${pasos.map((p, i) => pasoHtml(m.id, p, i)).join('')}
+        <button class="meta-paso-agregar" data-act="meta-paso-agregar" data-id="${escapeHtml(m.id)}">+ paso${pasos.length ? ` · ${hechos}/${pasos.length}` : ''}</button>
+      </div>
     </div>
   `;
 }

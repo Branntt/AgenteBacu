@@ -4,7 +4,16 @@ import { renderAvatarSVG, renderAvatarEditor } from '../components/avatar.js';
 const VISTAS_INV = [
   ['personal', '🎒 Personal'],
   ['habitacion', '🛏️ Habitación'],
-  ['garaje', '🏍️ Garaje']
+  ['garaje', '🏍️ Garaje'],
+  ['equipo', '🎬 Equipo']
+];
+
+const CATEGORIAS_EQUIPO = [
+  ['camara', '🎥 Cámara'],
+  ['luz', '💡 Luz'],
+  ['audio', '🎙️ Audio'],
+  ['soporte', '🛠️ Soporte'],
+  ['otro', '📦 Otro']
 ];
 
 // Un item del inventario. Vive en metas_personales con categoria inv_* ; cumplida = equipado.
@@ -81,6 +90,41 @@ function renderGaraje(items) {
   `;
 }
 
+// Cámaras, luces, audio y soporte del estudio — a diferencia del resto de Inventario
+// (que es "¿es mío?"), acá lo que importa es "¿quién lo tiene ahora mismo?". Vive en su
+// propia tabla equipo_produccion, no en metas_personales.
+function equipoItemHtml(e) {
+  const prestado = !!(e.prestado_a || '').trim();
+  return `
+    <div class="equipo-card ${prestado ? 'prestado' : ''}">
+      <div class="equipo-fila">
+        <select class="equipo-categoria" data-change="equipo-categoria" data-id="${escapeHtml(e.id)}">
+          ${CATEGORIAS_EQUIPO.map(([v, label]) => `<option value="${v}" ${e.categoria === v ? 'selected' : ''}>${label}</option>`).join('')}
+        </select>
+        <input class="equipo-nombre" data-change="equipo-nombre" data-id="${escapeHtml(e.id)}" value="${escapeHtml(e.nombre || '')}" placeholder="Nombre del equipo…">
+        <button class="btn-text-muted" data-act="equipo-eliminar" data-id="${escapeHtml(e.id)}" title="Eliminar">✕</button>
+      </div>
+      <div class="equipo-fila">
+        <span class="equipo-estado ${prestado ? 'rojo' : 'verde'}">${prestado ? '● Prestado' : '● Disponible'}</span>
+        <input class="equipo-prestado" data-change="equipo-prestado" data-id="${escapeHtml(e.id)}" value="${escapeHtml(e.prestado_a || '')}" placeholder="¿A quién o en qué rodaje? (vacío = disponible)">
+      </div>
+    </div>
+  `;
+}
+
+function renderEquipo(items) {
+  const disponibles = items.filter(e => !(e.prestado_a || '').trim()).length;
+  return `
+    <div class="section-title">🎬 Equipo de producción</div>
+    <div class="vista-sub">Cámaras, luces, audio y soporte del estudio — quién tiene qué en este momento.</div>
+    ${items.length ? `<div class="mono-label" style="margin-bottom:12px;">${disponibles} de ${items.length} disponibles ahora</div>` : ''}
+    <div class="equipo-lista">
+      ${items.length ? items.map(equipoItemHtml).join('') : '<div class="empty-note">Nada registrado todavía.</div>'}
+    </div>
+    <button class="inv-slot-add" data-act="equipo-nuevo" style="margin-top:10px;">+ Equipo</button>
+  `;
+}
+
 export function renderInventario(state) {
   const vista = state.invVista || 'personal';
   const items = cat => (state.metasPersonales || []).filter(m => m.categoria === 'inv_' + cat);
@@ -92,6 +136,7 @@ export function renderInventario(state) {
   let contenido;
   if (vista === 'habitacion') contenido = renderHabitacion(items('habitacion'));
   else if (vista === 'garaje') contenido = renderGaraje(items('garaje'));
+  else if (vista === 'equipo') contenido = renderEquipo(state.equipoProduccion || []);
   else contenido = renderPersonal(items('personal'), state);
 
   return `

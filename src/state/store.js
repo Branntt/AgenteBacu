@@ -42,7 +42,7 @@ export const state = {
   movimientosFinanciamiento: [],
   deudas: [],
   pagosMensuales: [],
-  gastosMenuales: [],
+  equipoProduccion: [],
   metasPersonales: [],
   metasMensuales: [],
   tareas: [],
@@ -166,7 +166,7 @@ export async function initAuth() {
 }
 
 async function cargarDatos() {
-  const [ideasRes, snapsRes, clientesRes, cuentasRes, movimientosRes, deudasRes, pagosMensualesRes, metasPersonalesRes, metasMensualesRes, tareasRes] = await Promise.all([
+  const [ideasRes, snapsRes, clientesRes, cuentasRes, movimientosRes, deudasRes, pagosMensualesRes, equipoProduccionRes, metasPersonalesRes, metasMensualesRes, tareasRes] = await Promise.all([
     supabase.from('ideas').select('*').order('id'),
     supabase.from('snaps').select('*').order('fecha'),
     supabase.from('clientes').select('*').order('id'),
@@ -174,6 +174,7 @@ async function cargarDatos() {
     supabase.from('movimientos_financiamiento').select('*').order('fecha'),
     supabase.from('deudas').select('*').order('created_at'),
     supabase.from('pagos_mensuales').select('*').order('dia_pago'),
+    supabase.from('equipo_produccion').select('*').order('created_at'),
     supabase.from('metas_personales').select('*').order('created_at'),
     supabase.from('metas_mensuales').select('*'),
     supabase.from('tareas').select('*').order('created_at')
@@ -185,6 +186,7 @@ async function cargarDatos() {
   state.movimientosFinanciamiento = movimientosRes.data || [];
   state.deudas = deudasRes.data || [];
   state.pagosMensuales = pagosMensualesRes.data || [];
+  state.equipoProduccion = equipoProduccionRes.data || [];
   state.metasPersonales = metasPersonalesRes.data || [];
   state.metasMensuales = metasMensualesRes.data || [];
   state.tareas = tareasRes.data || [];
@@ -301,6 +303,16 @@ function suscribirRealtime() {
     } else {
       const existe = state.pagosMensuales.some(p => p.id === payload.new.id);
       state.pagosMensuales = existe ? state.pagosMensuales.map(p => p.id === payload.new.id ? payload.new : p) : state.pagosMensuales.concat([payload.new]);
+    }
+    notify();
+  }).subscribe();
+
+  supabase.channel('sync-equipo-produccion').on('postgres_changes', { event: '*', schema: 'public', table: 'equipo_produccion' }, payload => {
+    if (payload.eventType === 'DELETE') {
+      state.equipoProduccion = state.equipoProduccion.filter(e => e.id !== payload.old.id);
+    } else {
+      const existe = state.equipoProduccion.some(e => e.id === payload.new.id);
+      state.equipoProduccion = existe ? state.equipoProduccion.map(e => e.id === payload.new.id ? payload.new : e) : state.equipoProduccion.concat([payload.new]);
     }
     notify();
   }).subscribe();
@@ -505,6 +517,27 @@ export const actions = {
   finanzasSetVista: v => setState({ finanzasVista: v }),
   avatarSet: (campo, valor) => setState({ avatar: { ...AVATAR_DEFAULT, ...state.avatar, [campo]: valor } }),
   avatarEditorToggle: () => setState({ avatarEditor: !state.avatarEditor }),
+
+  // Equipo de producción (cámaras, luces, audio, soporte del estudio) — tabla propia,
+  // no metas_personales: acá el dato que importa es "¿quién lo tiene ahora?", no
+  // "¿es mío?" como en el resto de Inventario.
+  equipoNuevo: () => {
+    const e = { id: 'eq' + Date.now(), nombre: '', categoria: 'camara', prestado_a: '' };
+    state.equipoProduccion = state.equipoProduccion.concat([e]);
+    notify();
+    supabase.from('equipo_produccion').insert(e).then(({ error }) => marcarGuardado(!error));
+  },
+  updEquipo: (id, patch) => {
+    state.equipoProduccion = state.equipoProduccion.map(e => e.id === id ? { ...e, ...patch } : e);
+    notify();
+    supabase.from('equipo_produccion').update(patch).eq('id', id).then(({ error }) => marcarGuardado(!error));
+  },
+  eliminarEquipo: id => {
+    state.equipoProduccion = state.equipoProduccion.filter(e => e.id !== id);
+    notify();
+    supabase.from('equipo_produccion').delete().eq('id', id).then(({ error }) => marcarGuardado(!error));
+  },
+
   uniToggleBloque: idx => {
     const abiertos = { ...state.uniBloquesAbiertos, [idx]: !state.uniBloquesAbiertos[idx] };
     setState({ uniBloquesAbiertos: abiertos });
@@ -752,6 +785,30 @@ export const actions = {
     state.metasPersonales = state.metasPersonales.filter(m => m.id !== id);
     notify();
     supabase.from('metas_personales').delete().eq('id', id).then(({ error }) => marcarGuardado(!error));
+  },
+
+  // Pasos de una meta — desglose simple para "alcanzarla con un plan", no solo un check
+  // suelto. Vive como jsonb (array de {texto, hecho}) dentro de la misma fila de
+  // metas_personales; se reescribe completo en cada cambio via updMetaPersonal.
+  metaPasoAgregar: metaId => {
+    const m = state.metasPersonales.find(x => x.id === metaId);
+    if (!m) return;
+    actions.updMetaPersonal(metaId, { pasos: (m.pasos || []).concat([{ texto: '', hecho: false }]) });
+  },
+  metaPasoTexto: (metaId, idx, texto) => {
+    const m = state.metasPersonales.find(x => x.id === metaId);
+    if (!m) return;
+    actions.updMetaPersonal(metaId, { pasos: (m.pasos || []).map((p, i) => i === idx ? { ...p, texto } : p) });
+  },
+  metaPasoToggle: (metaId, idx) => {
+    const m = state.metasPersonales.find(x => x.id === metaId);
+    if (!m) return;
+    actions.updMetaPersonal(metaId, { pasos: (m.pasos || []).map((p, i) => i === idx ? { ...p, hecho: !p.hecho } : p) });
+  },
+  metaPasoEliminar: (metaId, idx) => {
+    const m = state.metasPersonales.find(x => x.id === metaId);
+    if (!m) return;
+    actions.updMetaPersonal(metaId, { pasos: (m.pasos || []).filter((_, i) => i !== idx) });
   },
 
   setMetaMensual: (marca, mes, valor) => {
