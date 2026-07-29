@@ -2,7 +2,7 @@
 // usuario registra a mano), deudas personales, y cuentas de cobro sin pagar.
 // Lo facturado se muestra aparte, como referencia, no como dinero disponible.
 export function calcularFinanciamiento(movimientos, deudas, cuentasCobro) {
-  const efectivo = (movimientos || []).reduce((sum, m) => sum + (m.tipo === 'gasto' ? -1 : 1) * (Number(m.monto) || 0), 0);
+  const efectivo = (movimientos || []).reduce((sum, m) => sum + (m.tipo === 'salida' ? -1 : 1) * (Number(m.monto) || 0), 0);
   const debes = (deudas || []).filter(d => d.direccion === 'debo' && !d.pagada).reduce((sum, d) => sum + (Number(d.monto) || 0), 0);
   const deudaAFavor = (deudas || []).filter(d => d.direccion === 'me_deben' && !d.pagada).reduce((sum, d) => sum + (Number(d.monto) || 0), 0);
 

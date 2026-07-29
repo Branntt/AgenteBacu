@@ -649,7 +649,7 @@ export const actions = {
         id: 'mv' + Date.now(),
         fecha: hoyStr(),
         fuente: 'bancolombia',
-        tipo: 'ingreso',
+        tipo: 'entrada',
         monto: Number(cc.total) || 0,
         nota: `Pago de ${cc.cliente_nombre || 'cliente'} — cuenta de cobro ${cc.numero}`
       };
@@ -660,7 +660,7 @@ export const actions = {
   },
 
   movimientoNuevo: () => {
-    const m = { id: 'mv' + Date.now(), fecha: hoyStr(), fuente: 'bancolombia', tipo: 'ingreso', monto: 0, nota: '' };
+    const m = { id: 'mv' + Date.now(), fecha: hoyStr(), fuente: 'bancolombia', tipo: 'entrada', monto: 0, nota: '' };
     state.movimientosFinanciamiento = [m].concat(state.movimientosFinanciamiento);
     setState({ view: 'financiamiento' });
     supabase.from('movimientos_financiamiento').insert(m).then(({ error }) => marcarGuardado(!error));
