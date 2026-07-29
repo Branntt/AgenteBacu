@@ -23,6 +23,7 @@ export const state = {
   filtroCalendario: loadValue('ui.filtroCalendario', 'todas'),
   calVista: loadValue('ui.calVista', 'mes'),
   invVista: loadValue('ui.invVista', 'personal'),
+  finanzasVista: loadValue('ui.finanzasVista', 'ingresos'),
   avatar: loadValue('ui.avatar', AVATAR_DEFAULT),
   avatarEditor: false,
   uniBloquesAbiertos: {},
@@ -112,7 +113,7 @@ export function subscribe(fn) { listeners.push(fn); }
 function notify() { listeners.forEach(fn => fn()); }
 
 // Claves de interfaz que se recuerdan entre sesiones (cada pestaña vuelve donde quedó)
-const UI_PERSIST = ['month', 'filtroGuiones', 'guionesVista', 'filtroCalendario', 'calVista', 'semanaInicio', 'invVista', 'avatar'];
+const UI_PERSIST = ['month', 'filtroGuiones', 'guionesVista', 'filtroCalendario', 'calVista', 'semanaInicio', 'invVista', 'avatar', 'finanzasVista'];
 
 function setState(patch) {
   Object.assign(state, patch);
@@ -501,6 +502,7 @@ export const actions = {
 
   setCalVista: v => setState({ calVista: v }),
   invSetVista: v => setState({ invVista: v }),
+  finanzasSetVista: v => setState({ finanzasVista: v }),
   avatarSet: (campo, valor) => setState({ avatar: { ...AVATAR_DEFAULT, ...state.avatar, [campo]: valor } }),
   avatarEditorToggle: () => setState({ avatarEditor: !state.avatarEditor }),
   uniToggleBloque: idx => {

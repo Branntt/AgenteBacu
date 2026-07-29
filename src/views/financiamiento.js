@@ -69,16 +69,69 @@ export function renderFinanciamiento(state) {
   const yoDeboHtml = deudas.filter(d => d.direccion === 'debo' && !d.pagada);
   const yoDebenTotal = yoDeboHtml.reduce((sum, d) => sum + (Number(d.monto) || 0), 0);
 
-  // Movimientos ordenados por fecha (más recientes primero)
-  const movOrdenados = [...movimientos].sort((a, b) => b.fecha.localeCompare(a.fecha));
-  const gastos = movOrdenados.filter(m => m.tipo === 'salida');
-  const ingresos = movOrdenados.filter(m => m.tipo === 'entrada');
-
-  const totalGastos = gastos.reduce((sum, m) => sum + (Number(m.monto) || 0), 0);
-  const totalIngresos = ingresos.reduce((sum, m) => sum + (Number(m.monto) || 0), 0);
-
   // Gastos recurrentes totales
   const gastosRecurrentesTotal = gastosRecurrentes.reduce((sum, g) => sum + (Number(g.monto) || 0), 0);
+
+  const vista = state.finanzasVista || 'ingresos';
+  const TABS = [['ingresos', '💵 Ingresos'], ['gastos', '💸 Gastos'], ['deudas', '⚠️ Deudas']];
+  const tabsHtml = TABS.map(([v, label]) => `
+    <button class="inv-tab ${vista === v ? 'active' : ''}" data-act="finanzas-vista" data-value="${v}">${label}</button>
+  `).join('');
+
+  const vistaIngresosHtml = `
+    <!-- QUIÉN TE DEBE -->
+    <div class="finanzas-seccion" style="margin-bottom:24px;">
+      <div class="financ-deudas-head">
+        <div class="seccion-titulo" style="margin-bottom:0;">🔵 Quién te debe · ${fmtMoney(teDeben)}</div>
+        <button class="btn-ghost" data-act="deuda-nueva" data-direccion="me_deben">+ Deuda a mi favor</button>
+      </div>
+      ${facturasPendientes.length === 0 ? '' : card('var(--azul)', `
+        ${facturasPendientes.map(cc => filaMonto(
+          `${escapeHtml(cc.cliente_nombre || 'Sin nombre')} <span style="opacity:0.5;font-size:11px;">· cuenta ${escapeHtml(cc.numero)} · ${fmtFecha(cc.fecha)}</span>`,
+          fmtMoney(cc.total), 'var(--azul)',
+          botonMarcarPagada('cc-toggle-pagada', cc.id)
+        )).join('')}
+      `, 'margin-bottom:10px;')}
+      ${meDebenHtml.length ? meDebenHtml.map(deudaCardHtml).join('') : (facturasPendientes.length === 0 ? '<div style="opacity:0.5;font-size:12px;">Nadie te debe ahora mismo 🎉</div>' : '')}
+    </div>
+    <div class="finanzas-seccion" style="margin-bottom:24px;">${renderTablaFinanzas(movimientos, 'entrada')}</div>
+  `;
+
+  const vistaGastosHtml = `
+    <div class="finanzas-seccion" style="margin-bottom:24px;">${renderTablaFinanzas(movimientos, 'salida')}</div>
+    <div class="finanzas-seccion" style="margin-bottom:24px;">
+      <div class="seccion-titulo">💰 Gastos Mensuales Recurrentes</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));gap:10px;margin-bottom:12px;">
+        ${gastosRecurrentes.map(g => card('#E8641B', `
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div>
+              <div style="font-size:13px;font-weight:bold;">${g.emoji} ${escapeHtml(g.nombre)}</div>
+              <div style="font-size:10px;opacity:0.55;margin-top:4px;">Día ${g.dia_vencimiento}</div>
+            </div>
+            <div style="font-size:14px;font-weight:bold;color:#E8641B;">${fmtMoney(g.monto)}</div>
+          </div>
+        `, 'padding:12px;')).join('')}
+      </div>
+      ${card('#E8641B', `
+        <div style="text-align:center;">
+          <span style="opacity:0.7;font-size:13px;">Total recurrentes del mes: </span>
+          <span style="font-size:18px;font-weight:bold;color:#E8641B;">${fmtMoney(gastosRecurrentesTotal)}</span>
+        </div>
+      `)}
+    </div>
+  `;
+
+  const vistaDeudasHtml = `
+    <div class="finanzas-seccion" style="margin-bottom:24px;">
+      <div class="financ-deudas-head">
+        <div class="seccion-titulo" style="margin-bottom:0;">⚠️ Debes Pagar · ${fmtMoney(yoDebenTotal)}</div>
+        <button class="btn-ghost" data-act="deuda-nueva" data-direccion="debo">+ Debo</button>
+      </div>
+      ${yoDeboHtml.length ? yoDeboHtml.map(deudaCardHtml).join('') : '<div style="opacity:0.5;font-size:12px;">No debes nada registrado ahora mismo</div>'}
+    </div>
+  `;
+
+  const vistaHtml = vista === 'gastos' ? vistaGastosHtml : vista === 'deudas' ? vistaDeudasHtml : vistaIngresosHtml;
 
   return `
     <main class="financiamiento">
@@ -88,11 +141,11 @@ export function renderFinanciamiento(state) {
         <p style="margin:8px 0 0 0;font-size:14px;opacity:0.7;">Tu situación financiera actual</p>
       </div>
 
-      <!-- 1️⃣ SITUACIÓN HOY — lo primero que ven los ojos -->
+      <!-- SITUACIÓN HOY — siempre visible, sin importar la pestaña -->
       <div class="finanzas-seccion" style="margin-bottom:24px;">
         <div class="seccion-titulo">📊 Tu Situación Hoy</div>
 
-        <div style="background:var(--panel2);border:2px solid ${patrimonio >= 0 ? 'var(--verde)' : 'var(--rojo)'};box-shadow:0 0 24px ${patrimonio >= 0 ? 'rgba(31,175,116,0.25)' : 'rgba(217,54,46,0.25)'};padding:40px 32px;border-radius:12px;text-align:center;margin-bottom:16px;">
+        <div style="background:var(--panel2);border:2px solid ${patrimonio >= 0 ? 'var(--verde)' : 'var(--rojo)'};box-shadow:0 0 24px ${patrimonio >= 0 ? 'rgba(31,175,116,0.25)' : 'rgba(217,54,46,0.25)'};padding:40px 32px;border-radius:12px;text-align:center;">
           <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;opacity:0.7;margin-bottom:12px;">Patrimonio Neto</div>
           <div style="font-size:64px;font-weight:bold;margin-bottom:32px;line-height:1;color:${patrimonio >= 0 ? 'var(--verde)' : 'var(--rojo)'};">${fmtMoney(patrimonio)}</div>
 
@@ -111,84 +164,11 @@ export function renderFinanciamiento(state) {
             `)}
           </div>
         </div>
-
-        <!-- Gastos e Ingresos -->
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-          ${card('var(--rojo)', `
-            <div style="font-size:14px;font-weight:bold;margin-bottom:12px;color:var(--rojo);">💸 Gastos · ${fmtMoney(totalGastos)}</div>
-            <div style="display:flex;flex-direction:column;">
-              ${gastos.slice(0, 10).map(m => filaMonto(
-                `${escapeHtml(m.nota || 'Gasto')} <span style="opacity:0.5;font-size:11px;">· ${fmtFecha(m.fecha)}</span>`,
-                fmtMoney(m.monto), 'var(--rojo)'
-              )).join('')}
-              ${gastos.length === 0 ? '<div style="opacity:0.5;font-size:12px;">Sin gastos registrados</div>' : ''}
-            </div>
-          `)}
-          ${card('var(--verde)', `
-            <div style="font-size:14px;font-weight:bold;margin-bottom:12px;color:var(--verde);">💵 Pagos Recibidos · ${fmtMoney(totalIngresos)}</div>
-            <div style="display:flex;flex-direction:column;">
-              ${ingresos.slice(0, 10).map(m => filaMonto(
-                `${escapeHtml(m.nota || 'Ingreso')} <span style="opacity:0.5;font-size:11px;">· ${fmtFecha(m.fecha)}</span>`,
-                fmtMoney(m.monto), 'var(--verde)'
-              )).join('')}
-              ${ingresos.length === 0 ? '<div style="opacity:0.5;font-size:12px;">Sin ingresos registrados</div>' : ''}
-            </div>
-          `)}
-        </div>
       </div>
 
-      <!-- 2️⃣ QUIÉN TE DEBE -->
-      <div class="finanzas-seccion" style="margin-bottom:24px;">
-        <div class="financ-deudas-head">
-          <div class="seccion-titulo" style="margin-bottom:0;">🔵 Quién te debe · ${fmtMoney(teDeben)}</div>
-          <button class="btn-ghost" data-act="deuda-nueva" data-direccion="me_deben">+ Deuda a mi favor</button>
-        </div>
-        ${facturasPendientes.length === 0 ? '' : card('var(--azul)', `
-          ${facturasPendientes.map(cc => filaMonto(
-            `${escapeHtml(cc.cliente_nombre || 'Sin nombre')} <span style="opacity:0.5;font-size:11px;">· cuenta ${escapeHtml(cc.numero)} · ${fmtFecha(cc.fecha)}</span>`,
-            fmtMoney(cc.total), 'var(--azul)',
-            botonMarcarPagada('cc-toggle-pagada', cc.id)
-          )).join('')}
-        `, 'margin-bottom:10px;')}
-        ${meDebenHtml.length ? meDebenHtml.map(deudaCardHtml).join('') : (facturasPendientes.length === 0 ? '<div style="opacity:0.5;font-size:12px;">Nadie te debe ahora mismo 🎉</div>' : '')}
-      </div>
-
-      <!-- 3️⃣ REGISTRO DE FINANZAS -->
-      <div class="finanzas-seccion" style="margin-bottom:24px;">
-        ${renderTablaFinanzas(movimientos)}
-      </div>
-
-      <!-- 4️⃣ GASTOS MENSUALES RECURRENTES -->
-      <div class="finanzas-seccion" style="margin-bottom:24px;">
-        <div class="seccion-titulo">💰 Gastos Mensuales Recurrentes</div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));gap:10px;margin-bottom:12px;">
-          ${gastosRecurrentes.map(g => card('#E8641B', `
-            <div style="display:flex;justify-content:space-between;align-items:center;">
-              <div>
-                <div style="font-size:13px;font-weight:bold;">${g.emoji} ${escapeHtml(g.nombre)}</div>
-                <div style="font-size:10px;opacity:0.55;margin-top:4px;">Día ${g.dia_vencimiento}</div>
-              </div>
-              <div style="font-size:14px;font-weight:bold;color:#E8641B;">${fmtMoney(g.monto)}</div>
-            </div>
-          `, 'padding:12px;')).join('')}
-        </div>
-        ${card('#E8641B', `
-          <div style="text-align:center;">
-            <span style="opacity:0.7;font-size:13px;">Total recurrentes del mes: </span>
-            <span style="font-size:18px;font-weight:bold;color:#E8641B;">${fmtMoney(gastosRecurrentesTotal)}</span>
-          </div>
-        `)}
-      </div>
-
-      <!-- 5️⃣ DEUDAS PERSONALES -->
-      <div class="finanzas-seccion" style="margin-bottom:24px;">
-        <div class="financ-deudas-head">
-          <div class="seccion-titulo" style="margin-bottom:0;">⚠️ Debes Pagar · ${fmtMoney(yoDebenTotal)}</div>
-          <button class="btn-ghost" data-act="deuda-nueva" data-direccion="debo">+ Debo</button>
-        </div>
-        ${yoDeboHtml.length ? yoDeboHtml.map(deudaCardHtml).join('') : '<div style="opacity:0.5;font-size:12px;">No debes nada registrado ahora mismo</div>'}
-      </div>
-
+      <!-- SUBMENÚ: una pestaña a la vez, nada de scroll interminable -->
+      <div class="inv-tabs">${tabsHtml}</div>
+      ${vistaHtml}
     </main>
   `;
 }
