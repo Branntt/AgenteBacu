@@ -219,20 +219,26 @@ export function renderFinanciamiento(state) {
           <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;opacity:0.7;margin-bottom:12px;">Patrimonio Neto</div>
           <div style="font-size:clamp(32px,9vw,64px);font-weight:bold;margin-bottom:32px;line-height:1.15;overflow-wrap:break-word;color:${patrimonio >= 0 ? 'var(--verde)' : 'var(--rojo)'};">${fmtMoney(patrimonio)}</div>
 
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;font-size:13px;">
+          <div style="display:flex;flex-direction:column;gap:10px;font-size:13px;text-align:left;">
             ${card('var(--verde)', `
-              <div style="opacity:0.7;margin-bottom:6px;">En bolsillo</div>
-              <div style="font-size:clamp(14px,4vw,18px);font-weight:bold;overflow-wrap:break-word;color:var(--verde);">${fmtMoney(efectivo)}</div>
-            `)}
+              <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;">
+                <span style="opacity:0.7;">En bolsillo</span>
+                <span style="font-size:18px;font-weight:bold;white-space:nowrap;color:var(--verde);">${fmtMoney(efectivo)}</span>
+              </div>
+            `, 'padding:12px 16px;')}
             ${card('var(--azul)', `
-              <div style="opacity:0.7;margin-bottom:6px;">Te deben</div>
-              <div style="font-size:clamp(14px,4vw,18px);font-weight:bold;overflow-wrap:break-word;color:var(--azul);">${fmtMoney(teDeben)}</div>
-              <div style="font-size:9px;opacity:0.55;margin-top:3px;">no está en tu patrimonio</div>
-            `)}
+              <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;">
+                <span style="opacity:0.7;">Te deben</span>
+                <span style="font-size:18px;font-weight:bold;white-space:nowrap;color:var(--azul);">${fmtMoney(teDeben)}</span>
+              </div>
+              <div style="font-size:9px;opacity:0.55;margin-top:3px;text-align:right;">no está en tu patrimonio</div>
+            `, 'padding:12px 16px;')}
             ${card('var(--rojo)', `
-              <div style="opacity:0.7;margin-bottom:6px;">Debes</div>
-              <div style="font-size:clamp(14px,4vw,18px);font-weight:bold;overflow-wrap:break-word;color:var(--rojo);">${fmtMoney(debes)}</div>
-            `)}
+              <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;">
+                <span style="opacity:0.7;">Debes</span>
+                <span style="font-size:18px;font-weight:bold;white-space:nowrap;color:var(--rojo);">${fmtMoney(debes)}</span>
+              </div>
+            `, 'padding:12px 16px;')}
           </div>
 
           <div style="display:flex;justify-content:center;gap:20px;flex-wrap:wrap;margin-top:20px;font-family:'IBM Plex Mono',monospace;font-size:11px;opacity:0.75;">
