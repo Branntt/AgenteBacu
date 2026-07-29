@@ -69,10 +69,19 @@ export function renderFinanciamiento(state) {
   // Quién te debe: cuentas de cobro sin pagar (por cliente) + deudas personales a tu favor.
   // El estado de pago vive en cada factura, no en el cliente — ver calcularFinanciamiento.
   const facturasPendientes = cuentasCobroPendientes(cuentasCobro);
-  // Ya deberían pagar (fecha límite vencida) vs. aún no vence — no es la misma urgencia.
-  const facturasVencidas = facturasPendientes.filter(cc => cc.fecha_vencimiento && cc.fecha_vencimiento < hoy);
-  const facturasPorVencer = facturasPendientes.filter(cc => !(cc.fecha_vencimiento && cc.fecha_vencimiento < hoy));
   const meDebenHtml = deudas.filter(d => d.direccion === 'me_deben' && !d.pagada);
+
+  // Ya deberían pagar (fecha límite vencida) vs. aún no vence — no es la misma urgencia. Aplica
+  // por igual a facturas de clientes y a deudas personales a favor (ej. Sol vs. Sebastián: una
+  // lleva rato vencida, la otra tiene fecha futura acordada).
+  const vencida = f => {
+    const f2 = f.fecha_vencimiento || f.fecha_limite;
+    return f2 && f2 < hoy;
+  };
+  const facturasVencidas = facturasPendientes.filter(vencida);
+  const facturasPorVencer = facturasPendientes.filter(cc => !vencida(cc));
+  const deudasVencidas = meDebenHtml.filter(vencida);
+  const deudasPorVencer = meDebenHtml.filter(d => !vencida(d));
 
   // Deudas que tú debes pagar
   const yoDeboHtml = deudas.filter(d => d.direccion === 'debo' && !d.pagada);
@@ -103,15 +112,15 @@ export function renderFinanciamiento(state) {
         <div class="seccion-titulo" style="margin-bottom:0;">🔵 Quién te debe · ${fmtMoney(teDeben)}</div>
         <button class="btn-ghost" data-act="deuda-nueva" data-direccion="me_deben">+ Deuda a mi favor</button>
       </div>
-      ${facturasVencidas.length ? `
-        <div class="mono-label" style="color:var(--rojo);margin-bottom:6px;">⏰ Ya deberían haberte pagado · ${fmtMoney(facturasVencidas.reduce((s, cc) => s + (Number(cc.total) || 0), 0))}</div>
-        ${card('var(--rojo)', facturasVencidas.map(filaFacturaHtml).join(''), 'margin-bottom:16px;')}
+      ${facturasVencidas.length || deudasVencidas.length ? `
+        <div class="mono-label" style="color:var(--rojo);margin-bottom:6px;">⏰ Ya deberían haberte pagado · ${fmtMoney(facturasVencidas.reduce((s, cc) => s + (Number(cc.total) || 0), 0) + deudasVencidas.reduce((s, d) => s + (Number(d.monto) || 0), 0))}</div>
+        ${card('var(--rojo)', facturasVencidas.map(filaFacturaHtml).join('') + deudasVencidas.map(deudaCardHtml).join(''), 'margin-bottom:16px;')}
       ` : ''}
-      ${facturasPorVencer.length ? `
-        <div class="mono-label" style="color:var(--azul);margin-bottom:6px;">🔵 Aún no vence · ${fmtMoney(facturasPorVencer.reduce((s, cc) => s + (Number(cc.total) || 0), 0))}</div>
-        ${card('var(--azul)', facturasPorVencer.map(filaFacturaHtml).join(''), 'margin-bottom:10px;')}
+      ${facturasPorVencer.length || deudasPorVencer.length ? `
+        <div class="mono-label" style="color:var(--azul);margin-bottom:6px;">🔵 Aún no vence · ${fmtMoney(facturasPorVencer.reduce((s, cc) => s + (Number(cc.total) || 0), 0) + deudasPorVencer.reduce((s, d) => s + (Number(d.monto) || 0), 0))}</div>
+        ${card('var(--azul)', facturasPorVencer.map(filaFacturaHtml).join('') + deudasPorVencer.map(deudaCardHtml).join(''), 'margin-bottom:10px;')}
       ` : ''}
-      ${meDebenHtml.length ? meDebenHtml.map(deudaCardHtml).join('') : (facturasPendientes.length === 0 ? '<div style="opacity:0.5;font-size:12px;">Nadie te debe ahora mismo 🎉</div>' : '')}
+      ${facturasPendientes.length === 0 && meDebenHtml.length === 0 ? '<div style="opacity:0.5;font-size:12px;">Nadie te debe ahora mismo 🎉</div>' : ''}
     </div>
     <div class="finanzas-seccion" style="margin-bottom:24px;">${renderTablaFinanzas(movimientos, 'entrada')}</div>
   `;
