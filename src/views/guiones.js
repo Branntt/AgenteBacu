@@ -139,7 +139,7 @@ export function renderGuiones(state) {
   return `
     <main class="banco ${vista === 'tipo' ? 'desarrollo' : ''}">
       <div class="banco-head">
-        <h2 class="serif" style="margin:0;font-size:32px;">Estrategia</h2>
+        <h2 class="serif" style="margin:0;font-size:32px;">Contenido</h2>
         <div style="display:flex;gap:10px;flex-wrap:wrap;">
           <button class="btn-primary" data-act="ia-abrir">✦ Crear con IA</button>
           <select class="vista-select" data-change="guiones-vista-set">${vistaOpts}</select>

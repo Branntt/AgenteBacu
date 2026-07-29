@@ -4,7 +4,7 @@ import { escapeHtml } from '../lib/format.js';
 const NAV = [
   ['calendario', 'Calendario'],
   ['clientes', 'Clientes'],
-  ['guiones', 'Estrategia'],
+  ['guiones', 'Contenido'],
   ['financiamiento', 'Finanzas'],
   ['inventario', 'Inventario'],
   ['bienestar', 'Bienestar'],

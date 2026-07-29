@@ -267,7 +267,7 @@ export function renderPanorama(state) {
     </div>
   `).join('');
   const flujoHtml = `
-    <div class="mono-label" style="margin-bottom:8px;">Estrategia</div>
+    <div class="mono-label" style="margin-bottom:8px;">Contenido</div>
     ${flujoLista(FLUJO_ESTRATEGIA)}
     <div class="mono-label" style="margin:16px 0 8px;">Clientes</div>
     ${flujoLista(FLUJO_CLIENTES)}
@@ -313,9 +313,9 @@ export function renderPanorama(state) {
           ${statRow('Cerrados', cuentaCls(['ya_pagos', 'entregado']), 'var(--verde)')}
         </div>
 
-        <!-- ESTRATEGIA -->
+        <!-- CONTENIDO -->
         <div class="panel" data-act="nav-go" data-view="guiones" style="cursor:pointer;">
-          <span class="mono-label">🎬 Estrategia</span>
+          <span class="mono-label">🎬 Contenido</span>
           <div class="vital-value" style="margin-bottom:10px;">${ideasActivas.length} idea${ideasActivas.length === 1 ? '' : 's'}</div>
           ${statRow('Prospecto', cuentaIdeas(['prospecto']))}
           ${statRow('En desarrollo', cuentaIdeas(['desarrollo', 'lista']))}
