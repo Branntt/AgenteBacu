@@ -53,8 +53,13 @@ export function calcularFinanciamiento(movimientos, deudas, cuentasCobro, hoy) {
     ? pendientesAlDia.filter(cc => cc.fecha_vencimiento && cc.fecha_vencimiento >= hoy).reduce((sum, cc) => sum + (Number(cc.total) || 0), 0)
     : 0;
 
+  // Patrimonio = SOLO plata que ya tienes en la mano, menos lo que debes. "Te deben" —
+  // aunque tenga fecha confirmada y no esté vencida (ej. Sebastián el 5 de agosto) — no
+  // cuenta hasta que de verdad llegue (2026-07-29, a pedido del usuario: "todo tiene
+  // fecha", y hasta que se cumpla esa fecha y se marque pagada, sigue sin ser tuya). Lo
+  // que debes SÍ sigue restando siempre — ver nota en `debes` arriba.
   const teDeben = deudaAFavor + clientesDeben;
-  return { efectivo, porFuente, debes, teDeben, teDebenVencido, futuroPago, patrimonio: efectivo + teDeben - debes };
+  return { efectivo, porFuente, debes, teDeben, teDebenVencido, futuroPago, patrimonio: efectivo - debes };
 }
 
 export function cuentasCobroPendientes(cuentasCobro) {

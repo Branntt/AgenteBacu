@@ -32,6 +32,18 @@ function botonEliminar(act, id) {
   return `<button data-act="${act}" data-id="${escapeHtml(id)}" title="Quitar" style="font-size:11px;padding:4px 10px;border-radius:6px;border:1px solid var(--line);background:var(--panel);cursor:pointer;color:var(--muted);white-space:nowrap;">✕</button>`;
 }
 
+// A qué cuenta llega el pago de una factura — se elige ANTES de marcarla pagada. Antes
+// toggleCuentaCobroPagada siempre registraba el ingreso como 'bancolombia' sin importar
+// dónde llegara de verdad, y el desglose por cuenta en Financiamiento quedaba mal.
+const FUENTES_PAGO = [['bancolombia', 'Bancolombia'], ['nequi', 'Nequi'], ['efectivo', 'Efectivo']];
+function selectFuentePago(cc) {
+  const id = escapeHtml(cc.id);
+  const actual = cc.fuente_pago || 'bancolombia';
+  return `<select data-change="cc-fuente-pago" data-id="${id}" title="¿A qué cuenta llega el pago?" style="${FECHA_LIMITE_STYLE}">
+    ${FUENTES_PAGO.map(([v, label]) => `<option value="${v}" ${actual === v ? 'selected' : ''}>${label}</option>`).join('')}
+  </select>`;
+}
+
 // Fila de una cuenta de cobro pendiente, con su propia fecha límite editable
 // (antes solo se podía fijar al crearla — nunca después) y un botón para
 // deshacerla si se creó por error (ej. desde Rodaje rápido).
@@ -43,6 +55,7 @@ function filaFacturaHtml(cc) {
       <span style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0;">
         <input type="date" data-change="cc-fecha-vencimiento" data-id="${id}" value="${escapeHtml(cc.fecha_vencimiento || '')}" min="2026-01-01" title="Fecha límite de pago" style="${FECHA_LIMITE_STYLE}">
         <span style="font-weight:bold;color:var(--azul);">${fmtMoney(cc.total)}</span>
+        ${selectFuentePago(cc)}
         ${botonMarcarPagada('cc-toggle-pagada', cc.id)}
         ${botonEliminar('cc-eliminar', cc.id)}
       </span>
@@ -214,6 +227,7 @@ export function renderFinanciamiento(state) {
             ${card('var(--azul)', `
               <div style="opacity:0.7;margin-bottom:6px;">Te deben</div>
               <div style="font-size:clamp(14px,4vw,18px);font-weight:bold;overflow-wrap:break-word;color:var(--azul);">${fmtMoney(teDeben)}</div>
+              <div style="font-size:9px;opacity:0.55;margin-top:3px;">no está en tu patrimonio</div>
             `)}
             ${card('var(--rojo)', `
               <div style="opacity:0.7;margin-bottom:6px;">Debes</div>

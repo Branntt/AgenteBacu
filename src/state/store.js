@@ -703,10 +703,14 @@ export const actions = {
     supabase.from('cuentas_cobro').update({ pagada }).eq('id', id).then(({ error }) => marcarGuardado(!error));
 
     if (pagada) {
+      // fuente_pago (elegible en la factura antes de marcarla) — antes esto era siempre
+      // 'bancolombia' sin importar dónde llegara la plata de verdad, así que el desglose
+      // por cuenta (Financiamiento) mentía cada vez que un cliente pagaba por Nequi o en
+      // efectivo (2026-07-29, bug reportado por el usuario).
       const movimiento = {
         id: 'mv' + Date.now(),
         fecha: hoyStr(),
-        fuente: 'bancolombia',
+        fuente: cc.fuente_pago || 'bancolombia',
         tipo: 'entrada',
         monto: Number(cc.total) || 0,
         nota: `Pago de ${cc.cliente_nombre || 'cliente'} — cuenta de cobro ${cc.numero}`
