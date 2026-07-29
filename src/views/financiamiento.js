@@ -73,11 +73,30 @@ function deudaCardHtml(d) {
   `;
 }
 
+// Tarjeta editable de un pago mensual/suscripción real (tabla pagos_mensuales) — antes
+// esta sección leía un array de suscripciones hardcodeado en store.js, sin forma de
+// agregar/editar/eliminar nada; esa tabla y sus acciones (pagoMensualNuevo/updPagoMensual/
+// eliminarPagoMensual) y hasta el CSS (.pago-card/.pago-footer) ya existían, solo faltaba
+// esta tarjeta para conectarlos.
+function pagoCardHtml(p) {
+  const id = escapeHtml(p.id);
+  return `
+    <div class="pago-card">
+      <input class="pago-nombre" data-change="pago-mensual-nombre" data-id="${id}" value="${escapeHtml(p.nombre || '')}" placeholder="Nombre del pago o suscripción">
+      <div class="pago-footer" style="flex-wrap:wrap;">
+        <input class="pago-monto-label" data-change="pago-mensual-monto" data-id="${id}" value="${p.monto ? fmtMoney(p.monto) : ''}" placeholder="Monto" inputmode="numeric" style="background:none;border:none;width:110px;color:inherit;">
+        <input type="number" data-change="pago-mensual-dia" data-id="${id}" value="${p.dia_pago || ''}" min="1" max="31" placeholder="Día" title="Día del mes en que se cobra" style="${FECHA_LIMITE_STYLE}width:64px;">
+        ${botonEliminar('pago-mensual-eliminar', p.id)}
+      </div>
+    </div>
+  `;
+}
+
 export function renderFinanciamiento(state) {
   const movimientos = state.movimientosFinanciamiento || [];
   const deudas = state.deudas || [];
   const cuentasCobro = state.cuentasCobro || [];
-  const gastosRecurrentes = state.gastosRecurrentes || [];
+  const pagosMensuales = state.pagosMensuales || [];
   const hoy = hoyStr();
 
   // Cálculos financieros — misma función que usa Panorama, para que ambas pantallas concuerden.
@@ -104,8 +123,8 @@ export function renderFinanciamiento(state) {
   const yoDeboHtml = deudas.filter(d => d.direccion === 'debo' && !d.pagada);
   const yoDebenTotal = yoDeboHtml.reduce((sum, d) => sum + (Number(d.monto) || 0), 0);
 
-  // Gastos recurrentes totales
-  const gastosRecurrentesTotal = gastosRecurrentes.reduce((sum, g) => sum + (Number(g.monto) || 0), 0);
+  // Pagos mensuales/suscripciones — solo referencia, no entra en patrimonio (igual que antes).
+  const pagosMensualesTotal = pagosMensuales.reduce((sum, p) => sum + (Number(p.monto) || 0), 0);
 
   // Por pagar — quién te debe qué, en una sola línea bajo el resumen (no solo el total).
   const porPagarLista = facturasPendientes.map(cc => ({ nombre: cc.cliente_nombre || 'Sin nombre', monto: cc.total }))
@@ -145,24 +164,17 @@ export function renderFinanciamiento(state) {
   const vistaGastosHtml = `
     <div class="finanzas-seccion" style="margin-bottom:24px;">${renderTablaFinanzas(movimientos, 'salida')}</div>
     <div class="finanzas-seccion" style="margin-bottom:24px;">
-      <div class="seccion-titulo">💰 Gastos Mensuales Recurrentes</div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));gap:10px;margin-bottom:12px;">
-        ${gastosRecurrentes.map(g => card('#E8641B', `
-          <div style="display:flex;justify-content:space-between;align-items:center;">
-            <div>
-              <div style="font-size:13px;font-weight:bold;">${g.emoji} ${escapeHtml(g.nombre)}</div>
-              <div style="font-size:10px;opacity:0.55;margin-top:4px;">Día ${g.dia_vencimiento}</div>
-            </div>
-            <div style="font-size:14px;font-weight:bold;color:#E8641B;">${fmtMoney(g.monto)}</div>
-          </div>
-        `, 'padding:12px;')).join('')}
+      <div class="financ-deudas-head">
+        <div class="seccion-titulo" style="margin-bottom:0;">💰 Pagos Mensuales / Suscripciones</div>
+        <button class="btn-ghost" data-act="pago-mensual-nuevo">+ Agregar pago</button>
       </div>
-      ${card('#E8641B', `
+      ${pagosMensuales.length ? pagosMensuales.map(pagoCardHtml).join('') : '<div style="opacity:0.5;font-size:12px;">Nada registrado todavía — agrega tus suscripciones y pagos fijos del mes.</div>'}
+      ${pagosMensuales.length ? card('#E8641B', `
         <div style="text-align:center;">
-          <span style="opacity:0.7;font-size:13px;">Total recurrentes del mes: </span>
-          <span style="font-size:18px;font-weight:bold;color:#E8641B;">${fmtMoney(gastosRecurrentesTotal)}</span>
+          <span style="opacity:0.7;font-size:13px;">Total mensual: </span>
+          <span style="font-size:18px;font-weight:bold;color:#E8641B;">${fmtMoney(pagosMensualesTotal)}</span>
         </div>
-      `)}
+      `, 'margin-top:10px;') : ''}
     </div>
   `;
 

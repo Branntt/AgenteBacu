@@ -26,7 +26,7 @@ export const state = {
   finanzasVista: loadValue('ui.finanzasVista', 'ingresos'),
   avatar: loadValue('ui.avatar', AVATAR_DEFAULT),
   avatarEditor: false,
-  uniBloquesAbiertos: {},
+  uniBloquesAbiertos: loadValue('ui.uniBloquesAbiertos', {}),
   semanaInicio: loadValue('ui.semanaInicio', lunesDe(hoyStr())),
   snapDraft: null,
   rodajeDraft: null,
@@ -113,7 +113,7 @@ export function subscribe(fn) { listeners.push(fn); }
 function notify() { listeners.forEach(fn => fn()); }
 
 // Claves de interfaz que se recuerdan entre sesiones (cada pestaña vuelve donde quedó)
-const UI_PERSIST = ['month', 'filtroGuiones', 'guionesVista', 'filtroCalendario', 'calVista', 'semanaInicio', 'invVista', 'avatar', 'finanzasVista'];
+const UI_PERSIST = ['month', 'filtroGuiones', 'guionesVista', 'filtroCalendario', 'calVista', 'semanaInicio', 'invVista', 'avatar', 'finanzasVista', 'uniBloquesAbiertos'];
 
 function setState(patch) {
   Object.assign(state, patch);

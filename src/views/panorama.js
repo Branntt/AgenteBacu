@@ -81,7 +81,7 @@ export function renderPanorama(state) {
   const cuentaCls = estados => cls.filter(c => estados.includes(c.estado)).length;
 
   // Gastos recurrentes del mes
-  const recurrentesTotal = (state.gastosRecurrentes || []).reduce((s, g) => s + (Number(g.monto) || 0), 0);
+  const recurrentesTotal = (state.pagosMensuales || []).reduce((s, p) => s + (Number(p.monto) || 0), 0);
 
   // Inventario
   const invItems = (state.metasPersonales || []).filter(m => (m.categoria || '').startsWith('inv_'));

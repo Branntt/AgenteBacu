@@ -28,8 +28,10 @@ export function renderHeader(state) {
       <nav class="nav ${state.menuAbierto ? 'nav-abierto' : ''}">${navHtml}</nav>
       ${state.menuAbierto ? '<div class="nav-backdrop" data-act="menu-cerrar"></div>' : ''}
       <button class="btn-ghost" data-act="nav-go" data-view="configuraciones" title="Configuraciones" aria-label="Configuraciones">⚙️</button>
-      <button class="btn-ghost" data-act="rodaje-rapido-abrir">+ Rodaje rápido</button>
-      <button class="btn-primary" data-act="nueva-idea">+ Nueva idea</button>
+      ${state.view === 'calendario' ? '' : `
+        <button class="btn-ghost" data-act="rodaje-rapido-abrir">+ Rodaje rápido</button>
+        <button class="btn-primary" data-act="nueva-idea">+ Nueva idea</button>
+      `}
     </header>
   `;
 }
