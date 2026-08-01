@@ -60,7 +60,7 @@ function renderPersonal(items, state) {
     </div>
 
     ${tienePersonaje3D ? `
-      <div class="vista-sub" style="margin-top:-20px;margin-bottom:24px;">Personaje 3D (beta) — dura mientras no recargues la página (todavía no queda guardado para la próxima vez). Tampoco se pone encima la ropa del inventario automáticamente, eso necesitaría piezas de ropa en 3D que hoy no existen.</div>
+      <div class="vista-sub" style="margin-top:-20px;margin-bottom:24px;">Personaje 3D (beta) — ya queda guardado en este navegador/dispositivo. Todavía no se pone encima la ropa del inventario automáticamente, eso necesitaría piezas de ropa en 3D que hoy no existen.</div>
     ` : (state.avatarEditor ? renderAvatarEditor(state.avatar) : '')}
 
     <div class="section-title">Mochila — objetos personales</div>

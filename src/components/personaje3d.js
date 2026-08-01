@@ -61,9 +61,76 @@ function cargarAvaturn() {
 // no hace falta convertirlo nosotros.
 //
 // avatarGlbUrl NO se persiste en localStorage (no es UI_PERSIST, ver store.js): tanto un
-// data: URI de 5MB como una blob: URL derivada no sirven de nada guardados — el primero se
-// pasa de cuota, la segunda deja de servir apenas se recarga la página. El personaje 3D dura
-// la sesión, por ahora (la UI lo aclara).
+// data: URI de 5MB como una blob: URL derivada no sirven de nada guardados ahí — el primero
+// se pasa de la cuota (~5-10MB para TODO el origen, no solo esta llave), la segunda deja de
+// servir apenas se recarga la página. En cambio se guarda el Blob real en IndexedDB (cuota
+// mucho más grande, pensada justo para archivos) y en cada carga de la app se regenera una
+// blob: URL fresca a partir de eso — ver revisarGuardado()/guardarEnDB() más abajo.
+const DB_NOMBRE = 'agentebacu-personaje3d';
+const DB_STORE = 'avatar';
+
+function abrirDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NOMBRE, 1);
+    req.onupgradeneeded = () => req.result.createObjectStore(DB_STORE);
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function guardarEnDB(blob) {
+  const db = await abrirDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(DB_STORE, 'readwrite');
+    tx.objectStore(DB_STORE).put(blob, 'actual');
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+async function leerDeDB() {
+  const db = await abrirDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(DB_STORE, 'readonly');
+    const req = tx.objectStore(DB_STORE).get('actual');
+    req.onsuccess = () => resolve(req.result || null);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function borrarDeDB() {
+  const db = await abrirDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(DB_STORE, 'readwrite');
+    tx.objectStore(DB_STORE).delete('actual');
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+// Se revisa una sola vez por carga de página (no una por render) — si hay un personaje
+// guardado de una sesión anterior, arma una blob: URL fresca (la vieja ya no sirve, quedó
+// tirada cuando se cerró esa pestaña) y la mete en el estado como si se acabara de crear.
+let dbRevisada = false;
+async function revisarGuardado() {
+  if (dbRevisada) return;
+  dbRevisada = true;
+  try {
+    const blob = await leerDeDB();
+    if (blob) actions.personaje3dSetGlb(URL.createObjectURL(blob));
+  } catch (e) { /* IndexedDB no disponible (modo privado, etc.) — se sigue sin guardado */ }
+}
+
+// Detecta cuándo el usuario le da "Volver al avatar simple" (avatarGlbUrl pasa de tener
+// algo a null) para borrar también lo guardado — si no, "volver al simple" y recargar la
+// página lo traería de vuelta solo, que no es lo que pide ese botón.
+let ultimoGlbUrl;
+function sincronizarGuardado(state) {
+  if (ultimoGlbUrl !== undefined && ultimoGlbUrl && !state.avatarGlbUrl) {
+    borrarDeDB().catch(() => {});
+  }
+  ultimoGlbUrl = state.avatarGlbUrl;
+}
 
 // ---------------- Visor (muestra el avatar ya guardado) ----------------
 
@@ -203,7 +270,15 @@ async function inicializarCreador(host) {
     await avaturnSdk.init(host, { iframeClassName: 'avaturn-iframe' });
     avaturnSdk
       .on('load', () => { avaturnListo = true; })
-      .on('export', (data) => { actions.personaje3dSetGlb(data.url); })
+      .on('export', (data) => {
+        actions.personaje3dSetGlb(data.url); // uso inmediato — GLTFLoader ya sabe cargar data: URIs directo
+        // Guardar para la próxima sesión, aparte y sin bloquear lo de arriba: convertir a
+        // Blob real (nativo, rápido) y meterlo en IndexedDB.
+        if (data.urlType === 'dataURL') {
+          fetch(data.url).then(r => r.blob()).then(guardarEnDB)
+            .catch(err => console.error('[Personaje3D] no se pudo guardar para la próxima sesión', err));
+        }
+      })
       .on('error', (err) => console.error('[Personaje3D] error de Avaturn', err));
   } catch (e) {
     console.error('[Personaje3D] no se pudo iniciar el creador', e);
@@ -222,6 +297,9 @@ async function destruirCreador() {
 // ---------------- Sincronización post-render (llamar desde main.js, como restaurarFoco) ----------------
 
 export function sincronizarPersonaje3D(state) {
+  revisarGuardado(); // una sola vez por carga de página, ver arriba
+  sincronizarGuardado(state); // detecta "Volver al avatar simple" y borra lo guardado
+
   // Visor
   const hostViewer = document.getElementById('personaje3d-canvas-host');
   if (hostViewer && state.avatarGlbUrl) {
