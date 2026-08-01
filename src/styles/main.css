@@ -1366,11 +1366,16 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
 .inv-avatar-sub { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--muted); }
 .inv-lado { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
 
-/* Personaje 3D (prototipo) — ver src/components/personaje3d.js */
-.personaje3d-vacio { padding: 24px; text-align: center; border: 1px dashed var(--line2); margin-bottom: 24px; }
-.personaje3d-wrap { margin-bottom: 24px; }
-.personaje3d-canvas-host { width: 100%; height: 360px; background: var(--panel); border: 1px solid var(--line); }
+/* Personaje 3D (prototipo) — ver src/components/personaje3d.js. Ocupa el mismo lugar
+   central que .inv-avatar dentro de .inv-escena (ver renderPersonal en inventario.js). */
+.personaje3d-wrap, .personaje3d-vacio { width: 100%; min-width: 220px; max-width: 320px; text-align: center; }
+.personaje3d-vacio { padding: 24px; border: 1px dashed var(--line2); }
+.personaje3d-canvas-host { width: 100%; height: 320px; background: var(--panel2); border: 1px solid var(--line); }
 .personaje3d-canvas-host canvas { display: block; width: 100%; height: 100%; }
+.personaje3d-botones { display: flex; flex-direction: column; gap: 6px; align-items: center; margin-top: 10px; }
+@media (max-width: 599px) {
+  .personaje3d-wrap, .personaje3d-vacio { max-width: none; }
+}
 
 .inv-item {
   display: flex; align-items: center; gap: 6px;

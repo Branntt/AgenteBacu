@@ -33,26 +33,35 @@ function renderPersonal(items, state) {
   const mochila = items.filter(m => !m.cumplida);
   const izq = equipados.filter((_, i) => i % 2 === 0);
   const der = equipados.filter((_, i) => i % 2 === 1);
+  const ladoIzqHtml = izq.map(m => itemHtml(m, true)).join('') || '<div class="empty-note">Nada equipado</div>';
+  const ladoDerHtml = der.map(m => itemHtml(m, true)).join('') || '<div class="empty-note">Nada equipado</div>';
+
+  // Un solo lugar para "el avatar": si ya existe un personaje 3D guardado, ocupa el centro
+  // de la vitrina (con los mismos objetos equipados a los lados); si no, se ve el avatar
+  // SVG de siempre con un acceso para probar el 3D. No son dos secciones separadas.
+  const tienePersonaje3D = !!state.avatarGlbUrl;
+  const centroHtml = tienePersonaje3D ? renderPersonaje3DViewer(state) : `
+    <div class="inv-avatar">
+      <div class="inv-avatar-figura">${renderAvatarSVG(state.avatar, 150)}</div>
+      <div class="inv-avatar-nombre mono-label">BRANDON</div>
+      <div class="inv-avatar-sub">${equipados.length} equipado${equipados.length === 1 ? '' : 's'}</div>
+      <div class="personaje3d-botones">
+        <button class="btn-ghost" data-act="avatar-editor-toggle" style="min-height:0;font-size:11px;padding:7px 12px;">${state.avatarEditor ? 'Listo' : '✎ Personalizar'}</button>
+        <button class="btn-ghost" data-act="personaje3d-abrir" style="min-height:0;font-size:11px;padding:7px 12px;">🧍 Probar en 3D (beta)</button>
+      </div>
+    </div>
+  `;
 
   return `
     <div class="inv-escena">
-      <div class="inv-lado">${izq.map(m => itemHtml(m, true)).join('') || '<div class="empty-note">Nada equipado</div>'}</div>
-      <div class="inv-avatar">
-        <div class="inv-avatar-figura">${renderAvatarSVG(state.avatar, 150)}</div>
-        <div class="inv-avatar-nombre mono-label">BRANDON</div>
-        <div class="inv-avatar-sub">${equipados.length} equipado${equipados.length === 1 ? '' : 's'}</div>
-        <button class="btn-ghost" data-act="avatar-editor-toggle" style="margin-top:10px;font-size:11px;padding:7px 12px;min-height:0;">
-          ${state.avatarEditor ? 'Listo' : '✎ Personalizar'}
-        </button>
-      </div>
-      <div class="inv-lado">${der.map(m => itemHtml(m, true)).join('') || '<div class="empty-note">Nada equipado</div>'}</div>
+      <div class="inv-lado">${ladoIzqHtml}</div>
+      ${centroHtml}
+      <div class="inv-lado">${ladoDerHtml}</div>
     </div>
 
-    ${state.avatarEditor ? renderAvatarEditor(state.avatar) : ''}
-
-    <div class="section-title">Personaje 3D <span class="mono-label" style="color:var(--muted);">— prototipo</span></div>
-    <div class="vista-sub">Versión de prueba, aparte del avatar de arriba — todavía no equipa objetos del inventario.</div>
-    ${renderPersonaje3DViewer(state)}
+    ${tienePersonaje3D ? `
+      <div class="vista-sub" style="margin-top:-20px;margin-bottom:24px;">Personaje 3D (beta) — el modelo todavía no se pone encima la ropa del inventario automáticamente, eso necesitaría piezas de ropa en 3D que hoy no existen.</div>
+    ` : (state.avatarEditor ? renderAvatarEditor(state.avatar) : '')}
 
     <div class="section-title">Mochila — objetos personales</div>
     <div class="vista-sub">Tu ropa y objetos personales. ▲ equipa el item (aparece a tu lado), ▼ lo devuelve a la mochila.</div>

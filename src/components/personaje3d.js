@@ -121,7 +121,10 @@ export function renderPersonaje3DViewer(state) {
   return `
     <div class="personaje3d-wrap">
       <div class="personaje3d-canvas-host" id="personaje3d-canvas-host"></div>
-      <button class="btn-ghost" data-act="personaje3d-abrir" style="margin-top:8px;min-height:0;font-size:11px;padding:7px 12px;">✎ Rehacer personaje</button>
+      <div class="personaje3d-botones">
+        <button class="btn-ghost" data-act="personaje3d-abrir" style="min-height:0;font-size:11px;padding:7px 12px;">✎ Rehacer</button>
+        <button class="btn-text-muted" data-act="personaje3d-reset" style="min-height:0;font-size:11px;padding:7px 12px;">Volver al avatar simple</button>
+      </div>
     </div>
   `;
 }

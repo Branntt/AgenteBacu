@@ -363,6 +363,7 @@ root.addEventListener('click', e => {
     case 'nuevo-contenido-crear': actions.nuevoContenidoCrear(value); break;
     case 'personaje3d-abrir': actions.personaje3dAbrir(); break;
     case 'personaje3d-cerrar': actions.personaje3dCerrar(); break;
+    case 'personaje3d-reset': actions.personaje3dReset(); break;
     case 'cerrar-revision-ideas': actions.cerrarRevisionIdeas(); break;
     case 'actualizar-estado-idea': {
       const { id, estado } = el.dataset;
