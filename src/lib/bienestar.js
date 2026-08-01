@@ -78,7 +78,7 @@ export function calcularEstres(state) {
   const vencidasIdeas = ideasClasificadas.filter(x => x.vencida).length;
   if (ideas.length) {
     fuentes.push({
-      clave: 'ideas', label: 'Ideas y producción', emoji: '🎬', puntos: puntosIdeas, view: 'guiones',
+      clave: 'ideas', label: 'Ideas y producción', emoji: '🎬', puntos: puntosIdeas, view: 'clientes', vista: 'marcas',
       detalle: `${ideas.length} activa${ideas.length === 1 ? '' : 's'}${vencidasIdeas ? ` · ${vencidasIdeas} vencida${vencidasIdeas === 1 ? '' : 's'}` : ''}`
     });
   }
@@ -86,7 +86,7 @@ export function calcularEstres(state) {
     titulo: x.idea.titulo || 'Idea sin título',
     puntos: x.puntos,
     motivo: x.motivos.length ? x.motivos.join(' · ') : 'en ' + nombreModulo(x.idea.estado),
-    view: 'guiones'
+    view: 'clientes', vista: 'marcas'
   }));
 
   // ---- Clientes ----
@@ -101,12 +101,12 @@ export function calcularEstres(state) {
       titulo: c.nombre || 'Cliente sin nombre',
       puntos: p,
       motivo: motivos.length ? motivos.join(' · ') : 'en ' + nombreModulo(c.estado),
-      view: 'clientes'
+      view: 'clientes', vista: 'externos'
     });
   });
   if (clientes.length) {
     fuentes.push({
-      clave: 'clientes', label: 'Clientes', emoji: '👥', puntos: puntosClientes, view: 'clientes',
+      clave: 'clientes', label: 'Clientes', emoji: '👥', puntos: puntosClientes, view: 'clientes', vista: 'externos',
       detalle: `${clientes.length} en proceso`
     });
   }

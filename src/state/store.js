@@ -6,7 +6,6 @@ import { generarCuentaCobroPDF, OBSERVACIONES_DEFAULT } from '../lib/pdfInvoice.
 import { generarListadoClientesPDF } from '../lib/pdfListadoClientes.js';
 import { MESES, COLORES_TAREA, familiaDeFormato, METAS_EQUIPO_SEED } from '../data/constants.js';
 import { AVATAR_DEFAULT } from '../components/avatar.js';
-import { generarIdea } from '../lib/ia.js';
 
 export const state = {
   view: loadValue('app.view', 'calendario'),
@@ -20,6 +19,7 @@ export const state = {
   menuAbierto: false,
   filtroGuiones: loadValue('ui.filtroGuiones', 'todas'),
   guionesVista: loadValue('ui.guionesVista', 'general'),
+  clientesVista: loadValue('ui.clientesVista', 'externos'),
   filtroCalendario: loadValue('ui.filtroCalendario', 'todas'),
   calVista: loadValue('ui.calVista', 'mes'),
   invVista: loadValue('ui.invVista', 'personal'),
@@ -31,10 +31,7 @@ export const state = {
   snapDraft: null,
   rodajeDraft: null,
   cuentaCobroDraft: null,
-  iaDraft: null,
-  iaBusy: false,
-  iaError: null,
-  iaResultado: null,
+  nuevoContenidoAbierto: false,
   revisionIdeasModal: false,
   revisionIdeasPendientes: [],
   notificacionBacu: null,
@@ -113,7 +110,7 @@ export function subscribe(fn) { listeners.push(fn); }
 function notify() { listeners.forEach(fn => fn()); }
 
 // Claves de interfaz que se recuerdan entre sesiones (cada pestaña vuelve donde quedó)
-const UI_PERSIST = ['month', 'filtroGuiones', 'guionesVista', 'filtroCalendario', 'calVista', 'semanaInicio', 'invVista', 'avatar', 'finanzasVista', 'uniBloquesAbiertos'];
+const UI_PERSIST = ['month', 'filtroGuiones', 'guionesVista', 'clientesVista', 'filtroCalendario', 'calVista', 'semanaInicio', 'invVista', 'avatar', 'finanzasVista', 'uniBloquesAbiertos'];
 
 function setState(patch) {
   Object.assign(state, patch);
@@ -130,17 +127,29 @@ function marcarGuardado(ok) {
 
 // ---- conversión de columnas (snake_case en la base -> camelCase en la app) ----
 function fromDbIdea(row) {
-  const { fecha_rodaje, ...rest } = row;
-  return { ...rest, fechaRodaje: fecha_rodaje };
+  const { fecha_rodaje, basado_en_id, ...rest } = row;
+  return { ...rest, fechaRodaje: fecha_rodaje, basadoEnId: basado_en_id ?? null };
 }
+// basado_en_id solo se manda si la idea trae la llave puesta (ver nota en la migración
+// correspondiente): así una idea nueva no falla al guardar en cuentas que aún no corrieron
+// esa migración — mismo criterio que fuente_pago/tareas.fecha, se toca solo al usarlo.
 function toDbIdea(idea) {
-  const { fechaRodaje, ...rest } = idea;
-  return { ...rest, fecha_rodaje: fechaRodaje ?? null };
+  const { fechaRodaje, basadoEnId, ...rest } = idea;
+  const out = { ...rest, fecha_rodaje: fechaRodaje ?? null };
+  if ('basadoEnId' in idea) out.basado_en_id = basadoEnId ?? null;
+  return out;
 }
 function toDbPatch(patch) {
-  if (!('fechaRodaje' in patch)) return patch;
-  const { fechaRodaje, ...rest } = patch;
-  return { ...rest, fecha_rodaje: fechaRodaje ?? null };
+  let out = patch;
+  if ('fechaRodaje' in out) {
+    const { fechaRodaje, ...rest } = out;
+    out = { ...rest, fecha_rodaje: fechaRodaje ?? null };
+  }
+  if ('basadoEnId' in out) {
+    const { basadoEnId, ...rest } = out;
+    out = { ...rest, basado_en_id: basadoEnId ?? null };
+  }
+  return out;
 }
 
 function fechaALabel(fechaStr) {
@@ -353,9 +362,12 @@ export const actions = {
   // se guarda de dónde veníamos para que su botón "← Volver" sepa a dónde mandarte
   // (no queda ningún tab marcado "activo" mientras estás ahí, así que sin esto no hay
   // manera obvia de salir sin adivinar cuál pestaña tocar).
-  setView: v => {
+  // subVista solo aplica hoy a 'clientes' (para elegir entre 'externos' y 'marcas' sin
+  // depender de cuál haya quedado activa la última vez) — ver clientesVista.
+  setView: (v, subVista) => {
     const patch = { view: v };
     if (v === 'configuraciones' && state.view !== 'configuraciones') patch.vistaPreviaConfig = state.view;
+    if (v === 'clientes' && subVista) patch.clientesVista = subVista;
     persistValue('app.view', v);
     setState(patch);
   },
@@ -363,7 +375,7 @@ export const actions = {
   menuCerrar: () => setState({ menuAbierto: false }),
   setFiltroGuiones: v => setState({ filtroGuiones: v }),
   setGuionesVista: v => setState({ guionesVista: v }),
-  abrirMarca: marca => setState({ view: 'guiones', filtroGuiones: marca, guionesVista: 'general' }),
+  abrirMarca: marca => setState({ view: 'clientes', clientesVista: 'marcas', filtroGuiones: marca, guionesVista: 'general' }),
 
   setTema: v => { const ok = persistValue('sistemaEditorial.tema', v); setState({ tema: v }); marcarGuardado(ok); },
   setModoCalma: v => { const ok = persistValue('sistemaEditorial.modoCalma', v); setState({ modoCalma: v }); marcarGuardado(ok); },
@@ -381,7 +393,20 @@ export const actions = {
   nuevaIdea: () => {
     const nueva = { id: 'u' + Date.now(), marca: 'brant', colab: '', titulo: '', nota: '', gancho: '', objetivos: [], formato: 'Reel', estado: 'desarrollo', fecha: null, fechaRodaje: null, preguntas: [null, null, null, null], tiempo: '', grabacion: false, edicion: false, prioridad: 'Media', etapa: 0 };
     state.ideas = [nueva].concat(state.ideas);
-    setState({ selId: nueva.id, view: 'guiones' });
+    setState({ selId: nueva.id, view: 'clientes', clientesVista: 'marcas' });
+    supabase.from('ideas').insert(toDbIdea(nueva)).then(({ error }) => marcarGuardado(!error));
+  },
+
+  // Acceso rápido de creación en Contenido (dentro de Clientes › Tus marcas): elegís
+  // una de 4 categorías y cae directo al drawer de detalle ya con el formato puesto,
+  // en vez de crear en blanco y tener que buscarlo en el select de Formato.
+  nuevoContenidoAbrir: () => setState({ nuevoContenidoAbierto: true }),
+  nuevoContenidoCerrar: () => setState({ nuevoContenidoAbierto: false }),
+  nuevoContenidoCrear: formato => {
+    const marca = state.filtroGuiones !== 'todas' ? state.filtroGuiones : 'brant';
+    const nueva = { id: 'u' + Date.now(), marca, colab: '', titulo: '', nota: '', gancho: '', objetivos: [], formato, estado: 'desarrollo', fecha: null, fechaRodaje: null, preguntas: [null, null, null, null], tiempo: '', grabacion: false, edicion: false, prioridad: 'Media', etapa: 0 };
+    state.ideas = [nueva].concat(state.ideas);
+    setState({ selId: nueva.id, nuevoContenidoAbierto: false, view: 'clientes', clientesVista: 'marcas' });
     supabase.from('ideas').insert(toDbIdea(nueva)).then(({ error }) => marcarGuardado(!error));
   },
   rodajeRapidoAbrir: fecha => setState({ rodajeDraft: { titulo: '', marca: 'brant', fecha: fecha || hoyStr(), empresa: '', documento: '', precio: 0 } }),
@@ -900,13 +925,6 @@ export const actions = {
     }
   },
 
-  iaAbrir: () => setState({
-    iaDraft: { marca: state.filtroGuiones !== 'todas' ? state.filtroGuiones : 'brant', tema: '', modo: 'idea', formato: '' },
-    iaResultado: null,
-    iaError: null
-  }),
-  iaCerrar: () => setState({ iaDraft: null, iaResultado: null, iaError: null }),
-
   // Revisión de ideas por fecha
   abrirRevisionIdeas: (ideas) => setState({ revisionIdeasModal: true, revisionIdeasPendientes: ideas }),
   cerrarRevisionIdeas: () => setState({ revisionIdeasModal: false, revisionIdeasPendientes: [] }),
@@ -971,51 +989,6 @@ export const actions = {
       sessionStorage.setItem('ideas_revisadas', JSON.stringify(revisadas));
     }
   },
-  iaSetCampo: (campo, val) => setState({ iaDraft: { ...state.iaDraft, [campo]: val } }),
-
-  iaGenerar: async () => {
-    const D = state.iaDraft;
-    if (!D) return;
-    setState({ iaBusy: true, iaError: null });
-    try {
-      const ideas = await generarIdea(D);
-      setState({ iaBusy: false, iaResultado: ideas });
-    } catch (e) {
-      setState({ iaBusy: false, iaError: 'No se pudo generar. Intenta de nuevo.' });
-    }
-  },
-
-  iaConfirmar: () => {
-    const D = state.iaDraft;
-    const ideas = state.iaResultado;
-    if (!D || !ideas || !ideas.length) return;
-    const nuevas = ideas.map((idea, i) => ({
-      id: 'u' + Date.now() + '_' + i,
-      marca: D.marca,
-      colab: '',
-      titulo: idea.titulo,
-      nota: '',
-      gancho: '',
-      objetivos: idea.objetivos || [],
-      formato: idea.formato,
-      estado: 'desarrollo',
-      fecha: null,
-      fechaRodaje: null,
-      preguntas: [null, null, null, null],
-      tiempo: '',
-      grabacion: false,
-      edicion: false,
-      prioridad: 'Media',
-      etapa: 0,
-      guion: idea.guion
-    }));
-    state.ideas = nuevas.concat(state.ideas);
-    setState({ iaDraft: null, iaResultado: null, view: 'guiones', filtroGuiones: D.marca });
-    nuevas.forEach((idea) => {
-      supabase.from('ideas').insert(toDbIdea(idea)).then(({ error }) => marcarGuardado(!error));
-    });
-  },
-
   updPresupuesto: (campo, valor) => {
     state.presupuesto = { ...state.presupuesto, [campo]: parseN(valor) };
     notify();

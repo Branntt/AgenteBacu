@@ -141,7 +141,7 @@ export function renderGuiones(state) {
       <div class="banco-head">
         <h2 class="serif" style="margin:0;font-size:32px;">Contenido</h2>
         <div style="display:flex;gap:10px;flex-wrap:wrap;">
-          <button class="btn-primary" data-act="ia-abrir">✦ Crear con IA</button>
+          <button class="btn-primary" data-act="nuevo-contenido-abrir">+ Nuevo contenido</button>
           <select class="vista-select" data-change="guiones-vista-set">${vistaOpts}</select>
           <div class="filtros"><select class="filtro-select" data-change="filtro-guiones-set">${filtroOpts}</select></div>
         </div>

@@ -47,7 +47,7 @@ export function renderBienestar(state) {
   }).join('');
 
   const fuentesHtml = e.fuentes.length ? e.fuentes.map(f => `
-    <div class="fuente-row" data-act="nav-go" data-view="${f.view}">
+    <div class="fuente-row" data-act="nav-go" data-view="${f.view}" data-vista="${f.vista || ''}">
       <div class="fuente-top">
         <span class="fuente-label">${f.emoji} ${f.label}</span>
         <span class="fuente-pts">${f.puntos} pts</span>
@@ -58,7 +58,7 @@ export function renderBienestar(state) {
   `).join('') : '<div class="empty-note">Nada te está pesando ahora mismo. Disfrútalo.</div>';
 
   const topHtml = e.items.slice(0, 8).map((it, n) => `
-    <div class="peso-row" data-act="nav-go" data-view="${it.view}">
+    <div class="peso-row" data-act="nav-go" data-view="${it.view}" data-vista="${it.vista || ''}">
       <span class="peso-num">${String(n + 1).padStart(2, '0')}</span>
       <div class="peso-cuerpo">
         <div class="peso-titulo">${escapeHtml(it.titulo)}</div>

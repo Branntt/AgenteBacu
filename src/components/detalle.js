@@ -29,6 +29,32 @@ export function renderDetalle(state) {
     Object.keys(MARCAS).filter(k => k !== selIdea.marca).map(k => ({ v: k, label: MARCAS[k].nombre }))
   );
 
+  // Una Estrategia es el plan detrás de un grupo de piezas: no se enlaza a otra (muestra
+  // cuánto contenido cuelga de ella); todo lo demás puede enlazarse a una o quedar "Aparte".
+  let estrategiaHtml;
+  if (selIdea.formato === 'Estrategia') {
+    const nHijos = state.ideas.filter(i => i.basadoEnId === selIdea.id).length;
+    estrategiaHtml = `
+      <div class="field">
+        <label class="field-label">Contenido basado en esta estrategia</label>
+        <div class="panel-footnote" style="margin:0;">${nHijos ? `${nHijos} pieza${nHijos === 1 ? '' : 's'} de contenido enlazada${nHijos === 1 ? '' : 's'} acá.` : 'Ninguna todavía — al crear un Foto/Carrusel/Post se puede elegir esta estrategia en "Basado en".'}</div>
+      </div>
+    `;
+  } else {
+    const estrategiaOpts = [{ v: '', label: 'Aparte (contenido independiente)' }].concat(
+      state.ideas.filter(i => i.formato === 'Estrategia' && i.marca === selIdea.marca && i.id !== selIdea.id)
+        .map(e => ({ v: e.id, label: e.titulo || 'Estrategia sin título' }))
+    );
+    estrategiaHtml = `
+      <div class="field">
+        <label class="field-label">Basado en / Estrategia</label>
+        <select data-change="idea-basado-en" data-id="${id}">
+          ${estrategiaOpts.map(o => `<option value="${escapeHtml(o.v)}" ${(selIdea.basadoEnId || '') === o.v ? 'selected' : ''}>${escapeHtml(o.label)}</option>`).join('')}
+        </select>
+      </div>
+    `;
+  }
+
   const estadoChip = ESTADO_LABELS[selIdea.estado] + (selIdea.colab ? ' · compartida' : '');
 
   const objChipsHtml = OBJETIVOS.map((label, oi) => {
@@ -140,6 +166,8 @@ export function renderDetalle(state) {
             <input data-change="idea-tiempo" data-id="${id}" value="${escapeHtml(selIdea.tiempo)}" placeholder="p. ej. 4 h / 2 días">
           </div>
         </div>
+
+        ${estrategiaHtml}
 
         <div class="field">
           <label class="field-label">Gancho — primeros 2 segundos / primera línea</label>

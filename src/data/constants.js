@@ -24,7 +24,7 @@ export const MARCAS = {
 
 export const OBJETIVOS = ['Autoridad', 'Excelencia', 'Historia', 'Proceso real', 'Inspirar', 'Conversación', 'Identidad', 'Comunidad', 'Clientes', 'Impulsar artistas', 'Cultura creativa'];
 
-export const FORMATOS = ['Reel', 'Carrusel', 'Fotografía', 'Documento', 'Historia', 'Live', 'Artículo', 'Making Of', 'Mini documental', 'Entrevista', 'Moodboard', 'Voice Over', 'Cubrimiento'];
+export const FORMATOS = ['Reel', 'Post', 'Carrusel', 'Fotografía', 'Documento', 'Historia', 'Live', 'Artículo', 'Estrategia', 'Making Of', 'Mini documental', 'Entrevista', 'Moodboard', 'Voice Over', 'Cubrimiento'];
 
 export const PIPELINE = ['Idea', 'Validación', 'Preproducción', 'Producción', 'Edición', 'Revisión', 'Programación', 'Publicación', 'Análisis', 'Aprendizajes'];
 
@@ -162,7 +162,7 @@ export const FAMILIAS_GUION = {
   corto: {
     label: 'Guion corto',
     descripcion: 'Gancho, cuerpo y cierre — para piezas que se ven o escuchan de un tirón.',
-    formatos: ['Reel', 'Voice Over', 'Historia'],
+    formatos: ['Reel', 'Voice Over', 'Historia', 'Post'],
     campos: [
       { key: 'gancho', label: 'Gancho — primeros 2 segundos', placeholder: '¿Por qué alguien deja de hacer scroll?' },
       { key: 'cuerpo', label: 'Cuerpo — el desarrollo', placeholder: 'Qué se dice, en qué orden.' },
@@ -196,7 +196,7 @@ export const FAMILIAS_GUION = {
   largo: {
     label: 'Texto largo',
     descripcion: 'Título y cuerpo, como un ensayo.',
-    formatos: ['Documento', 'Artículo'],
+    formatos: ['Documento', 'Artículo', 'Estrategia'],
     campos: [
       { key: 'titulo', label: 'Título', placeholder: 'Título del texto' },
       { key: 'cuerpo', label: 'Cuerpo del texto', placeholder: 'El texto completo, de principio a fin.' }

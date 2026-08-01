@@ -301,7 +301,7 @@ export function renderPanorama(state) {
         </div>
 
         <!-- CLIENTES -->
-        <div class="panel" data-act="nav-go" data-view="clientes" style="cursor:pointer;">
+        <div class="panel" data-act="nav-go" data-view="clientes" data-vista="externos" style="cursor:pointer;">
           <span class="mono-label">👥 Clientes</span>
           <div class="vital-value" style="margin-bottom:10px;">${clientesActivos.length} activo${clientesActivos.length === 1 ? '' : 's'}</div>
           ${statRow('Prospecto', cuentaCls(['prospecto']))}
@@ -314,7 +314,7 @@ export function renderPanorama(state) {
         </div>
 
         <!-- CONTENIDO -->
-        <div class="panel" data-act="nav-go" data-view="guiones" style="cursor:pointer;">
+        <div class="panel" data-act="nav-go" data-view="clientes" data-vista="marcas" style="cursor:pointer;">
           <span class="mono-label">🎬 Contenido</span>
           <div class="vital-value" style="margin-bottom:10px;">${ideasActivas.length} idea${ideasActivas.length === 1 ? '' : 's'}</div>
           ${statRow('Prospecto', cuentaIdeas(['prospecto']))}

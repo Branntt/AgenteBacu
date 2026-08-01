@@ -1,4 +1,12 @@
 import { escapeHtml } from '../lib/format.js';
+import { renderGuiones } from './guiones.js';
+
+// Fusión (2026-07-29): Contenido vivía en su propia pestaña de nav; ahora es la sub-vista
+// "Tus marcas" de acá, porque Brant/Bacu/Novena son las marcas propias del usuario — no
+// clientes externos, pero conceptualmente su "cliente" más importante. Ver clientesVista
+// en store.js. La sub-vista "externos" de abajo es exactamente lo que antes era toda esta
+// pestaña (kanban de clientes que pagan) — sin cambios de datos ni de comportamiento.
+const SUBVISTAS = [['externos', '👥 Clientes'], ['marcas', '🎬 Tus marcas']];
 
 // Gama de 8 colores distintos, de frío a caliente según avanza el cliente; descartado = gris
 const ESTADO_COLORS = {
@@ -48,7 +56,7 @@ function clienteCardHtml(c, cuentasCliente) {
   `;
 }
 
-export function renderClientes(state) {
+function renderClientesExternos(state) {
   const clientes = state.clientes || [];
   const cuentasCobro = state.cuentasCobro || [];
 
@@ -89,5 +97,17 @@ export function renderClientes(state) {
       <div class="vista-sub">${clientes.length ? statsHtml : 'Cada caso de estudio publicado en Bacu debería producir el siguiente nombre en esta lista.'}</div>
       <div class="banco-grid">${colsHtml}</div>
     </main>
+  `;
+}
+
+export function renderClientes(state) {
+  const vista = state.clientesVista || 'externos';
+  const tabsHtml = SUBVISTAS.map(([v, label]) => `
+    <button class="inv-tab ${vista === v ? 'active' : ''}" data-act="nav-go" data-view="clientes" data-vista="${v}">${label}</button>
+  `).join('');
+
+  return `
+    <div class="inv-tabs" style="margin-bottom:20px;">${tabsHtml}</div>
+    ${vista === 'marcas' ? renderGuiones(state) : renderClientesExternos(state)}
   `;
 }

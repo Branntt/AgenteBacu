@@ -11,7 +11,6 @@ import { renderCuentaCobro } from './components/cuentaCobro.js';
 import { renderHistorialCuentas } from './components/historialCuentas.js';
 import { renderLogin } from './views/login.js';
 import { renderPanorama } from './views/panorama.js';
-import { renderGuiones } from './views/guiones.js';
 import { renderCalendario } from './views/calendario.js';
 import { renderClientes } from './views/clientes.js';
 import { renderFinanciamiento } from './views/financiamiento.js';
@@ -21,13 +20,12 @@ import { renderMetas } from './views/metas.js';
 import { renderUniversidad } from './views/universidad.js';
 import { renderPared } from './views/pared.js';
 import { renderConfiguraciones } from './views/configuraciones.js';
-import { renderIAModal } from './views/iaModal.js';
+import { renderNuevoContenido } from './components/nuevoContenido.js';
 import { renderRevisionIdeasModal } from './components/revisionIdeasModal.js';
 import { renderNotificacionBacu } from './components/notificacionBacu.js';
 
 const VIEWS = {
   panorama: renderPanorama,
-  guiones: renderGuiones,
   calendario: renderCalendario,
   clientes: renderClientes,
   financiamiento: renderFinanciamiento,
@@ -141,14 +139,14 @@ function render() {
       ${renderRodajeRapido(state)}
       ${renderCuentaCobro(state)}
       ${renderHistorialCuentas(state)}
-      ${renderIAModal(state)}
+      ${renderNuevoContenido(state)}
       ${renderRevisionIdeasModal(state)}
       ${renderNotificacionBacu(state)}
     </div>
   `;
   restaurarFoco(foco);
 
-  const drawerAbiertoAhora = !!(state.selId || state.clienteSelId || state.guionId || state.rodajeDraft || state.cuentaCobroDraft || state.historialAbierto || state.iaDraft);
+  const drawerAbiertoAhora = !!(state.selId || state.clienteSelId || state.guionId || state.rodajeDraft || state.cuentaCobroDraft || state.historialAbierto || state.nuevoContenidoAbierto);
   if (drawerAbiertoAhora && !drawerAbiertoAntes) {
     const drawer = root.querySelector('.drawer');
     const primero = drawer && drawer.querySelector(FOCUSABLE);
@@ -206,7 +204,7 @@ if ('serviceWorker' in navigator) {
 }
 
 document.addEventListener('keydown', e => {
-  const drawerAbierto = state.selId || state.clienteSelId || state.guionId || state.rodajeDraft || state.cuentaCobroDraft || state.iaDraft || state.menuAbierto;
+  const drawerAbierto = state.selId || state.clienteSelId || state.guionId || state.rodajeDraft || state.cuentaCobroDraft || state.nuevoContenidoAbierto || state.menuAbierto;
   if (!drawerAbierto) return;
 
   if (e.key === 'Escape') {
@@ -215,7 +213,7 @@ document.addEventListener('keydown', e => {
     if (state.guionId) actions.cerrarGuion();
     if (state.rodajeDraft) actions.rodajeRapidoCerrar();
     if (state.cuentaCobroDraft) actions.cuentaCobroCerrar();
-    if (state.iaDraft) actions.iaCerrar();
+    if (state.nuevoContenidoAbierto) actions.nuevoContenidoCerrar();
     if (state.menuAbierto) actions.menuCerrar();
     return;
   }
@@ -236,10 +234,10 @@ root.addEventListener('click', e => {
   if (!el) return;
   const noNav = e.target.closest('[data-no-nav]');
   if (noNav && !noNav.contains(el)) return;
-  const { act, id, view, marca, idx, value, fecha, categoria, direccion } = el.dataset;
+  const { act, id, view, marca, idx, value, fecha, categoria, direccion, vista } = el.dataset;
 
   switch (act) {
-    case 'nav-go': actions.setView(view); actions.menuCerrar(); break;
+    case 'nav-go': actions.setView(view, vista); actions.menuCerrar(); break;
     case 'menu-toggle': actions.menuToggle(); break;
     case 'menu-cerrar': actions.menuCerrar(); break;
     case 'nueva-idea': actions.nuevaIdea(); break;
@@ -356,10 +354,9 @@ root.addEventListener('click', e => {
       if (cc) actions.cuentaCobroDescargar(cc);
       break;
     }
-    case 'ia-abrir': actions.iaAbrir(); break;
-    case 'ia-cerrar': actions.iaCerrar(); break;
-    case 'ia-generar': actions.iaGenerar(); break;
-    case 'ia-confirmar': actions.iaConfirmar(); break;
+    case 'nuevo-contenido-abrir': actions.nuevoContenidoAbrir(); break;
+    case 'nuevo-contenido-cerrar': actions.nuevoContenidoCerrar(); break;
+    case 'nuevo-contenido-crear': actions.nuevoContenidoCrear(value); break;
     case 'cerrar-revision-ideas': actions.cerrarRevisionIdeas(); break;
     case 'actualizar-estado-idea': {
       const { id, estado } = el.dataset;
@@ -412,6 +409,7 @@ root.addEventListener('change', e => {
       case 'idea-tiempo': actions.updIdea(id, { tiempo: value }); break;
       case 'idea-fecha': actions.updIdea(id, { fecha: value || null }); break;
       case 'idea-fecha-rodaje': actions.updIdea(id, { fechaRodaje: value || null }); break;
+      case 'idea-basado-en': actions.updIdea(id, { basadoEnId: value || null }); break;
       case 'idea-estado': actions.updIdea(id, { estado: value }); break;
       case 'idea-metrica': actions.setMetrica(id, campo, value); break;
       case 'idea-aprendizaje': actions.updIdea(id, { aprendizaje: value }); break;
@@ -469,10 +467,6 @@ root.addEventListener('change', e => {
       case 'filtro-calendario-set': actions.setFiltroCalendario(value); break;
       case 'filtro-guiones-set': actions.setFiltroGuiones(value); break;
       case 'guiones-vista-set': actions.setGuionesVista(value); break;
-      case 'ia-set-marca': actions.iaSetCampo('marca', value); break;
-      case 'ia-set-modo': actions.iaSetCampo('modo', value); break;
-      case 'ia-set-tema': actions.iaSetCampo('tema', value); break;
-      case 'ia-set-formato': actions.iaSetCampo('formato', value); break;
     }
     return;
   }
