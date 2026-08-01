@@ -1395,6 +1395,20 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
 }
 .inv-slot-add:hover { color: var(--verde); border-color: var(--verde); }
 
+/* Objetos personales por categoría (camisa/pantalón/gorra/...) — ver TIPOS_PERSONAL en
+   constants.js. .inv-categoria = un apartado dentro de "Mochila" (siempre visible, incluso
+   vacío). .inv-categoria-mini = la misma agrupación pero junto al personaje (.inv-lado),
+   solo cuando hay algo equipado en esa categoría — ver renderPersonal en inventario.js. */
+.inv-categorias { display: flex; flex-direction: column; gap: 18px; }
+.inv-categoria-titulo { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+.inv-categoria-mini { text-align: left; }
+.inv-categoria-mini-titulo { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--muted); margin-bottom: 4px; }
+.inv-categoria-mini .inv-item { margin-bottom: 6px; }
+.inv-tipo-select {
+  background: var(--panel); border: 1px solid var(--line); color: var(--muted); border-radius: 6px;
+  font-family: 'IBM Plex Mono', monospace; font-size: 11px; padding: 4px; flex-shrink: 0; max-width: 108px;
+}
+
 .inv-garaje-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
 .inv-vehiculo {
   position: relative; background: var(--panel2); border: 1px solid var(--line); border-radius: 12px;

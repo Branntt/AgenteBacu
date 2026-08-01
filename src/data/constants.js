@@ -73,6 +73,25 @@ export const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'ju
 
 export const ENFOQUE = [];
 
+// Categorías de "objetos personales" en Inventario (campo `tipo` en metas_personales,
+// separado de `categoria` que ya distingue personal/habitación/garaje/etc). Pedidas por el
+// usuario el 2026-08-01 para poder ver/cambiar cada tipo de prenda por separado, junto al
+// personaje. 'otro' va al final a propósito: agrupa lo que no encaja (ej. "Mochila"), y es
+// el valor por defecto para items viejos sin `tipo` asignado (ver tipoInfo en inventario.js).
+export const TIPOS_PERSONAL = [
+  ['camisa', '👕', 'Camisa'],
+  ['pantalon', '👖', 'Pantalón'],
+  ['buzo', '🧥', 'Buzo'],
+  ['zapatos', '👟', 'Zapatos'],
+  ['medias', '🧦', 'Medias'],
+  ['gorra', '🧢', 'Gorra'],
+  ['gafas', '🕶️', 'Gafas'],
+  ['audifonos', '🎧', 'Audífonos'],
+  ['aretes', '💎', 'Aretes'],
+  ['piercing_ceja', '📌', 'Piercing de ceja'],
+  ['otro', '🎒', 'Otro']
+];
+
 export const CATEGORIAS_META = [
   ['camara', 'Cámara'],
   ['luces', 'Luces'],
@@ -125,8 +144,8 @@ export const METAS_EQUIPO_SEED = [
   // Objetos personales (2026-08-01, a partir de fotos que pasó el usuario) — quedan como
   // cualquier otro item del inventario: editables/borrables desde la pestaña, esto solo
   // los precarga una vez.
-  { categoria: 'inv_personal', titulo: 'Gorra negra' },
-  { categoria: 'inv_personal', titulo: 'Lentes de sol' },
+  { categoria: 'inv_personal', titulo: 'Gorra negra', tipo: 'gorra' },
+  { categoria: 'inv_personal', titulo: 'Lentes de sol', tipo: 'gafas' },
   { categoria: 'inv_personal', titulo: 'Bandana / cubrecuello' },
   { categoria: 'inv_personal', titulo: 'Mochila' },
   // Bienestar: hábitos diarios. `fecha` guarda el último día cumplido, por eso se reinician solos.

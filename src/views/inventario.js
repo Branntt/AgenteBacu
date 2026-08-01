@@ -1,6 +1,7 @@
 import { escapeHtml } from '../lib/format.js';
 import { renderAvatarSVG, renderAvatarEditor } from '../components/avatar.js';
 import { renderPersonaje3DViewer } from '../components/personaje3d.js';
+import { TIPOS_PERSONAL } from '../data/constants.js';
 
 const VISTAS_INV = [
   ['personal', '🎒 Personal'],
@@ -18,11 +19,17 @@ const CATEGORIAS_EQUIPO = [
 ];
 
 // Un item del inventario. Vive en metas_personales con categoria inv_* ; cumplida = equipado.
-function itemHtml(m, equipable) {
+// conTipo (solo en Personal) agrega el selector de categoría — Habitación/Garaje no lo usan.
+function itemHtml(m, equipable, conTipo) {
   return `
     <div class="inv-item ${m.cumplida ? 'equipado' : ''}">
       ${equipable ? `<button class="inv-equipar" data-act="inv-equipar" data-id="${escapeHtml(m.id)}" title="${m.cumplida ? 'Quitar equipado' : 'Equipar'}">${m.cumplida ? '▼' : '▲'}</button>` : ''}
       <input class="inv-nombre" data-change="meta-personal-titulo" data-id="${escapeHtml(m.id)}" value="${escapeHtml(m.titulo)}" placeholder="Nombre del item…">
+      ${conTipo ? `
+        <select class="inv-tipo-select" data-change="meta-personal-tipo" data-id="${escapeHtml(m.id)}" title="Categoría">
+          ${TIPOS_PERSONAL.map(([v, emoji, label]) => `<option value="${v}" ${(m.tipo || 'otro') === v ? 'selected' : ''}>${emoji} ${label}</option>`).join('')}
+        </select>
+      ` : ''}
       <button class="inv-quitar" data-act="meta-personal-eliminar" data-id="${escapeHtml(m.id)}" title="Eliminar">✕</button>
     </div>
   `;
@@ -31,10 +38,20 @@ function itemHtml(m, equipable) {
 function renderPersonal(items, state) {
   const equipados = items.filter(m => m.cumplida);
   const mochila = items.filter(m => !m.cumplida);
-  const izq = equipados.filter((_, i) => i % 2 === 0);
-  const der = equipados.filter((_, i) => i % 2 === 1);
-  const ladoIzqHtml = izq.map(m => itemHtml(m, true)).join('') || '<div class="empty-note">Nada equipado</div>';
-  const ladoDerHtml = der.map(m => itemHtml(m, true)).join('') || '<div class="empty-note">Nada equipado</div>';
+
+  // Junto al personaje: solo las categorías con algo puesto (para no llenar la vitrina de
+  // etiquetas vacías), agrupadas por tipo y repartidas alternadamente a cada lado.
+  const gruposEquipados = TIPOS_PERSONAL
+    .map(([tipo, emoji, label]) => ({ tipo, emoji, label, items: equipados.filter(m => (m.tipo || 'otro') === tipo) }))
+    .filter(g => g.items.length);
+  const grupoEquipadoHtml = g => `
+    <div class="inv-categoria-mini">
+      <div class="inv-categoria-mini-titulo">${g.emoji} ${g.label}</div>
+      ${g.items.map(m => itemHtml(m, true, true)).join('')}
+    </div>
+  `;
+  const ladoIzqHtml = gruposEquipados.filter((_, i) => i % 2 === 0).map(grupoEquipadoHtml).join('') || '<div class="empty-note">Nada equipado</div>';
+  const ladoDerHtml = gruposEquipados.filter((_, i) => i % 2 === 1).map(grupoEquipadoHtml).join('') || '<div class="empty-note">Nada equipado</div>';
 
   // Un solo lugar para "el avatar": si ya existe un personaje 3D guardado, ocupa el centro
   // de la vitrina (con los mismos objetos equipados a los lados); si no, se ve el avatar
@@ -52,6 +69,21 @@ function renderPersonal(items, state) {
     </div>
   `;
 
+  // Mochila: un apartado fijo por cada categoría (aunque esté vacía, para poder ir
+  // llenándola) — "Otro" al final agrupa lo que no encaje en ninguna de las anteriores.
+  const mochilaCategoriasHtml = TIPOS_PERSONAL.map(([tipo, emoji, label]) => {
+    const itemsTipo = mochila.filter(m => (m.tipo || 'otro') === tipo);
+    return `
+      <div class="inv-categoria">
+        <div class="inv-categoria-titulo">${emoji} ${label}</div>
+        <div class="inv-grid">
+          ${itemsTipo.map(m => itemHtml(m, true, true)).join('')}
+          <button class="inv-slot-add" data-act="inv-agregar" data-value="personal" data-tipo="${tipo}">+ ${label}</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+
   return `
     <div class="inv-escena">
       <div class="inv-lado">${ladoIzqHtml}</div>
@@ -64,10 +96,9 @@ function renderPersonal(items, state) {
     ` : (state.avatarEditor ? renderAvatarEditor(state.avatar) : '')}
 
     <div class="section-title">Mochila — objetos personales</div>
-    <div class="vista-sub">Tu ropa y objetos personales. ▲ equipa el item (aparece a tu lado), ▼ lo devuelve a la mochila.</div>
-    <div class="inv-grid">
-      ${mochila.map(m => itemHtml(m, true)).join('')}
-      <button class="inv-slot-add" data-act="inv-agregar" data-value="personal">+ Item</button>
+    <div class="vista-sub">Tu ropa y objetos personales, por categoría. ▲ equipa el item (aparece a tu lado), ▼ lo devuelve a la mochila.</div>
+    <div class="inv-categorias">
+      ${mochilaCategoriasHtml}
     </div>
 
     <div style="margin-top:32px;">

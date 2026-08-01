@@ -188,17 +188,31 @@ function loopVisor() {
 // trae ninguna animación "idle" embebida para pararlo en una pose relajada. El rig usa
 // nombres de hueso estilo Mixamo (confirmado inspeccionando un export real: LeftArm,
 // RightArm, LeftShoulder... 52 huesos en total), así que se bajan los brazos a mano
-// rotando LeftArm/RightArm sobre el eje Z **mundial** (no local — el local ya viene con una
-// orientación propia por hueso, rotar ahí a ciegas tuerce el brazo en vez de bajarlo).
-// rotateOnWorldAxis se encarga de la conversión mundial→local sola. El antebrazo y la mano
-// heredan el movimiento solos por ser hijos en la jerarquía, sin tocarlos aparte.
+// rotando LeftArm/RightArm sobre el eje Z **mundial**.
+//
+// OJO: `Object3D.rotateOnWorldAxis` de Three.js NO sirve acá — su propia documentación dice
+// "assumes no rotated parent", y en un esqueleto real CADA hueso (LeftShoulder, Spine...)
+// tiene su propia rotación local. En la práctica eso hacía que "girar en Z mundial" del brazo
+// terminara girando alrededor de Y (el brazo giraba hacia atrás a la altura del hombro, tipo
+// espantapájaros, en vez de bajar) — confirmado imprimiendo la posición mundial de la mano
+// antes/después. La corrección real: convertir el eje mundial al espacio local del padre
+// (usando su quaternion mundial completo, que ya acumula toda la cadena de huesos arriba) y
+// aplicar la rotación ahí — eso sí respeta cualquier cadena de padres rotados.
+function rotarEnEjeMundial(THREE, obj, ejeMundial, angulo) {
+  const deltaMundial = new THREE.Quaternion().setFromAxisAngle(ejeMundial, angulo);
+  const qPadreMundial = new THREE.Quaternion();
+  obj.parent.getWorldQuaternion(qPadreMundial);
+  const deltaLocal = qPadreMundial.clone().invert().multiply(deltaMundial).multiply(qPadreMundial);
+  obj.quaternion.premultiply(deltaLocal);
+}
+
 function relajarPose(THREE, escena) {
   const eje = new THREE.Vector3(0, 0, 1);
   const angulo = THREE.MathUtils.degToRad(75);
   let brazosEncontrados = 0;
   escena.traverse(obj => {
-    if (obj.name === 'LeftArm') { obj.rotateOnWorldAxis(eje, -angulo); brazosEncontrados++; }
-    if (obj.name === 'RightArm') { obj.rotateOnWorldAxis(eje, angulo); brazosEncontrados++; }
+    if (obj.name === 'LeftArm') { rotarEnEjeMundial(THREE, obj, eje, -angulo); brazosEncontrados++; }
+    if (obj.name === 'RightArm') { rotarEnEjeMundial(THREE, obj, eje, angulo); brazosEncontrados++; }
   });
   // Si Avaturn cambia el naming del rig en el futuro, esto no encuentra los huesos y el
   // modelo se queda en T-pose — no rompe nada, solo no se aplica la corrección.

@@ -238,7 +238,7 @@ root.addEventListener('click', e => {
   if (!el) return;
   const noNav = e.target.closest('[data-no-nav]');
   if (noNav && !noNav.contains(el)) return;
-  const { act, id, view, marca, idx, value, fecha, categoria, direccion, vista } = el.dataset;
+  const { act, id, view, marca, idx, value, fecha, categoria, direccion, vista, tipo } = el.dataset;
 
   switch (act) {
     case 'nav-go': actions.setView(view, vista); actions.menuCerrar(); break;
@@ -330,7 +330,7 @@ root.addEventListener('click', e => {
     case 'habito-nuevo': actions.habitoNuevo(); break;
     case 'habito-toggle': actions.habitoToggle(id); break;
     case 'uni-toggle': actions.uniToggleBloque(Number(idx)); break;
-    case 'inv-agregar': actions.metaPersonalNueva('inv_' + value); break;
+    case 'inv-agregar': actions.metaPersonalNueva('inv_' + value, tipo); break;
     case 'inv-equipar': {
       const item = state.metasPersonales.find(m => m.id === id);
       if (item) actions.updMetaPersonal(id, { cumplida: !item.cumplida });
@@ -452,6 +452,7 @@ root.addEventListener('change', e => {
       case 'pago-mensual-monto': actions.updPagoMensual(id, { monto: parseN(value) }); break;
       case 'pago-mensual-dia': actions.updPagoMensual(id, { dia_pago: parseN(value) || null }); break;
       case 'meta-personal-titulo': actions.updMetaPersonal(id, { titulo: value }); break;
+      case 'meta-personal-tipo': actions.updMetaPersonal(id, { tipo: value || null }); break;
       case 'meta-personal-fecha': actions.updMetaPersonal(id, { fecha: value || null }); break;
       case 'meta-paso-texto': actions.metaPasoTexto(id, Number(idx), value); break;
       case 'equipo-nombre': actions.updEquipo(id, { nombre: value }); break;

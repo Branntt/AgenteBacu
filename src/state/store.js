@@ -218,7 +218,11 @@ function sembrarMetasEquipo() {
   const existentes = new Set(state.metasPersonales.map(m => (m.titulo || '').trim().toLowerCase()));
   const faltantes = METAS_EQUIPO_SEED.filter(s => !existentes.has(s.titulo.toLowerCase()));
   if (!faltantes.length) return;
-  const rows = faltantes.map((s, i) => ({ id: 'mp' + Date.now() + '-' + i, categoria: s.categoria, titulo: s.titulo, fecha: null, cumplida: false }));
+  const rows = faltantes.map((s, i) => {
+    const r = { id: 'mp' + Date.now() + '-' + i, categoria: s.categoria, titulo: s.titulo, fecha: null, cumplida: false };
+    if (s.tipo) r.tipo = s.tipo;
+    return r;
+  });
   state.metasPersonales = state.metasPersonales.concat(rows);
   notify();
   supabase.from('metas_personales').insert(rows).then(({ error }) => marcarGuardado(!error));
@@ -820,8 +824,12 @@ export const actions = {
     supabase.from('pagos_mensuales').delete().eq('id', id).then(({ error }) => marcarGuardado(!error));
   },
 
-  metaPersonalNueva: categoria => {
+  // tipo: solo para items de Inventario > Personal (ver TIPOS_PERSONAL en constants.js) — se
+  // manda solo si viene puesto, mismo criterio que basado_en_id/fuente_pago (columna nueva,
+  // no romper el insert antes de correr la migración).
+  metaPersonalNueva: (categoria, tipo) => {
     const m = { id: 'mp' + Date.now(), categoria, titulo: '', fecha: null, cumplida: false };
+    if (tipo) m.tipo = tipo;
     state.metasPersonales = state.metasPersonales.concat([m]);
     notify();
     supabase.from('metas_personales').insert(m).then(({ error }) => marcarGuardado(!error));
