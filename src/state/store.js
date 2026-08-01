@@ -26,9 +26,12 @@ export const state = {
   finanzasVista: loadValue('ui.finanzasVista', 'ingresos'),
   avatar: loadValue('ui.avatar', AVATAR_DEFAULT),
   avatarEditor: false,
-  // Prototipo de personaje 3D (Inventario > Personal, beta) — avatarGlbUrl es la URL del
-  // último avatar exportado desde Avaturn; null = todavía no se creó ninguno.
-  avatarGlbUrl: loadValue('ui.avatarGlbUrl', null),
+  // Prototipo de personaje 3D (Inventario > Personal, beta) — avatarGlbUrl es una blob: URL
+  // del último avatar exportado desde Avaturn (ver dataUrlABlobUrl en personaje3d.js); null =
+  // todavía no se creó ninguno. A propósito NO se carga de localStorage (no es UI_PERSIST):
+  // una blob: URL solo sirve dentro de la misma carga de página, guardarla no serviría de
+  // nada al recargar — dura la sesión, nada más, por ahora.
+  avatarGlbUrl: null,
   personaje3dAbierto: false,
   uniBloquesAbiertos: loadValue('ui.uniBloquesAbiertos', {}),
   semanaInicio: loadValue('ui.semanaInicio', lunesDe(hoyStr())),
@@ -114,7 +117,7 @@ export function subscribe(fn) { listeners.push(fn); }
 function notify() { listeners.forEach(fn => fn()); }
 
 // Claves de interfaz que se recuerdan entre sesiones (cada pestaña vuelve donde quedó)
-const UI_PERSIST = ['month', 'filtroGuiones', 'guionesVista', 'clientesVista', 'filtroCalendario', 'calVista', 'semanaInicio', 'invVista', 'avatar', 'avatarGlbUrl', 'finanzasVista', 'uniBloquesAbiertos'];
+const UI_PERSIST = ['month', 'filtroGuiones', 'guionesVista', 'clientesVista', 'filtroCalendario', 'calVista', 'semanaInicio', 'invVista', 'avatar', 'finanzasVista', 'uniBloquesAbiertos'];
 
 function setState(patch) {
   Object.assign(state, patch);

@@ -48,6 +48,25 @@ function cargarAvaturn() {
   return avaturnPromise;
 }
 
+// Sin una cuenta/sesión propia en Avaturn, el widget no puede subir el avatar exportado a
+// su nube — en cambio devuelve el GLB entero embebido como un data: URI (~5MB en base64).
+// Eso rompía dos cosas: (1) el CSP no tenía "data:" en connect-src, así que GLTFLoader
+// tiraba "Failed to fetch" al intentar cargarlo — agregar "data:" ahí no alcanzaba igual,
+// porque (2) guardar un string de 5MB en localStorage se pasa de la cuota y falla en
+// silencio (por eso "avatarGlbUrl" nunca quedaba persistido). Solución: decodificar el
+// base64 nosotros mismos (sin red, sin CSP de por medio) a un Blob y usar una blob: URL en
+// su lugar — más liviana, y blob: sí estaba permitida. Esto NO se puede persistir en
+// localStorage tampoco (una blob: URL deja de servir apenas se recarga la página, el blob
+// vive en memoria) — por ahora el personaje 3D dura mientras no recargues, ver nota en la UI.
+function dataUrlABlobUrl(dataUrl) {
+  const [header, base64] = dataUrl.split(',');
+  const mime = (header.match(/data:(.*?);base64/) || [])[1] || 'model/gltf-binary';
+  const binario = atob(base64);
+  const bytes = new Uint8Array(binario.length);
+  for (let i = 0; i < binario.length; i++) bytes[i] = binario.charCodeAt(i);
+  return URL.createObjectURL(new Blob([bytes], { type: mime }));
+}
+
 // ---------------- Visor (muestra el avatar ya guardado) ----------------
 
 let visor = null; // { renderer, scene, camera, controls, THREE, modelo }
@@ -164,7 +183,10 @@ async function inicializarCreador(host) {
     await avaturnSdk.init(host, { iframeClassName: 'avaturn-iframe' });
     avaturnSdk
       .on('load', () => { avaturnListo = true; })
-      .on('export', (data) => { actions.personaje3dSetGlb(data.url); })
+      .on('export', (data) => {
+        const url = data.urlType === 'dataURL' ? dataUrlABlobUrl(data.url) : data.url;
+        actions.personaje3dSetGlb(url);
+      })
       .on('error', (err) => console.error('[Personaje3D] error de Avaturn', err));
   } catch (e) {
     console.error('[Personaje3D] no se pudo iniciar el creador', e);
