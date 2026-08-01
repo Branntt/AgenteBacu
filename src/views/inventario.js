@@ -1,5 +1,6 @@
 import { escapeHtml } from '../lib/format.js';
 import { renderAvatarSVG, renderAvatarEditor } from '../components/avatar.js';
+import { renderPersonaje3DViewer } from '../components/personaje3d.js';
 
 const VISTAS_INV = [
   ['personal', '🎒 Personal'],
@@ -48,6 +49,10 @@ function renderPersonal(items, state) {
     </div>
 
     ${state.avatarEditor ? renderAvatarEditor(state.avatar) : ''}
+
+    <div class="section-title">Personaje 3D <span class="mono-label" style="color:var(--muted);">— prototipo</span></div>
+    <div class="vista-sub">Versión de prueba, aparte del avatar de arriba — todavía no equipa objetos del inventario.</div>
+    ${renderPersonaje3DViewer(state)}
 
     <div class="section-title">Mochila — objetos personales</div>
     <div class="vista-sub">Tu ropa y objetos personales. ▲ equipa el item (aparece a tu lado), ▼ lo devuelve a la mochila.</div>

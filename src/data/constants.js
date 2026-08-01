@@ -122,6 +122,13 @@ export const METAS_EQUIPO_SEED = [
   { categoria: 'deseo_camara', titulo: 'Sony A7S III' },
   // Inventario (pestaña Inventario): items con categoria inv_* ; cumplida = equipado
   { categoria: 'inv_garaje', titulo: 'Best 125' },
+  // Objetos personales (2026-08-01, a partir de fotos que pasó el usuario) — quedan como
+  // cualquier otro item del inventario: editables/borrables desde la pestaña, esto solo
+  // los precarga una vez.
+  { categoria: 'inv_personal', titulo: 'Gorra negra' },
+  { categoria: 'inv_personal', titulo: 'Lentes de sol' },
+  { categoria: 'inv_personal', titulo: 'Bandana / cubrecuello' },
+  { categoria: 'inv_personal', titulo: 'Mochila' },
   // Bienestar: hábitos diarios. `fecha` guarda el último día cumplido, por eso se reinician solos.
   { categoria: 'habito', titulo: 'Dormir 7 horas' },
   { categoria: 'habito', titulo: 'Moverme / entrenar' },

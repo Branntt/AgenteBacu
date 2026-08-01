@@ -26,6 +26,10 @@ export const state = {
   finanzasVista: loadValue('ui.finanzasVista', 'ingresos'),
   avatar: loadValue('ui.avatar', AVATAR_DEFAULT),
   avatarEditor: false,
+  // Prototipo de personaje 3D (Inventario > Personal, beta) — avatarGlbUrl es la URL del
+  // último avatar exportado desde Avaturn; null = todavía no se creó ninguno.
+  avatarGlbUrl: loadValue('ui.avatarGlbUrl', null),
+  personaje3dAbierto: false,
   uniBloquesAbiertos: loadValue('ui.uniBloquesAbiertos', {}),
   semanaInicio: loadValue('ui.semanaInicio', lunesDe(hoyStr())),
   snapDraft: null,
@@ -110,7 +114,7 @@ export function subscribe(fn) { listeners.push(fn); }
 function notify() { listeners.forEach(fn => fn()); }
 
 // Claves de interfaz que se recuerdan entre sesiones (cada pestaña vuelve donde quedó)
-const UI_PERSIST = ['month', 'filtroGuiones', 'guionesVista', 'clientesVista', 'filtroCalendario', 'calVista', 'semanaInicio', 'invVista', 'avatar', 'finanzasVista', 'uniBloquesAbiertos'];
+const UI_PERSIST = ['month', 'filtroGuiones', 'guionesVista', 'clientesVista', 'filtroCalendario', 'calVista', 'semanaInicio', 'invVista', 'avatar', 'avatarGlbUrl', 'finanzasVista', 'uniBloquesAbiertos'];
 
 function setState(patch) {
   Object.assign(state, patch);
@@ -551,6 +555,11 @@ export const actions = {
   finanzasSetVista: v => setState({ finanzasVista: v }),
   avatarSet: (campo, valor) => setState({ avatar: { ...AVATAR_DEFAULT, ...state.avatar, [campo]: valor } }),
   avatarEditorToggle: () => setState({ avatarEditor: !state.avatarEditor }),
+
+  personaje3dAbrir: () => setState({ personaje3dAbierto: true }),
+  personaje3dCerrar: () => setState({ personaje3dAbierto: false }),
+  personaje3dSetGlb: url => setState({ avatarGlbUrl: url, personaje3dAbierto: false }),
+  personaje3dReset: () => setState({ avatarGlbUrl: null }),
 
   // Equipo de producción (cámaras, luces, audio, soporte del estudio) — tabla propia,
   // no metas_personales: acá el dato que importa es "¿quién lo tiene ahora?", no

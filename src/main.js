@@ -21,6 +21,7 @@ import { renderUniversidad } from './views/universidad.js';
 import { renderPared } from './views/pared.js';
 import { renderConfiguraciones } from './views/configuraciones.js';
 import { renderNuevoContenido } from './components/nuevoContenido.js';
+import { renderPersonaje3DCreador, sincronizarPersonaje3D } from './components/personaje3d.js';
 import { renderRevisionIdeasModal } from './components/revisionIdeasModal.js';
 import { renderNotificacionBacu } from './components/notificacionBacu.js';
 
@@ -140,13 +141,15 @@ function render() {
       ${renderCuentaCobro(state)}
       ${renderHistorialCuentas(state)}
       ${renderNuevoContenido(state)}
+      ${renderPersonaje3DCreador(state)}
       ${renderRevisionIdeasModal(state)}
       ${renderNotificacionBacu(state)}
     </div>
   `;
   restaurarFoco(foco);
+  sincronizarPersonaje3D(state);
 
-  const drawerAbiertoAhora = !!(state.selId || state.clienteSelId || state.guionId || state.rodajeDraft || state.cuentaCobroDraft || state.historialAbierto || state.nuevoContenidoAbierto);
+  const drawerAbiertoAhora = !!(state.selId || state.clienteSelId || state.guionId || state.rodajeDraft || state.cuentaCobroDraft || state.historialAbierto || state.nuevoContenidoAbierto || state.personaje3dAbierto);
   if (drawerAbiertoAhora && !drawerAbiertoAntes) {
     const drawer = root.querySelector('.drawer');
     const primero = drawer && drawer.querySelector(FOCUSABLE);
@@ -204,7 +207,7 @@ if ('serviceWorker' in navigator) {
 }
 
 document.addEventListener('keydown', e => {
-  const drawerAbierto = state.selId || state.clienteSelId || state.guionId || state.rodajeDraft || state.cuentaCobroDraft || state.nuevoContenidoAbierto || state.menuAbierto;
+  const drawerAbierto = state.selId || state.clienteSelId || state.guionId || state.rodajeDraft || state.cuentaCobroDraft || state.nuevoContenidoAbierto || state.personaje3dAbierto || state.menuAbierto;
   if (!drawerAbierto) return;
 
   if (e.key === 'Escape') {
@@ -214,6 +217,7 @@ document.addEventListener('keydown', e => {
     if (state.rodajeDraft) actions.rodajeRapidoCerrar();
     if (state.cuentaCobroDraft) actions.cuentaCobroCerrar();
     if (state.nuevoContenidoAbierto) actions.nuevoContenidoCerrar();
+    if (state.personaje3dAbierto) actions.personaje3dCerrar();
     if (state.menuAbierto) actions.menuCerrar();
     return;
   }
@@ -357,6 +361,8 @@ root.addEventListener('click', e => {
     case 'nuevo-contenido-abrir': actions.nuevoContenidoAbrir(); break;
     case 'nuevo-contenido-cerrar': actions.nuevoContenidoCerrar(); break;
     case 'nuevo-contenido-crear': actions.nuevoContenidoCrear(value); break;
+    case 'personaje3d-abrir': actions.personaje3dAbrir(); break;
+    case 'personaje3d-cerrar': actions.personaje3dCerrar(); break;
     case 'cerrar-revision-ideas': actions.cerrarRevisionIdeas(); break;
     case 'actualizar-estado-idea': {
       const { id, estado } = el.dataset;
