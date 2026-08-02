@@ -100,10 +100,8 @@ export const UNIVERSIDAD = {
 
   // Cursos que faltan por matricular
   cursosPendientes: [
-    { curso: 'Práctica Profesional', sem: 8, creditos: 5, razon: 'Trabajo de grado - 8 semestre' },
-    { curso: 'Electiva Profundiza 7 semestre', sem: 7, creditos: 11, razon: 'Profundización electiva' },
-    { curso: 'Electiva Profundiza 8 semestre', sem: 8, creditos: 5, razon: 'Profundización electiva' },
-    { curso: 'Actividades Libres', sem: 0, creditos: 2, razon: 'Bienestar Universitario' },
-    { curso: 'Electiva de Contexto 8 semestre', sem: 8, creditos: 3, razon: 'Completar contexto' }
+    { curso: 'Práctica Profesional', sem: 8, creditos: 10, razon: 'Trabajo de grado - 8 semestre' },
+    { curso: 'Electiva de Contexto', sem: 8, creditos: 3, razon: 'Completar contexto' },
+    { curso: 'Realización Proyecto Documental', sem: 7, creditos: 5, razon: 'Trabajo de grado - 7 semestre' }
   ]
 };
