@@ -229,8 +229,18 @@ function verificarIdeasPorFecha() {
   const hoy = hoyStr();
   const revisadas = loadValue('bacu.ideasRevisadas', []);
 
-  // Ideas cuya fecha (rodaje o publicación) ya pasó — solo se excluyen descartadas
-  const estadosFinalesIdea = ['descartada'];
+  // Ideas cuya fecha (rodaje o publicación) ya pasó — se excluyen los 2 estados TERMINALES
+  // del pipeline (ver PIPELINE_IDEA en components/notificacionBacu.js y COLUMNAS en
+  // views/guiones.js): 'descartada' (se abandonó) y 'ya_pago'/'publicada' (ya se cerró bien).
+  // En ninguno de los dos hay nada que preguntar, por distinto que sea el motivo del cierre.
+  // Antes solo se excluía 'descartada' — una idea ya cobrada y entregada (ya_pago, el ÚLTIMO
+  // escalón del pipeline) seguía cayendo acá, y como no existe ningún estado "más adelante"
+  // que ofrecerle, la notificación quedaba con un solo botón sin sentido ("liberar fecha" de
+  // algo que ya se pagó) en vez de las opciones múltiples que sí aparecen para una idea a
+  // medio camino. Bug reportado por el usuario el 2026-08-01 — ver opcionesDelanteras() en
+  // notificacionBacu.js, que ya manejaba bien el caso "sin opciones hacia adelante", el
+  // problema real era que ese caso nunca debió alcanzarse.
+  const estadosFinalesIdea = ['descartada', 'ya_pago', 'publicada'];
   const ideasVencidas = state.ideas
     .filter(i => {
       const f = i.fechaRodaje || i.fecha;
@@ -238,10 +248,13 @@ function verificarIdeasPorFecha() {
     })
     .map(i => ({ tipo: 'idea', id: i.id, titulo: i.titulo, marca: i.marca, estado: i.estado, fecha: i.fechaRodaje || i.fecha }));
 
-  // Grabaciones de clientes con fecha pasada — se pregunta sin importar el estado
+  // Mismo criterio para clientes — ver COLUMNAS en views/clientes.js. 'conversacion' se
+  // excluye por otra razón (ni siquiera se confirmó que se fuera a grabar, no por ser
+  // terminal); 'ya_pagos'/'entregado'/'descartado' sí son los terminales — ya se cerró.
   const estadosYaGrabados = ['conversacion'];
+  const estadosFinalesCliente = ['ya_pagos', 'entregado', 'descartado'];
   const grabacionesVencidas = state.clientes
-    .filter(c => c.fecha_grabacion && c.fecha_grabacion < hoy && !estadosYaGrabados.includes(c.estado) && !revisadas.includes(c.id))
+    .filter(c => c.fecha_grabacion && c.fecha_grabacion < hoy && !estadosYaGrabados.includes(c.estado) && !estadosFinalesCliente.includes(c.estado) && !revisadas.includes(c.id))
     .map(c => ({ tipo: 'cliente', id: c.id, titulo: c.nombre + (c.proyecto ? ' — ' + c.proyecto : ''), marca: null, estado: c.estado, fecha: c.fecha_grabacion }));
 
   const pendientes = ideasVencidas.concat(grabacionesVencidas);
