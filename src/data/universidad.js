@@ -63,13 +63,13 @@ export const UNIVERSIDAD = {
       ]
     },
     {
-      nombre: 'Competencias Digitales', aprob: 4, req: 5, estado: 'pend',
+      nombre: 'Competencias Digitales', aprob: 5, req: 5, estado: 'ok',
       cursos: [
         { curso: 'Vida en Línea', materia: 'Examen Vida en Línea', estado: 'ok' },
         { curso: 'Cultura Digital', materia: 'Examen Cultura Digital', estado: 'ok' },
         { curso: 'MS Word', estado: 'ok', matriculado: true },
         { curso: 'MS Excel', estado: 'ok', matriculado: true },
-        { curso: 'MS PowerPoint', estado: 'pend', matriculado: true }
+        { curso: 'MS PowerPoint', estado: 'ok', matriculado: true }
       ]
     },
     {
