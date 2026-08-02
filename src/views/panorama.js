@@ -1,8 +1,6 @@
-import { MARCAS, REGLAS_SISTEMA, PIPELINE, MESES, ENFOQUE } from '../data/constants.js';
-import { fmtFecha, fmtNum, escapeHtml } from '../lib/format.js';
-import { hoyStr, lunesDe, sumarDias } from '../lib/idea.js';
+import { escapeHtml, fmtNum } from '../lib/format.js';
+import { hoyStr } from '../lib/idea.js';
 import { calcularFinanciamiento } from '../lib/financiamiento.js';
-import { calcularEstres } from '../lib/bienestar.js';
 import { UNIVERSIDAD } from '../data/universidad.js';
 
 function fmtMoney(n) {
@@ -10,408 +8,225 @@ function fmtMoney(n) {
   return (v < 0 ? '-$' : '$') + Math.abs(v).toLocaleString('es-CO');
 }
 
-// Aproximación de "cómo va la semana": no mide estado de ánimo, mide señales de organización
-// ya presentes en los datos — cuánto hay programado y cuántas prioridades altas siguen sin fecha.
-function calcularOrganizacionSemana(ideas) {
-  const hoy = hoyStr();
-  const inicioSemana = lunesDe(hoy);
-  const finSemana = sumarDias(inicioSemana, 6);
-  const enRango = f => f && f >= inicioSemana && f <= finSemana;
-  const estaSemana = ideas.filter(i => i.estado !== 'descartada' && (enRango(i.fecha) || enRango(i.fechaRodaje))).length;
-  const prioridadSinFecha = ideas.filter(i => i.prioridad === 'Alta' && i.estado !== 'publicada' && i.estado !== 'descartada' && !i.fecha).length;
+function renderContenidoPipeline(ideas) {
+  const activas = ideas.filter(i => i.estado !== 'descartada');
+  const sinGuion = activas.filter(i => !i.guion || i.guion.trim() === '').length;
+  const conGuion = activas.filter(i => i.guion && i.guion.trim() !== '').length;
+  const grabados = activas.filter(i => ['grabar', 'produccion', 'edicion', 'entrega', 'por_pagar', 'ya_pago', 'publicada'].includes(i.estado)).length;
 
-  let label = 'Al día', clase = 'ok';
-  if (prioridadSinFecha >= 3) { label = 'Cargado'; clase = 'alto'; }
-  else if (prioridadSinFecha >= 1) { label = 'Con pendientes'; clase = 'medio'; }
-
-  return { estaSemana, prioridadSinFecha, label, clase };
+  return `
+    <div class="panorama-seccion">
+      <div class="seccion-titulo">📹 Contenido en Pipeline</div>
+      <div class="pipeline-numeros">
+        <div class="pipeline-item">
+          <div class="pipeline-numero">${sinGuion}</div>
+          <div class="pipeline-label">Ideas sin guion</div>
+        </div>
+        <div class="pipeline-item">
+          <div class="pipeline-numero">${conGuion}</div>
+          <div class="pipeline-label">Guiones</div>
+        </div>
+        <div class="pipeline-item">
+          <div class="pipeline-numero">${grabados}</div>
+          <div class="pipeline-label">Rodajes grabados</div>
+        </div>
+      </div>
+    </div>
+  `;
 }
 
-export function renderPanorama(state) {
-  const ideas = state.ideas;
-  const [anio, mesNum] = state.month.split('-').map(Number);
-  const diasMes = new Date(anio, mesNum, 0).getDate();
-  const enMes = ideas.filter(i => i.fecha && i.fecha.startsWith(state.month) && i.estado !== 'descartada');
-  const diasConPub = new Set(enMes.map(i => i.fecha)).size;
-  const hoy = hoyStr();
-  const muestraMetricas = !state.modoCalma;
+function renderEstadoEquipos(equipoProd, metasPersonales) {
+  const conEnergia = [
+    ...(equipoProd || []).filter(e => e.requiere_energia),
+    ...(metasPersonales || []).filter(m => (m.categoria || '').startsWith('inv_') && m.requiere_energia)
+  ].slice(0, 5);
 
-  const orgSemana = calcularOrganizacionSemana(ideas);
-  const finTotal = calcularFinanciamiento(state.movimientosFinanciamiento, state.deudas, state.cuentasCobro, hoy);
-
-  // ---- seguimiento: registros de seguidores/alcance, fusionado desde la vieja pestaña Seguimiento ----
-  const snapsOrdenados = (state.snaps || []).slice().sort((a, b) => a.fecha < b.fecha ? -1 : 1);
-  const ultimoSnap = snapsOrdenados[snapsOrdenados.length - 1];
-  const penultimoSnap = snapsOrdenados[snapsOrdenados.length - 2];
-
-  // ---- resúmenes para las tarjetas vitales ----
-  // Estrategia (los estados viejos cuentan en su módulo equivalente)
-  const ideasActivas = ideas.filter(i => i.estado !== 'descartada');
-  const resEstrategia = {
-    desarrollo: ideasActivas.filter(i => ['prospecto', 'desarrollo', 'lista'].includes(i.estado)).length,
-    grabar: ideasActivas.filter(i => ['grabar', 'produccion'].includes(i.estado)).length,
-    edicion: ideasActivas.filter(i => i.estado === 'edicion').length,
-    porCerrar: ideasActivas.filter(i => ['entrega', 'por_pagar'].includes(i.estado)).length
-  };
-
-  // Clientes
-  const cls = state.clientes || [];
-  const clientesActivos = cls.filter(c => !['descartado', 'ya_pagos', 'entregado'].includes(c.estado));
-  const clientesProspectos = cls.filter(c => c.estado === 'prospecto').length;
-  const porCobrarTotal = cls.filter(c => c.estado === 'por_pagar').reduce((s, c) => s + (Number(c.precio) || 0), 0);
-
-  // Totalizador de seguidores (suma de las 3 marcas en el último registro)
-  const sumaSeg = snap => snap ? ['brant', 'bacu', 'novena'].reduce((s, k) => s + ((snap[k] && snap[k].seg) || 0), 0) : null;
-  const totalSeg = sumaSeg(ultimoSnap);
-  const totalSegAntes = sumaSeg(penultimoSnap);
-  const deltaTotalSeg = totalSeg != null && totalSegAntes != null ? totalSeg - totalSegAntes : null;
-
-  // Tareas ahora se administran en la pestaña Pared; aquí solo se cuenta lo
-  // pendiente con fecha para la tarjeta de Calendario de abajo.
-  const tareas = state.tareas || [];
-
-  // Calendario: qué hay este mes
-  const rodajesMes = ideas.filter(i => i.fechaRodaje && i.fechaRodaje.startsWith(state.month) && i.estado !== 'descartada').length;
-  const grabClientesMes = cls.filter(c => c.fecha_grabacion && c.fecha_grabacion.startsWith(state.month)).length;
-  const entregasPendientes = tareas.filter(t => t.fecha && !t.hecha).length;
-
-  // Estrategia por módulo (estados viejos mapeados al equivalente)
-  const cuentaIdeas = estados => ideasActivas.filter(i => estados.includes(i.estado)).length;
-  // Clientes por módulo
-  const cuentaCls = estados => cls.filter(c => estados.includes(c.estado)).length;
-
-  // Gastos recurrentes del mes
-  const recurrentesTotal = (state.pagosMensuales || []).reduce((s, p) => s + (Number(p.monto) || 0), 0);
-
-  // Inventario
-  const invItems = (state.metasPersonales || []).filter(m => (m.categoria || '').startsWith('inv_'));
-  const invPersonal = invItems.filter(m => m.categoria === 'inv_personal');
-  const invEquipados = invPersonal.filter(m => m.cumplida).length;
-  const invHabitacion = invItems.filter(m => m.categoria === 'inv_habitacion').length;
-  const invGaraje = invItems.filter(m => m.categoria === 'inv_garaje').length;
-
-  // Bienestar
-  const estres = calcularEstres(state);
-
-  // Metas (sin inventario ni hábitos)
-  const metasReales = (state.metasPersonales || []).filter(m => !(m.categoria || '').startsWith('inv_') && m.categoria !== 'habito');
-  const metasCumplidas = metasReales.filter(m => m.cumplida).length;
-  const metasDeseos = metasReales.filter(m => (m.categoria || '').startsWith('deseo_')).length;
-  const metasEquipo = metasReales.filter(m => ['camara', 'luces', 'edicion', 'perifericos'].includes(m.categoria)).length;
-
-  // Universidad
-  const uniPct = (UNIVERSIDAD.creditosAprobados / UNIVERSIDAD.creditosRequeridos) * 100;
-  const uniFaltan = UNIVERSIDAD.creditosRequeridos - UNIVERSIDAD.creditosAprobados;
-  const uniPendientes = UNIVERSIDAD.bloques.reduce((n, b) => n + ((b.cursos || []).filter(c => c.estado === 'pend' || c.estado === 'parcial').length), 0);
-
-  // Fila de estadística compacta para el centro de stats
-  const statRow = (label, valor, color) => `
-    <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:5px 0;border-bottom:1px solid var(--line);">
-      <span style="opacity:0.65;">${label}</span>
-      <span style="font-weight:600;${color ? `color:${color};` : ''}">${valor}</span>
-    </div>
-  `;
-  const D = state.snapDraft;
-
-  const snapFormHtml = D ? `
-    <div class="snap-form">
-      <div class="snap-form-head">
-        <span>Nuevo registro — copia los números de Instagram</span>
-        <input type="date" data-change="snap-fecha" value="${escapeHtml(D.fecha)}" min="2026-01-01">
-      </div>
-      <div class="snap-fields">
-        ${Object.keys(MARCAS).map(k => `
-          <div class="snap-field">
-            <span class="snap-field-label">${MARCAS[k].handle}</span>
-            <input data-change="snap-campo" data-key="${k}Seg" value="${escapeHtml(D[k + 'Seg'])}" placeholder="Seguidores" inputmode="numeric">
-            <input data-change="snap-campo" data-key="${k}Vis" value="${escapeHtml(D[k + 'Vis'])}" placeholder="Visualizaciones 30 días" inputmode="numeric">
-          </div>
-        `).join('')}
-      </div>
-      <div class="snap-actions">
-        <button class="btn-primary" data-act="snap-guarda">Guardar</button>
-        <button class="btn-ghost" data-act="snap-cierra">Cancelar</button>
-      </div>
-    </div>
-  ` : '';
-
-  const enfoqueHtml = ENFOQUE.length ? ENFOQUE.map(ef => `
-    <div class="enfoque-row">
-      <span class="enfoque-num">0${ef.n}</span>
-      <div>
-        <div class="enfoque-title">${escapeHtml(ef.titulo)}</div>
-        <div class="enfoque-text">${escapeHtml(ef.texto)}</div>
-      </div>
-    </div>
-  `).join('') : `<div class="empty-note">Todavía no hay suficientes registros para sacar conclusiones. Cargá seguidores y alcance seguido y esto se va a ir llenando solo.</div>`;
-
-  const mesActualLabel = MESES[new Date().getMonth()].charAt(0).toUpperCase() + MESES[new Date().getMonth()].slice(1) + ' ' + new Date().getFullYear();
-
-  const snapRowsHtml = snapsOrdenados.slice().reverse().map(s => {
-    const resumen = ['brant', 'bacu', 'novena'].map(k => (s[k] ? fmtNum(s[k].seg) : '—')).join(' / ');
-    return `<div class="historial-row"><span class="fecha">${fmtFecha(s.fecha, MESES)}</span><span>${resumen}</span></div>`;
-  }).join('');
-
-  const publicadas = ideas.filter(i => i.estado === 'publicada' || i.estado === 'ya_pago');
-  const topPubsHtml = publicadas.length ? publicadas.map(i => {
-    const m = i.metricas || {};
-    const parts = [];
-    if (m.alcance) parts.push(m.alcance + ' alcance');
-    if (m.guardados) parts.push(m.guardados + ' guardados');
-    if (m.seguidores) parts.push('+' + m.seguidores + ' seg');
-    const meta = MARCAS[i.marca].nombre + ' · ' + (parts.length ? parts.join(' · ') : 'sin resultados registrados');
+  if (!conEnergia.length) {
     return `
-      <div class="top-pub" data-act="idea-abrir" data-id="${escapeHtml(i.id)}">
-        <div class="top-pub-title">${escapeHtml(i.titulo)}</div>
-        <div class="top-pub-meta">${escapeHtml(meta)}</div>
+      <div class="panorama-seccion">
+        <div class="seccion-titulo">🎥 Estado de Equipos</div>
+        <div class="empty-note">Sin equipos que requieran carga registrados.</div>
       </div>
     `;
-  }).join('') : `<div class="empty-note">Cuando publiques, registra alcance, guardados y seguidores nuevos en cada idea publicada. Aquí verás qué repite y qué no.</div>`;
+  }
 
-  const marcasHtml = Object.keys(MARCAS).map(k => {
-    const M = MARCAS[k];
-    const propias = ideas.filter(i => i.marca === k || i.colab === k);
-    const nDesarrollo = propias.filter(i => ['prospecto', 'desarrollo', 'lista'].includes(i.estado)).length;
-    const nListas = propias.filter(i => ['grabar', 'produccion'].includes(i.estado)).length;
-    const nProgramadas = propias.filter(i => i.fecha && i.fecha >= hoy && !['descartada', 'publicada', 'ya_pago'].includes(i.estado)).length;
-    const prox = propias.filter(i => i.fecha && i.fecha >= hoy && i.estado !== 'descartada' && i.estado !== 'publicada').sort((a, b) => a.fecha < b.fecha ? -1 : 1)[0];
-    const proxima = prox ? `${fmtFecha(prox.fecha, MESES)} · ${escapeHtml(prox.titulo)}` : 'nada programado — está bien';
-
-    const metaMes = (state.metasMensuales || []).find(m => m.marca === k && m.mes === state.month);
-    const metaValor = metaMes ? Number(metaMes.meta_publicaciones) || 0 : 0;
-    const publicadasMes = propias.filter(i => i.fecha && i.fecha.startsWith(state.month) && i.estado !== 'descartada').length;
-    const progresoPct = metaValor > 0 ? Math.min(100, Math.round((publicadasMes / metaValor) * 100)) : 0;
-
-    const curSnap = ultimoSnap && ultimoSnap[k] ? ultimoSnap[k] : null;
-    const antesSnap = penultimoSnap && penultimoSnap[k] ? penultimoSnap[k] : null;
-    const deltaSeg = curSnap && antesSnap ? curSnap.seg - antesSnap.seg : null;
-    const maxSeg = Math.max(1, ...snapsOrdenados.map(s => (s[k] && s[k].seg) || 0));
-    const deltaClass = deltaSeg == null ? 'na' : (deltaSeg >= 0 ? 'up' : 'down');
-    const deltaTxt = deltaSeg == null ? 'primer registro' : (deltaSeg >= 0 ? '+' + fmtNum(deltaSeg) : fmtNum(deltaSeg));
-    const barsHtml = snapsOrdenados.map(s => {
-      const h = Math.max(3, Math.round(((s[k] && s[k].seg) || 0) / maxSeg * 24));
-      return `<span class="bar" style="background:${M.color};height:${h}px"></span>`;
-    }).join('');
+  const itemsHtml = conEnergia.map(e => {
+    const nombre = e.nombre || 'Sin nombre';
+    const pct = Number(e.carga_porcentaje) || 0;
+    const estado = e.estado_carga || 'desconocido';
+    const colorBarra = pct >= 70 ? '#4CAF50' : pct >= 30 ? '#FFC107' : '#F44336';
+    const alerta = pct < 30 || ['descargado', 'sin_bateria', 'requiere_pilas'].includes(estado);
 
     return `
-      <div class="marca-card" data-act="marca-abrir" data-marca="${k}">
-        <div class="marca-card-top">
-          <span class="dot" style="background:${M.color}"></span>
-          <span class="mono-label" style="margin-bottom:0;">${M.rol}</span>
+      <div class="equipo-item">
+        <div class="equipo-info">
+          <span class="equipo-nombre">${escapeHtml(nombre)}</span>
+          <span class="equipo-estado ${alerta ? 'alerta' : ''}">${pct}% ${alerta ? '⚠️' : '✓'}</span>
         </div>
-        <div class="marca-name serif">${escapeHtml(M.nombre)}</div>
-        <div class="marca-handle">${M.handle}</div>
-        <div class="marca-esencia">${escapeHtml(M.esencia)}</div>
-        ${muestraMetricas ? `
-        <div class="marca-metrics">
-          <div><div class="marca-metric-value">${nDesarrollo}</div><div class="marca-metric-label">en desarrollo</div></div>
-          <div><div class="marca-metric-value">${nListas}</div><div class="marca-metric-label">por grabar</div></div>
-          <div><div class="marca-metric-value verde">${nProgramadas}</div><div class="marca-metric-label">programadas</div></div>
-        </div>` : ''}
-        <div class="marca-next"><span class="mono-label" style="display:inline;margin-bottom:0;">Próxima → </span>${proxima}</div>
-        <div class="marca-seguimiento">
-          <div class="cuenta-nums">
-            <span class="cuenta-value">${curSnap ? fmtNum(curSnap.seg) : '—'}</span>
-            <span class="cuenta-delta ${deltaClass}">${deltaTxt}</span>
-          </div>
-          <div class="cuenta-meta">seguidores · ${curSnap ? fmtNum(curSnap.vis) : '—'} vis/30d</div>
-          <div class="cuenta-bars">${barsHtml}</div>
+        <div class="equipo-barra">
+          <div class="equipo-fill" style="width:${pct}%;background:${colorBarra};"></div>
         </div>
-        <div class="marca-objetivo" data-no-nav>
-          <div class="marca-objetivo-head">
-            <span class="mono-label" style="margin-bottom:0;">Meta este mes</span>
-            <input class="marca-objetivo-input" inputmode="numeric" data-change="meta-mensual-set" data-marca="${k}" value="${metaValor || ''}" placeholder="0">
-          </div>
-          ${metaValor > 0 ? `
-            <div class="progreso-bar"><div class="progreso-fill" style="width:${progresoPct}%;background:${M.color}"></div></div>
-            <div class="progreso-label">${publicadasMes} / ${metaValor} publicaciones</div>
-          ` : `<div class="progreso-label muted">Ponle un número para ver tu avance</div>`}
-        </div>
-      </div>
-    `;
-  }).join('');
-
-  const preguntasHtml = REGLAS_SISTEMA.map((texto, n) => `
-    <div class="rule-row">
-      <span class="rule-num">0${n + 1}</span>
-      <span class="rule-text">${escapeHtml(texto)}</span>
-    </div>
-  `).join('');
-
-  // Flujo de trabajo: los módulos reales de Estrategia y Clientes, con su color
-  const FLUJO_ESTRATEGIA = [
-    ['Prospecto', 'var(--text)'],
-    ['En conversación para desarrollo', '#2E55E0'],
-    ['Grabación', '#1FB6CE'],
-    ['Proyecto por editar', '#EFC94C'],
-    ['Por confirmar entrega', '#E8641B'],
-    ['Por pagar / Por entregar', '#E0312E'],
-    ['Ya pagos / Entregados', 'var(--verde)'],
-    ['Descartada', 'var(--muted)']
-  ];
-  const FLUJO_CLIENTES = [
-    ['Prospecto', 'var(--text)'],
-    ['En conversación para contratación', '#2E55E0'],
-    ['Grabación', '#1FB6CE'],
-    ['Proyecto por editar', '#EFC94C'],
-    ['Por confirmar entrega', '#E8641B'],
-    ['Por pagar / Por entregar', '#E0312E'],
-    ['Ya pagos / Entregados', 'var(--verde)'],
-    ['Descartada', 'var(--muted)']
-  ];
-  const flujoLista = flujo => flujo.map(([label, color], i) => `
-    <div class="flujo-row">
-      <span class="flujo-num">${String(i + 1).padStart(2, '0')}</span>
-      <span class="dot" style="width:8px;height:8px;background:${color};margin-right:8px;"></span>
-      <span class="flujo-label">${escapeHtml(label)}</span>
-    </div>
-  `).join('');
-  const flujoHtml = `
-    <div class="mono-label" style="margin-bottom:8px;">Contenido</div>
-    ${flujoLista(FLUJO_ESTRATEGIA)}
-    <div class="mono-label" style="margin:16px 0 8px;">Clientes</div>
-    ${flujoLista(FLUJO_CLIENTES)}
-  `;
-
-  const pares = [['brant', 'bacu', 'Brant + Bacu'], ['bacu', 'novena', 'Bacu + Novena'], ['brant', 'novena', 'Brant + Novena']];
-  const colabsHtml = pares.map(([a, b, par]) => {
-    const n = ideas.filter(i => i.colab && ((i.marca === a && i.colab === b) || (i.marca === b && i.colab === a)) && i.estado !== 'descartada').length;
-    return `
-      <div class="colab-row">
-        <span class="colab-par">${par}</span>
-        <span class="colab-n">${n} ideas</span>
       </div>
     `;
   }).join('');
 
   return `
-    <main class="panorama">
-      <div class="section-title" style="margin-top:8px;">Centro de estadísticas</div>
-      <div class="vista-sub">El resumen de todo lo importante, pestaña por pestaña. Toca una tarjeta para ir allá.</div>
+    <div class="panorama-seccion">
+      <div class="seccion-titulo">🎥 Estado de Equipos</div>
+      <div class="equipos-lista">${itemsHtml}</div>
+    </div>
+  `;
+}
 
-      <div class="stats-centro">
-        <!-- CALENDARIO -->
-        <div class="panel" data-act="nav-go" data-view="calendario" style="cursor:pointer;">
-          <span class="mono-label">📅 Calendario — ${MESES[mesNum - 1]}</span>
-          <div class="vital-value" style="margin-bottom:10px;">${enMes.length} publicación${enMes.length === 1 ? '' : 'es'}</div>
-          ${statRow('Rodajes este mes', rodajesMes)}
-          ${statRow('Grabaciones de clientes', grabClientesMes, '#1FB6CE')}
-          ${statRow('Entregas pendientes', entregasPendientes, entregasPendientes > 0 ? 'var(--rojo)' : 'var(--verde)')}
-          ${statRow('Días sin publicar', diasMes - diasConPub)}
+function renderTop3Tareas(tareas) {
+  const urgentes = tareas
+    .filter(t => !t.hecha)
+    .sort((a, b) => {
+      const orden = { 'Urgente': 0, 'Hoy': 1, 'Semana': 2, 'Guiones': 3, 'IA': 4, 'METAS': 5, 'Mejoras': 6, 'Sin fecha': 7 };
+      const ordenA = orden[a.columna] ?? 999;
+      const ordenB = orden[b.columna] ?? 999;
+      return ordenA - ordenB;
+    })
+    .slice(0, 3);
+
+  if (!urgentes.length) {
+    return `
+      <div class="panorama-seccion">
+        <div class="seccion-titulo">⚡ Hoy — Prioritario</div>
+        <div class="empty-note">¡Todo despejado! 🎉</div>
+      </div>
+    `;
+  }
+
+  const itemsHtml = urgentes.map((t, idx) => {
+    const colores = { 'Urgente': '#FF4444', 'Hoy': '#2196F3', 'Semana': '#4CAF50', 'Guiones': '#9C27B0', 'IA': '#FF9800' };
+    const color = colores[t.columna] || '#757575';
+    return `
+      <div class="tarea-item">
+        <span class="tarea-numero">${idx + 1}</span>
+        <span class="tarea-color" style="background:${color}"></span>
+        <span class="tarea-texto">${escapeHtml(t.texto.substring(0, 50))}</span>
+      </div>
+    `;
+  }).join('');
+
+  return `
+    <div class="panorama-seccion">
+      <div class="seccion-titulo">⚡ Hoy — Prioritario</div>
+      <div class="tareas-list">${itemsHtml}</div>
+    </div>
+  `;
+}
+
+function renderUniversidad() {
+  const creditosFaltantes = UNIVERSIDAD.creditosRequeridos - UNIVERSIDAD.creditosAprobados;
+  const pct = (UNIVERSIDAD.creditosAprobados / UNIVERSIDAD.creditosRequeridos) * 100;
+
+  const cursosHtml = UNIVERSIDAD.cursosPendientes.map(c => `
+    <div class="uni-curso">
+      <span>${escapeHtml(c.curso)}</span>
+      <span class="uni-creditos">${c.creditos} cr</span>
+    </div>
+  `).join('');
+
+  return `
+    <div class="panorama-seccion">
+      <div class="seccion-titulo">📚 Universidad</div>
+      <div class="uni-progreso">
+        <div class="uni-bar">
+          <div class="uni-fill" style="width:${pct}%"></div>
         </div>
-
-        <!-- CLIENTES -->
-        <div class="panel" data-act="nav-go" data-view="clientes" data-vista="externos" style="cursor:pointer;">
-          <span class="mono-label">👥 Clientes</span>
-          <div class="vital-value" style="margin-bottom:10px;">${clientesActivos.length} activo${clientesActivos.length === 1 ? '' : 's'}</div>
-          ${statRow('Prospecto', cuentaCls(['prospecto']))}
-          ${statRow('En conversación', cuentaCls(['conversacion']))}
-          ${statRow('Grabación', cuentaCls(['grabacion']), '#1FB6CE')}
-          ${statRow('Por editar', cuentaCls(['proyecto_edicion']), '#EFC94C')}
-          ${statRow('Por confirmar entrega', cuentaCls(['confirmar_entrega']), '#E8641B')}
-          ${statRow('Por pagar', cuentaCls(['por_pagar']) + ' · ' + fmtMoney(porCobrarTotal), 'var(--rojo)')}
-          ${statRow('Cerrados', cuentaCls(['ya_pagos', 'entregado']), 'var(--verde)')}
-        </div>
-
-        <!-- CONTENIDO -->
-        <div class="panel" data-act="nav-go" data-view="clientes" data-vista="marcas" style="cursor:pointer;">
-          <span class="mono-label">🎬 Contenido</span>
-          <div class="vital-value" style="margin-bottom:10px;">${ideasActivas.length} idea${ideasActivas.length === 1 ? '' : 's'}</div>
-          ${statRow('Prospecto', cuentaIdeas(['prospecto']))}
-          ${statRow('En desarrollo', cuentaIdeas(['desarrollo', 'lista']))}
-          ${statRow('Grabación', cuentaIdeas(['grabar', 'produccion']), '#1FB6CE')}
-          ${statRow('Por editar', cuentaIdeas(['edicion']), '#EFC94C')}
-          ${statRow('Por confirmar entrega', cuentaIdeas(['entrega']), '#E8641B')}
-          ${statRow('Por pagar', cuentaIdeas(['por_pagar']), 'var(--rojo)')}
-          ${statRow('Ya pagó', cuentaIdeas(['ya_pago', 'publicada']), 'var(--verde)')}
-        </div>
-
-        <!-- FINANZAS -->
-        <div class="panel" data-act="nav-go" data-view="financiamiento" style="cursor:pointer;">
-          <span class="mono-label">💰 Finanzas</span>
-          <div class="vital-value ${finTotal.patrimonio < 0 ? 'alto' : 'verde'}" style="margin-bottom:10px;">${fmtMoney(finTotal.patrimonio)}</div>
-          ${statRow('En bolsillo', fmtMoney(finTotal.efectivo), 'var(--verde)')}
-          ${statRow('Te deben', fmtMoney(finTotal.teDeben), 'var(--azul)')}
-          ${statRow('Debes', fmtMoney(finTotal.debes), 'var(--rojo)')}
-          ${statRow('Recurrentes/mes', fmtMoney(recurrentesTotal), 'var(--rojo)')}
-        </div>
-
-        <!-- INVENTARIO -->
-        <div class="panel" data-act="nav-go" data-view="inventario" style="cursor:pointer;">
-          <span class="mono-label">🎒 Inventario</span>
-          <div class="vital-value" style="margin-bottom:10px;">${invItems.length} item${invItems.length === 1 ? '' : 's'}</div>
-          ${statRow('Equipados', invEquipados + ' / ' + invPersonal.length, 'var(--verde)')}
-          ${statRow('En la habitación', invHabitacion)}
-          ${statRow('En el garaje', invGaraje, '#1FB6CE')}
-        </div>
-
-        <!-- BIENESTAR -->
-        <div class="panel" data-act="nav-go" data-view="bienestar" style="cursor:pointer;">
-          <span class="mono-label">🧠 Bienestar</span>
-          <div class="vital-value" style="margin-bottom:10px;color:${estres.color};">${estres.pct}%</div>
-          ${statRow('Nivel', estres.nivel, estres.color)}
-          ${statRow('Carga total', estres.bruto + ' pts')}
-          ${statRow('Hábitos hoy', estres.habitosHoy + ' / ' + estres.habitos.length, estres.habitosHoy > 0 ? 'var(--verde)' : undefined)}
-        </div>
-
-        <!-- METAS -->
-        <div class="panel" data-act="nav-go" data-view="metas" style="cursor:pointer;">
-          <span class="mono-label">🎯 Metas</span>
-          <div class="vital-value verde" style="margin-bottom:10px;">${metasCumplidas} / ${metasReales.length}</div>
-          ${statRow('Cumplidas', metasCumplidas, 'var(--verde)')}
-          ${statRow('Mejora de equipo', metasEquipo)}
-          ${statRow('Lo que quiero', metasDeseos, '#8E5BE8')}
-        </div>
-
-        <!-- UNIVERSIDAD -->
-        <div class="panel" data-act="nav-go" data-view="universidad" style="cursor:pointer;">
-          <span class="mono-label">🎓 Universidad</span>
-          <div class="vital-value verde" style="margin-bottom:10px;">${uniPct.toFixed(1)}%</div>
-          ${statRow('Créditos', UNIVERSIDAD.creditosAprobados + ' / ' + UNIVERSIDAD.creditosRequeridos, 'var(--verde)')}
-          ${statRow('Te faltan', uniFaltan + ' cr', 'var(--rojo)')}
-          ${statRow('Cursos pendientes', uniPendientes, 'var(--rojo)')}
+        <div class="uni-stats">
+          <span>${UNIVERSIDAD.creditosAprobados} / ${UNIVERSIDAD.creditosRequeridos} créditos</span>
+          <span class="uni-faltantes">Faltán ${creditosFaltantes} cr</span>
         </div>
       </div>
-
-      <div class="seg-head">
-        <div class="section-title" style="margin-bottom:0;">Las marcas — pipeline y seguimiento</div>
-        <button class="btn-primary" data-act="snap-abre">+ Registro</button>
+      <div class="uni-cursos">
+        <div class="uni-label">Pendientes:</div>
+        ${cursosHtml}
       </div>
-      <div class="vista-sub">Dónde va cada marca: en producción, seguidores, alcance y meta del mes.</div>
-      ${snapFormHtml}
-      <div class="marcas-grid">${marcasHtml}</div>
+      <button class="btn-primary btn-small" data-act="nav-go" data-view="universidad" style="width:100%;margin-top:12px;">
+        Registrar trabajo asignado
+      </button>
+    </div>
+  `;
+}
 
-      <div class="seg-bottom">
-        <div class="panel">
-          <div class="section-title">Enfoque de crecimiento — ${mesActualLabel}</div>
-          <div style="display:flex; flex-direction:column; gap:16px;">${enfoqueHtml}</div>
-        </div>
-        <div class="side-col">
-          <div class="panel">
-            <div class="section-title">Historial de seguidores</div>
-            <div style="display:flex; flex-direction:column; gap:10px;">${snapRowsHtml || '<div class="empty-note">Sin registros todavía.</div>'}</div>
+function renderMetasProgreso(metasPersonales) {
+  const metas = (metasPersonales || [])
+    .filter(m => !(m.categoria || '').startsWith('inv_') && m.categoria !== 'habito' && !m.cumplida)
+    .slice(0, 4);
+
+  if (!metas.length) {
+    return `
+      <div class="panorama-seccion">
+        <div class="seccion-titulo">🎯 Metas Activas</div>
+        <div class="empty-note">¡Todas las metas completadas! 🏆</div>
+      </div>
+    `;
+  }
+
+  const metasHtml = metas.map(m => {
+    const pasos = (m.pasos || []);
+    const pasosHechos = pasos.filter(p => p.hecho).length;
+    const pct = pasos.length > 0 ? (pasosHechos / pasos.length) * 100 : 0;
+
+    return `
+      <div class="meta-item">
+        <div class="meta-nombre">${escapeHtml(m.nombre.substring(0, 45))}</div>
+        ${pasos.length > 0 ? `
+          <div class="meta-bar">
+            <div class="meta-fill" style="width:${pct}%"></div>
           </div>
-          <div class="panel">
-            <div class="section-title">Qué funcionó — publicadas</div>
-            <div style="display:flex; flex-direction:column; gap:12px;">${topPubsHtml}</div>
-          </div>
-        </div>
+          <div class="meta-stat">${pasosHechos} / ${pasos.length} pasos</div>
+        ` : '<div class="meta-stat" style="color:var(--muted);">Sin pasos</div>'}
       </div>
+    `;
+  }).join('');
 
-      <div class="rules-grid">
-        <div class="panel">
-          <div class="section-title">Las 4 reglas — esto no se rompe</div>
-          <div style="display:flex; flex-direction:column; gap:14px;">${preguntasHtml}</div>
-          <div class="rule-footnote">Si una regla se rompe, el sistema deja de decir la verdad.</div>
-        </div>
-        <div class="panel">
-          <div class="section-title">Flujo de trabajo</div>
-          <div style="display:flex; flex-direction:column; gap:7px;">${flujoHtml}</div>
-        </div>
-        <div class="panel" style="display:flex; flex-direction:column;">
-          <div class="section-title">Publicaciones compartidas</div>
-          <div style="display:flex; flex-direction:column; gap:12px; flex:1;">${colabsHtml}</div>
-          <div class="panel-footnote">Solo cuando benefician a ambas marcas. Nunca forzadas.</div>
+  return `
+    <div class="panorama-seccion">
+      <div class="seccion-titulo">🎯 Metas Activas</div>
+      <div class="metas-lista">${metasHtml}</div>
+    </div>
+  `;
+}
+
+export function renderPanorama(state) {
+  const hoy = hoyStr();
+  const finTotal = calcularFinanciamiento(state.movimientosFinanciamiento, state.deudas, state.cuentasCobro, hoy);
+
+  return `
+    <main class="panorama-nuevo">
+      <h2 class="serif" style="margin:0;font-size:32px;margin-bottom:4px;">Panorama</h2>
+      <div class="vista-sub">Centro de datos visual — todo de un vistazo.</div>
+
+      <div class="panorama-grid">
+        ${renderContenidoPipeline(state.ideas || [])}
+        ${renderEstadoEquipos(state.equipoProduccion || [], state.metasPersonales || [])}
+        ${renderTop3Tareas(state.tareas || [])}
+        ${renderUniversidad()}
+        ${renderMetasProgreso(state.metasPersonales || [])}
+
+        <div class="panorama-seccion">
+          <div class="seccion-titulo">💰 Patrimonio Neto</div>
+          <div class="patrimonio-valor ${finTotal.patrimonio < 0 ? 'negativo' : 'positivo'}">
+            ${fmtMoney(finTotal.patrimonio)}
+          </div>
+          <div class="patrimonio-desglose">
+            <div class="desglose-item">
+              <span>En bolsillo:</span>
+              <span class="verde">${fmtMoney(finTotal.efectivo)}</span>
+            </div>
+            <div class="desglose-item">
+              <span>Te deben:</span>
+              <span class="azul">${fmtMoney(finTotal.teDeben)}</span>
+            </div>
+            <div class="desglose-item">
+              <span>Debes:</span>
+              <span class="rojo">${fmtMoney(finTotal.debes)}</span>
+            </div>
+          </div>
         </div>
       </div>
     </main>
