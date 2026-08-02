@@ -72,16 +72,16 @@ export function renderUniversidad(state) {
 
   const bloquesHtml = U.bloques.map((b, i) => bloqueHtml(b, i, !!abiertos[i])).join('');
 
-  const M = U.matriculaRecomendada;
-  const matriculaHtml = M.cursos.map(c => `
+  const M = U.matriculaActual || U.matriculaRecomendada;
+  const matriculaHtml = M && M.cursos ? M.cursos.map(c => `
     <div class="uni-mat-fila">
       <div>
         <div class="uni-mat-curso">${escapeHtml(c.curso)}</div>
-        <div class="uni-mat-meta">Sem ${c.sem} · NRC ${escapeHtml(c.nrc)}</div>
+        <div class="uni-mat-meta">Sem ${c.sem}${c.nrc ? ` · NRC ${escapeHtml(c.nrc)}` : ''}</div>
       </div>
       <span class="uni-mat-cred">${c.creditos} cr</span>
     </div>
-  `).join('');
+  `).join('') : '';
 
   return `
     <main class="universidad">
@@ -110,9 +110,9 @@ export function renderUniversidad(state) {
       <div class="uni-ruta">${rutaHtml}</div>
 
       <!-- PRÓXIMO SEMESTRE -->
-      <div class="section-title">📋 Matrícula recomendada · ${escapeHtml(M.periodo)}</div>
-      <div class="vista-sub">${M.creditosAMatricular} créditos a matricular de ${M.creditosRequeridos} requeridos.</div>
-      <div class="uni-matricula">${matriculaHtml}</div>
+      ${M ? `<div class="section-title">📋 Matrícula actual · ${escapeHtml(M.periodo)}</div>
+      <div class="vista-sub">${M.creditosMatriculados || '?'} créditos matriculados.</div>
+      <div class="uni-matricula">${matriculaHtml}</div>` : ''}
 
       <!-- CUMPLIMIENTO POR BLOQUE -->
       <div class="section-title">Cumplimiento por bloque</div>
