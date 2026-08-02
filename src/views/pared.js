@@ -56,6 +56,11 @@ export function renderPared(state) {
         ${columnasHtml}
       </div>
 
+      <div class="pared-papelera" data-drop="papelera" title="Arrastra aquí para eliminar">
+        <span class="papelera-icon">🗑️</span>
+        <span class="papelera-texto">Eliminar</span>
+      </div>
+
       <div class="tareas-pared" style="margin-top:28px;">
         <button class="tarea-agregar" data-act="tarea-nueva">+ Tarea</button>
       </div>

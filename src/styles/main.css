@@ -598,6 +598,44 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
   display: none;
 }
 
+/* Papelera para eliminar cintas */
+.pared-papelera {
+  margin: 24px auto;
+  padding: 20px 40px;
+  border: 2px dashed var(--rojo);
+  border-radius: 8px;
+  text-align: center;
+  cursor: grab;
+  background: rgba(255,60,90, 0.05);
+  max-width: 300px;
+  transition: all 0.2s;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--rojo);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.pared-papelera:hover {
+  background: rgba(255,60,90, 0.1);
+  border-color: var(--rojo);
+}
+.pared-papelera.drop-activo {
+  background: rgba(255,60,90, 0.2);
+  border-color: var(--rojo);
+  box-shadow: 0 0 12px rgba(255,60,90, 0.3);
+  transform: scale(1.05);
+}
+.papelera-icon {
+  font-size: 32px;
+}
+.papelera-texto {
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
 /* metas personales — agrupadas por tipo */
 .metas-grid { display: grid; grid-template-columns: 1fr; gap: 20px; margin-bottom: 32px; }
 /* min-width:0 necesario: sin esto, el input .meta-titulo (flex:1) hereda su ancho

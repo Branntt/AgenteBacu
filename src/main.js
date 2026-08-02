@@ -431,6 +431,12 @@ root.addEventListener('drop', e => {
     return;
   }
 
+  // Si es Papelera (eliminar tarea)
+  if (zonaInventario?.dataset.drop === 'papelera') {
+    actions.eliminarTarea(idSoltado);
+    return;
+  }
+
   // Si es Inventario (equipar/mochila)
   if (zonaInventario) {
     const item = state.metasPersonales.find(m => m.id === idSoltado);
