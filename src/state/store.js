@@ -265,8 +265,26 @@ function verificarIdeasPorFecha() {
   }
 }
 
-function suscribirRealtime() {
-  supabase.channel('sync-ideas').on('postgres_changes', { event: '*', schema: 'public', table: 'ideas' }, payload => {
+// Realtime: mantener referencias a canales para poder unsub selectivamente
+const channelRefs = {};
+const canalesActivos = new Set();
+
+// Mapear qué canales necesita cada vista
+const CHANNEL_MAP = {
+  calendario: ['sync-ideas', 'sync-metas-personales'],
+  clientes: ['sync-clientes', 'sync-snaps'],
+  financiamiento: ['sync-cuentas-cobro', 'sync-movimientos-financiamiento', 'sync-deudas', 'sync-pagos-mensuales'],
+  inventario: ['sync-metas-personales', 'sync-equipo-produccion'],
+  bienestar: ['sync-metas-mensuales', 'sync-tareas'],
+  metas: ['sync-metas-mensuales', 'sync-tareas'],
+  universidad: ['sync-tareas'],
+  pared: ['sync-ideas', 'sync-clientes'],
+  panorama: ['sync-ideas', 'sync-clientes', 'sync-metas-personales', 'sync-equipo-produccion'],
+  configuraciones: [] // hereda de la vista anterior
+};
+
+const PAYLOAD_HANDLERS = {
+  'sync-ideas': payload => {
     if (payload.eventType === 'DELETE') {
       state.ideas = state.ideas.filter(i => i.id !== payload.old.id);
     } else {
@@ -275,9 +293,8 @@ function suscribirRealtime() {
       state.ideas = existe ? state.ideas.map(i => i.id === idea.id ? idea : i) : [idea].concat(state.ideas);
     }
     notify();
-  }).subscribe();
-
-  supabase.channel('sync-clientes').on('postgres_changes', { event: '*', schema: 'public', table: 'clientes' }, payload => {
+  },
+  'sync-clientes': payload => {
     if (payload.eventType === 'DELETE') {
       state.clientes = state.clientes.filter(c => c.id !== payload.old.id);
     } else {
@@ -285,9 +302,8 @@ function suscribirRealtime() {
       state.clientes = existe ? state.clientes.map(c => c.id === payload.new.id ? payload.new : c) : [payload.new].concat(state.clientes);
     }
     notify();
-  }).subscribe();
-
-  supabase.channel('sync-snaps').on('postgres_changes', { event: '*', schema: 'public', table: 'snaps' }, payload => {
+  },
+  'sync-snaps': payload => {
     if (payload.eventType === 'DELETE') {
       state.snaps = state.snaps.filter(s => s.id !== payload.old.id);
     } else {
@@ -295,9 +311,8 @@ function suscribirRealtime() {
       state.snaps = existe ? state.snaps.map(s => s.id === payload.new.id ? payload.new : s) : state.snaps.concat([payload.new]);
     }
     notify();
-  }).subscribe();
-
-  supabase.channel('sync-cuentas-cobro').on('postgres_changes', { event: '*', schema: 'public', table: 'cuentas_cobro' }, payload => {
+  },
+  'sync-cuentas-cobro': payload => {
     if (payload.eventType === 'DELETE') {
       state.cuentasCobro = state.cuentasCobro.filter(c => c.id !== payload.old.id);
     } else {
@@ -305,9 +320,8 @@ function suscribirRealtime() {
       state.cuentasCobro = existe ? state.cuentasCobro.map(c => c.id === payload.new.id ? payload.new : c) : state.cuentasCobro.concat([payload.new]);
     }
     notify();
-  }).subscribe();
-
-  supabase.channel('sync-movimientos-financiamiento').on('postgres_changes', { event: '*', schema: 'public', table: 'movimientos_financiamiento' }, payload => {
+  },
+  'sync-movimientos-financiamiento': payload => {
     if (payload.eventType === 'DELETE') {
       state.movimientosFinanciamiento = state.movimientosFinanciamiento.filter(m => m.id !== payload.old.id);
     } else {
@@ -315,9 +329,8 @@ function suscribirRealtime() {
       state.movimientosFinanciamiento = existe ? state.movimientosFinanciamiento.map(m => m.id === payload.new.id ? payload.new : m) : state.movimientosFinanciamiento.concat([payload.new]);
     }
     notify();
-  }).subscribe();
-
-  supabase.channel('sync-deudas').on('postgres_changes', { event: '*', schema: 'public', table: 'deudas' }, payload => {
+  },
+  'sync-deudas': payload => {
     if (payload.eventType === 'DELETE') {
       state.deudas = state.deudas.filter(d => d.id !== payload.old.id);
     } else {
@@ -325,9 +338,8 @@ function suscribirRealtime() {
       state.deudas = existe ? state.deudas.map(d => d.id === payload.new.id ? payload.new : d) : state.deudas.concat([payload.new]);
     }
     notify();
-  }).subscribe();
-
-  supabase.channel('sync-pagos-mensuales').on('postgres_changes', { event: '*', schema: 'public', table: 'pagos_mensuales' }, payload => {
+  },
+  'sync-pagos-mensuales': payload => {
     if (payload.eventType === 'DELETE') {
       state.pagosMensuales = state.pagosMensuales.filter(p => p.id !== payload.old.id);
     } else {
@@ -335,9 +347,8 @@ function suscribirRealtime() {
       state.pagosMensuales = existe ? state.pagosMensuales.map(p => p.id === payload.new.id ? payload.new : p) : state.pagosMensuales.concat([payload.new]);
     }
     notify();
-  }).subscribe();
-
-  supabase.channel('sync-equipo-produccion').on('postgres_changes', { event: '*', schema: 'public', table: 'equipo_produccion' }, payload => {
+  },
+  'sync-equipo-produccion': payload => {
     if (payload.eventType === 'DELETE') {
       state.equipoProduccion = state.equipoProduccion.filter(e => e.id !== payload.old.id);
     } else {
@@ -345,9 +356,8 @@ function suscribirRealtime() {
       state.equipoProduccion = existe ? state.equipoProduccion.map(e => e.id === payload.new.id ? payload.new : e) : state.equipoProduccion.concat([payload.new]);
     }
     notify();
-  }).subscribe();
-
-  supabase.channel('sync-metas-personales').on('postgres_changes', { event: '*', schema: 'public', table: 'metas_personales' }, payload => {
+  },
+  'sync-metas-personales': payload => {
     if (payload.eventType === 'DELETE') {
       state.metasPersonales = state.metasPersonales.filter(m => m.id !== payload.old.id);
     } else {
@@ -355,9 +365,8 @@ function suscribirRealtime() {
       state.metasPersonales = existe ? state.metasPersonales.map(m => m.id === payload.new.id ? payload.new : m) : state.metasPersonales.concat([payload.new]);
     }
     notify();
-  }).subscribe();
-
-  supabase.channel('sync-metas-mensuales').on('postgres_changes', { event: '*', schema: 'public', table: 'metas_mensuales' }, payload => {
+  },
+  'sync-metas-mensuales': payload => {
     if (payload.eventType === 'DELETE') {
       state.metasMensuales = state.metasMensuales.filter(m => m.id !== payload.old.id);
     } else {
@@ -365,9 +374,8 @@ function suscribirRealtime() {
       state.metasMensuales = existe ? state.metasMensuales.map(m => m.id === payload.new.id ? payload.new : m) : state.metasMensuales.concat([payload.new]);
     }
     notify();
-  }).subscribe();
-
-  supabase.channel('sync-tareas').on('postgres_changes', { event: '*', schema: 'public', table: 'tareas' }, payload => {
+  },
+  'sync-tareas': payload => {
     if (payload.eventType === 'DELETE') {
       state.tareas = state.tareas.filter(t => t.id !== payload.old.id);
     } else {
@@ -375,7 +383,43 @@ function suscribirRealtime() {
       state.tareas = existe ? state.tareas.map(t => t.id === payload.new.id ? payload.new : t) : state.tareas.concat([payload.new]);
     }
     notify();
-  }).subscribe();
+  }
+};
+
+function obtenerCanalConfig(nombre) {
+  const tableName = nombre.replace('sync-', '').replace(/-/g, '_');
+  return { table: tableName, event: '*', schema: 'public' };
+}
+
+function suscribirCanal(nombre) {
+  if (canalesActivos.has(nombre)) return;
+  const config = obtenerCanalConfig(nombre);
+  const handler = PAYLOAD_HANDLERS[nombre];
+  const channel = supabase.channel(nombre).on('postgres_changes', config, handler);
+  channel.subscribe();
+  channelRefs[nombre] = channel;
+  canalesActivos.add(nombre);
+}
+
+function desuscribirCanal(nombre) {
+  if (!canalesActivos.has(nombre)) return;
+  const channel = channelRefs[nombre];
+  if (channel) channel.unsubscribe();
+  delete channelRefs[nombre];
+  canalesActivos.delete(nombre);
+}
+
+function gestionarCanalesActivos(vista) {
+  const necesarios = new Set(CHANNEL_MAP[vista] || []);
+  const aDesuscribir = Array.from(canalesActivos).filter(c => !necesarios.has(c));
+  const aSuscribir = Array.from(necesarios).filter(c => !canalesActivos.has(c));
+  aDesuscribir.forEach(desuscribirCanal);
+  aSuscribir.forEach(suscribirCanal);
+}
+
+function suscribirRealtime() {
+  // Suscribir a todos inicialmente (panorama, el dashboard inicial)
+  Object.keys(PAYLOAD_HANDLERS).forEach(suscribirCanal);
 }
 
 export const actions = {
@@ -391,6 +435,7 @@ export const actions = {
     if (v === 'clientes' && subVista) patch.clientesVista = subVista;
     persistValue('app.view', v);
     setState(patch);
+    gestionarCanalesActivos(v);
   },
   menuToggle: () => setState({ menuAbierto: !state.menuAbierto }),
   menuCerrar: () => setState({ menuAbierto: false }),
