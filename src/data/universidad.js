@@ -6,7 +6,7 @@ export const UNIVERSIDAD = {
   programa: 'Artes Audiovisuales',
   id: 'U00168667',
   creditosAprobados: 109,
-  creditosRequeridos: 147,
+  creditosRequeridos: 127,
   evaluado: '2026-08-02',
   periodo: 'Segundo Semestre 2026',
 
