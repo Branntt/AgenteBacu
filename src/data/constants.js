@@ -92,6 +92,33 @@ export const TIPOS_PERSONAL = [
   ['otro', '🎒', 'Otro']
 ];
 
+// Centro de Carga (2026-08-01) — tipos de energía que puede usar un objeto (metas_personales
+// o equipo_produccion, ver ambas migraciones supabase-migracion-centro-carga.sql) y los
+// estados posibles de carga. Ambos son arrays [valor, emoji, label] para llenar <select>s,
+// mismo patrón que TIPOS_PERSONAL — extender la lista alcanza para agregar un tipo nuevo.
+export const TIPOS_ENERGIA = [
+  ['bateria_interna', '🔋', 'Batería interna'],
+  ['bateria_extraible', '🔋', 'Batería extraíble'],
+  ['np_fw50', '🔋', 'NP-FW50'],
+  ['np_f', '🔋', 'NP-F'],
+  ['pilas_aa', '🪫', 'Pilas AA'],
+  ['pilas_aaa', '🪫', 'Pilas AAA'],
+  ['corriente', '🔌', 'Corriente directa'],
+  ['usb_c', '🔌', 'USB-C'],
+  ['micro_usb', '🔌', 'Micro USB'],
+  ['lightning', '🔌', 'Lightning']
+];
+
+export const ESTADOS_CARGA = [
+  ['listo', '🟢', 'Listo para grabar'],
+  ['en_carga', '🟡', 'En carga'],
+  ['cargando_lento', '🟡', 'Cargando lentamente'],
+  ['descargado', '🔴', 'Descargado'],
+  ['sin_bateria', '⚫', 'Sin batería instalada'],
+  ['requiere_pilas', '🔴', 'Requiere pilas'],
+  ['mantenimiento', '⚫', 'En mantenimiento']
+];
+
 export const CATEGORIAS_META = [
   ['camara', 'Cámara'],
   ['luces', 'Luces'],

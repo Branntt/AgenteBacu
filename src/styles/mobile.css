@@ -76,10 +76,6 @@
   .tarea-cinta.sugerida { padding: 10px; }
   .tarea-cinta.sugerida .tarea-agregar { flex: 1 0 100%; text-align: center; margin-top: 6px; }
 
-  /* Avatar: los swatches de color mantienen su forma redonda */
-  .avatar-swatch { min-height: 34px; width: 34px; height: 34px; padding: 0; }
-  .avatar-opt { min-height: 40px; padding: 8px 12px; font-size: 12px; }
-
   /* Modales */
   .modal-overlay { backdrop-filter: blur(4px); }
   .modal-content { padding: 20px; border-radius: 12px; }

@@ -5,7 +5,6 @@ import { supabase } from '../lib/supabaseClient.js';
 import { generarCuentaCobroPDF, OBSERVACIONES_DEFAULT } from '../lib/pdfInvoice.js';
 import { generarListadoClientesPDF } from '../lib/pdfListadoClientes.js';
 import { MESES, COLORES_TAREA, familiaDeFormato, METAS_EQUIPO_SEED } from '../data/constants.js';
-import { AVATAR_DEFAULT } from '../components/avatar.js';
 
 export const state = {
   view: loadValue('app.view', 'calendario'),
@@ -24,8 +23,6 @@ export const state = {
   calVista: loadValue('ui.calVista', 'mes'),
   invVista: loadValue('ui.invVista', 'personal'),
   finanzasVista: loadValue('ui.finanzasVista', 'ingresos'),
-  avatar: loadValue('ui.avatar', AVATAR_DEFAULT),
-  avatarEditor: false,
   // Prototipo de personaje 3D (Inventario > Personal, beta) — avatarGlbUrl es una blob: URL
   // del último avatar exportado desde Avaturn (ver dataUrlABlobUrl en personaje3d.js); null =
   // todavía no se creó ninguno. A propósito NO se carga de localStorage (no es UI_PERSIST):
@@ -117,7 +114,7 @@ export function subscribe(fn) { listeners.push(fn); }
 function notify() { listeners.forEach(fn => fn()); }
 
 // Claves de interfaz que se recuerdan entre sesiones (cada pestaña vuelve donde quedó)
-const UI_PERSIST = ['month', 'filtroGuiones', 'guionesVista', 'clientesVista', 'filtroCalendario', 'calVista', 'semanaInicio', 'invVista', 'avatar', 'finanzasVista', 'uniBloquesAbiertos'];
+const UI_PERSIST = ['month', 'filtroGuiones', 'guionesVista', 'clientesVista', 'filtroCalendario', 'calVista', 'semanaInicio', 'invVista', 'finanzasVista', 'uniBloquesAbiertos'];
 
 function setState(patch) {
   Object.assign(state, patch);
@@ -560,8 +557,6 @@ export const actions = {
   setCalVista: v => setState({ calVista: v }),
   invSetVista: v => setState({ invVista: v }),
   finanzasSetVista: v => setState({ finanzasVista: v }),
-  avatarSet: (campo, valor) => setState({ avatar: { ...AVATAR_DEFAULT, ...state.avatar, [campo]: valor } }),
-  avatarEditorToggle: () => setState({ avatarEditor: !state.avatarEditor }),
 
   personaje3dAbrir: () => setState({ personaje3dAbierto: true }),
   personaje3dCerrar: () => setState({ personaje3dAbierto: false }),
@@ -827,9 +822,13 @@ export const actions = {
   // tipo: solo para items de Inventario > Personal (ver TIPOS_PERSONAL en constants.js) — se
   // manda solo si viene puesto, mismo criterio que basado_en_id/fuente_pago (columna nueva,
   // no romper el insert antes de correr la migración).
-  metaPersonalNueva: (categoria, tipo) => {
+  // parentId: anida el item nuevo dentro de otro (ej. una pieza dentro de "Computador de
+  // Mesa") — un solo nivel, ver supabase-migracion-item-parent.sql. Mismo criterio de "solo
+  // mandar si viene puesto" que tipo/basado_en_id.
+  metaPersonalNueva: (categoria, tipo, parentId) => {
     const m = { id: 'mp' + Date.now(), categoria, titulo: '', fecha: null, cumplida: false };
     if (tipo) m.tipo = tipo;
+    if (parentId) m.parent_id = parentId;
     state.metasPersonales = state.metasPersonales.concat([m]);
     notify();
     supabase.from('metas_personales').insert(m).then(({ error }) => marcarGuardado(!error));

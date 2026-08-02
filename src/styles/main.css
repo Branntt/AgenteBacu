@@ -1333,41 +1333,11 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
   background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
   padding: 24px 16px; margin-bottom: 32px;
 }
-.inv-avatar { text-align: center; padding: 0 12px; }
-.inv-avatar-figura {
-  width: 176px; height: 176px; margin: 0 auto 10px;
-  display: flex; align-items: flex-end; justify-content: center; overflow: hidden;
-  border: 2px solid var(--verde); border-radius: 50%;
-  background: radial-gradient(circle at 50% 35%, rgba(31,175,116,0.12), transparent 70%);
-  box-shadow: 0 0 28px rgba(31,175,116,0.25), inset 0 0 28px rgba(31,175,116,0.08);
-}
-.inv-avatar-figura svg { display: block; margin-bottom: -6px; }
-
-/* editor del avatar */
-.avatar-editor {
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 18px;
-  background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
-  padding: 20px; margin-bottom: 32px;
-}
-.avatar-grupo { display: flex; flex-direction: column; }
-.avatar-opts { display: flex; flex-wrap: wrap; gap: 6px; }
-.avatar-swatch {
-  width: 30px; height: 30px; border-radius: 50%; cursor: pointer;
-  border: 2px solid var(--line2); padding: 0;
-}
-.avatar-swatch.activo { border-color: var(--verde); box-shadow: 0 0 10px rgba(31,175,116,0.5); transform: scale(1.12); }
-.avatar-opt {
-  background: var(--panel2); border: 1px solid var(--line); color: var(--muted);
-  border-radius: 6px; cursor: pointer; padding: 7px 11px; min-height: 0;
-  font-family: 'IBM Plex Mono', monospace; font-size: 11px;
-}
-.avatar-opt.activo { color: var(--verde); border-color: var(--verde); }
-.inv-avatar-nombre { margin-bottom: 4px; color: var(--verde); }
-.inv-avatar-sub { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--muted); }
 .inv-lado { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
 
-/* Personaje 3D (prototipo) — ver src/components/personaje3d.js. Ocupa el mismo lugar
-   central que .inv-avatar dentro de .inv-escena (ver renderPersonal en inventario.js). */
+/* Personaje 3D — ver src/components/personaje3d.js. Único "avatar" desde 2026-08-01 (se
+   quitó el avatar SVG simple), ocupa el centro de .inv-escena (ver renderPersonal en
+   inventario.js). */
 .personaje3d-wrap, .personaje3d-vacio { width: 100%; min-width: 220px; max-width: 320px; text-align: center; }
 .personaje3d-vacio { padding: 24px; border: 1px dashed var(--line2); }
 .personaje3d-canvas-host { width: 100%; height: 320px; background: var(--panel2); border: 1px solid var(--line); }
@@ -1409,6 +1379,49 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
   font-family: 'IBM Plex Mono', monospace; font-size: 11px; padding: 4px; flex-shrink: 0; max-width: 108px;
 }
 
+/* Arrastrar y soltar para equipar (ver main.js) — el ítem se atenúa mientras se arrastra
+   (vía :active, aproximación simple sin JS extra) y la zona de destino se resalta al pasar
+   por encima (clase .drop-activo, la agrega/quita dragover/dragleave en main.js). */
+.inv-item[draggable="true"] { cursor: grab; }
+[data-drop].drop-activo { outline: 2px dashed var(--verde); outline-offset: 4px; border-radius: 12px; }
+
+/* Items anidados (Tecnología/Personales) — un item padre puede contener piezas adentro, ver
+   itemConHijosHtml en inventario.js. Un solo nivel, los hijos no vuelven a anidar. */
+.inv-item-padre {
+  background: var(--panel2); border: 1px solid var(--line); border-radius: 10px; padding: 10px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.inv-item-padre .inv-item { background: var(--panel); }
+.inv-item-hijos { display: flex; flex-direction: column; gap: 6px; padding-left: 16px; border-left: 2px solid var(--line2); }
+.inv-slot-add-hijo { min-height: 0; padding: 8px 10px; font-size: 11px; align-self: flex-start; }
+
+/* Fila "requiere energía" en un item — ver energiaFilaHtml en inventario.js */
+.inv-item-energia { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 0 4px; }
+.inv-energia-check { display: flex; align-items: center; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--muted); cursor: pointer; }
+
+/* Centro de Carga */
+.carga-alertas { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+.carga-alerta {
+  background: var(--panel2); border: 1px solid var(--line); border-left: 3px solid var(--rojo);
+  border-radius: 8px; padding: 10px 14px; font-size: 13px;
+}
+.carga-alerta-rodaje { border-left-color: var(--amarillo); font-weight: 500; }
+.carga-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
+.carga-card {
+  background: var(--panel2); border: 1px solid var(--line); border-radius: 12px; padding: 14px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.carga-card-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.carga-card-nombre { font-weight: 600; }
+.carga-barra { height: 8px; border-radius: 4px; background: var(--panel); overflow: hidden; }
+.carga-barra-fill { height: 100%; border-radius: 4px; transition: width 0.2s; }
+.carga-card-fila { display: flex; gap: 8px; align-items: center; }
+.carga-card-fila select, .carga-input-fecha {
+  background: var(--panel); border: 1px solid var(--line); color: inherit; border-radius: 6px;
+  font-family: 'IBM Plex Mono', monospace; font-size: 11px; padding: 6px; flex: 1; min-width: 0;
+}
+.carga-input-pct { width: 60px; background: var(--panel); border: 1px solid var(--line); color: inherit; border-radius: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; padding: 6px; text-align: center; }
+
 .inv-garaje-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
 .inv-vehiculo {
   position: relative; background: var(--panel2); border: 1px solid var(--line); border-radius: 12px;
@@ -1430,7 +1443,6 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
 
 @media (max-width: 600px) {
   .inv-escena { grid-template-columns: 1fr; }
-  .inv-avatar, .personaje3d-wrap, .personaje3d-vacio { order: -1; }
-  .inv-avatar-figura { width: 120px; height: 120px; font-size: 72px; }
+  .personaje3d-wrap, .personaje3d-vacio { order: -1; }
   .personaje3d-canvas-host { height: 260px; }
 }

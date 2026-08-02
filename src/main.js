@@ -325,12 +325,10 @@ root.addEventListener('click', e => {
     case 'meta-personal-nueva': actions.metaPersonalNueva(categoria); break;
     case 'inv-vista': actions.invSetVista(value); break;
     case 'finanzas-vista': actions.finanzasSetVista(value); break;
-    case 'avatar-set': actions.avatarSet(el.dataset.campo, value); break;
-    case 'avatar-editor-toggle': actions.avatarEditorToggle(); break;
     case 'habito-nuevo': actions.habitoNuevo(); break;
     case 'habito-toggle': actions.habitoToggle(id); break;
     case 'uni-toggle': actions.uniToggleBloque(Number(idx)); break;
-    case 'inv-agregar': actions.metaPersonalNueva('inv_' + value, tipo); break;
+    case 'inv-agregar': actions.metaPersonalNueva('inv_' + value, tipo, el.dataset.parent); break;
     case 'inv-equipar': {
       const item = state.metasPersonales.find(m => m.id === id);
       if (item) actions.updMetaPersonal(id, { cumplida: !item.cumplida });
@@ -380,6 +378,47 @@ root.addEventListener('click', e => {
     case 'bacu-posponer': actions.bacuPosponer(id); break;
     case 'cerrar-notificacion-bacu': actions.cerrarNotificacionBacu(); break;
   }
+});
+
+// Arrastrar y soltar para equipar/desequipar en Inventario > Personal — alternativa a los
+// botones ▲/▼ (que siguen funcionando igual). Un item con draggable="true" y data-id se suelta
+// sobre una zona con data-drop="equipar" (el personaje) o data-drop="mochila" (la lista de
+// abajo); no hay drag-and-drop nativo entre navegador y móvil táctil, así que los botones ▲/▼
+// se quedan como el único camino garantizado en celular.
+let dragId = null;
+
+root.addEventListener('dragstart', e => {
+  const el = e.target.closest('[draggable="true"][data-id]');
+  if (!el) return;
+  dragId = el.dataset.id;
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', dragId);
+});
+
+root.addEventListener('dragover', e => {
+  const zona = e.target.closest('[data-drop]');
+  if (!zona) return;
+  e.preventDefault();
+  zona.classList.add('drop-activo');
+});
+
+root.addEventListener('dragleave', e => {
+  const zona = e.target.closest('[data-drop]');
+  if (zona) zona.classList.remove('drop-activo');
+});
+
+root.addEventListener('drop', e => {
+  const zona = e.target.closest('[data-drop]');
+  if (!zona) return;
+  e.preventDefault();
+  zona.classList.remove('drop-activo');
+  const idSoltado = e.dataTransfer.getData('text/plain') || dragId;
+  dragId = null;
+  if (!idSoltado) return;
+  const item = state.metasPersonales.find(m => m.id === idSoltado);
+  if (!item) return;
+  const equipar = zona.dataset.drop === 'equipar';
+  if (item.cumplida !== equipar) actions.updMetaPersonal(idSoltado, { cumplida: equipar });
 });
 
 root.addEventListener('submit', e => {
@@ -454,6 +493,19 @@ root.addEventListener('change', e => {
       case 'meta-personal-titulo': actions.updMetaPersonal(id, { titulo: value }); break;
       case 'meta-personal-tipo': actions.updMetaPersonal(id, { tipo: value || null }); break;
       case 'meta-personal-fecha': actions.updMetaPersonal(id, { fecha: value || null }); break;
+      // Centro de Carga — mismos 5 campos en metas_personales y equipo_produccion, ver
+      // supabase-migracion-centro-carga.sql. Dos variantes porque cada tabla tiene su propia
+      // acción de update (updMetaPersonal / updEquipo), no hay un dispatcher genérico por tabla.
+      case 'meta-energia-requiere': actions.updMetaPersonal(id, { requiere_energia: value }); break;
+      case 'meta-energia-tipo': actions.updMetaPersonal(id, { tipo_energia: value || null }); break;
+      case 'meta-energia-carga': actions.updMetaPersonal(id, { carga_porcentaje: value === '' ? null : parseN(value) }); break;
+      case 'meta-energia-estado': actions.updMetaPersonal(id, { estado_carga: value || null }); break;
+      case 'meta-energia-ultima-carga': actions.updMetaPersonal(id, { ultima_carga: value || null }); break;
+      case 'equipo-energia-requiere': actions.updEquipo(id, { requiere_energia: value }); break;
+      case 'equipo-energia-tipo': actions.updEquipo(id, { tipo_energia: value || null }); break;
+      case 'equipo-energia-carga': actions.updEquipo(id, { carga_porcentaje: value === '' ? null : parseN(value) }); break;
+      case 'equipo-energia-estado': actions.updEquipo(id, { estado_carga: value || null }); break;
+      case 'equipo-energia-ultima-carga': actions.updEquipo(id, { ultima_carga: value || null }); break;
       case 'meta-paso-texto': actions.metaPasoTexto(id, Number(idx), value); break;
       case 'equipo-nombre': actions.updEquipo(id, { nombre: value }); break;
       case 'equipo-categoria': actions.updEquipo(id, { categoria: value }); break;
