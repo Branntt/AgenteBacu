@@ -85,7 +85,7 @@ export const UNIVERSIDAD = {
   // Matrícula actual (202660) — segundo semestre 2026
   matriculaActual: {
     periodo: '202660',
-    creditosMatriculados: 16,
+    creditosMatriculados: 28,
     cursos: [
       { curso: 'MS Word', nrc: '', sem: 2, creditos: 0, estado: 'matriculado' },
       { curso: 'MS Excel', nrc: '', sem: 3, creditos: 0, estado: 'matriculado' },
@@ -101,7 +101,8 @@ export const UNIVERSIDAD = {
   // Cursos que faltan por matricular
   cursosPendientes: [
     { curso: 'A2-2 Waystage 2', sem: 3, creditos: 0, razon: 'Instrumental Idiomas' },
-    { curso: 'Realización Proy Documental', sem: 7, creditos: 5, razon: 'Pendiente para 7 semestre' },
-    { curso: 'Práctica Profesional', sem: 8, creditos: 5, razon: 'Pendiente para 8 semestre' }
+    { curso: 'Electiva de Contexto', sem: 8, creditos: 3, razon: 'Completar ciclo común' },
+    { curso: 'Realización Proy Documental', sem: 7, creditos: 5, razon: 'Trabajo de grado - 7 semestre' },
+    { curso: 'Práctica Profesional', sem: 8, creditos: 10, razon: 'Trabajo de grado - 8 semestre' }
   ]
 };
