@@ -49,16 +49,13 @@ export function renderUniversidad(state) {
   const faltan = U.creditosRequeridos - U.creditosAprobados;
   const abiertos = state.uniBloquesAbiertos || {};
 
-  // Ruta de salida: todos los cursos pendientes de todos los bloques
+  // Ruta de salida: usar cursosPendientes (lista oficial de lo que falta)
   const pendientes = [];
-  U.bloques.forEach(b => {
-    if (!b.cursos) return;
-    b.cursos.forEach(c => {
-      if (c.estado === 'pend' || c.estado === 'parcial') {
-        pendientes.push({ bloque: b.nombre, ...c });
-      }
+  if (U.cursosPendientes) {
+    U.cursosPendientes.forEach(c => {
+      pendientes.push({ bloque: `${c.sem} semestre`, ...c });
     });
-  });
+  }
 
   const rutaHtml = pendientes.map(c => `
     <div class="uni-ruta-item">
