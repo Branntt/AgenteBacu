@@ -37,14 +37,12 @@ export const UNIVERSIDAD = {
       ]
     },
     {
-      nombre: 'Electivas de Profundización', aprob: 12, req: 28, estado: 'pend',
+      nombre: 'Electivas de Profundización', aprob: 12, req: 12, estado: 'ok',
       cursos: [
         { curso: 'Electiva Profundiza 1 semestre', creditos: 3, materia: 'Fundamentos de Diseño', nota: '3.1', estado: 'ok' },
         { curso: 'Electiva Profundiza 2 semestre', creditos: 3, materia: 'Semiótica de la Imagen', nota: '3.5', estado: 'ok' },
         { curso: 'Electiva Profundiza 4 semestre', creditos: 3, materia: 'Teoría Estética', nota: '3.9', estado: 'ok' },
-        { curso: 'Electiva Profundiza 5 semestre', creditos: 3, materia: 'Fenomenología de la Imagen', nota: '3.3', estado: 'ok' },
-        { curso: 'Electiva Profundiza 7 semestre', creditos: 11, estado: 'pend' },
-        { curso: 'Electiva Profundiza 8 semestre', creditos: 5, estado: 'pend' }
+        { curso: 'Electiva Profundiza 5 semestre', creditos: 3, materia: 'Fenomenología de la Imagen', nota: '3.3', estado: 'ok' }
       ]
     },
     {
@@ -55,11 +53,10 @@ export const UNIVERSIDAD = {
       ]
     },
     {
-      nombre: 'Bienestar Universitario', aprob: 2, req: 4, estado: 'pend',
+      nombre: 'Bienestar Universitario', aprob: 2, req: 2, estado: 'ok',
       cursos: [
         { curso: 'Taller de Desarrollo Humano', creditos: 1, materia: 'Taller salud masaje terapéutico', nota: 'A', estado: 'ok' },
-        { curso: 'Taller Deporte, Recreación y Cultura', creditos: 1, materia: 'Taller deporte billar', nota: 'A', estado: 'ok' },
-        { curso: 'Actividades Libres', creditos: 2, materia: '48 horas libres acumuladas', estado: 'pend' }
+        { curso: 'Taller Deporte, Recreación y Cultura', creditos: 1, materia: 'Taller deporte billar', nota: 'A', estado: 'ok' }
       ]
     },
     {
