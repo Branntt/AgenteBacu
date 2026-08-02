@@ -1,5 +1,5 @@
 import { escapeHtml } from '../lib/format.js';
-import { calcularEstres } from '../lib/bienestar.js';
+import { calcularEstres, calcularStatsGamificacion } from '../lib/bienestar.js';
 import { hoyStr } from '../lib/idea.js';
 
 const NIVELES = [
@@ -28,6 +28,14 @@ function habitoHtml(h, hoy) {
 export function renderBienestar(state) {
   const hoy = hoyStr();
   const e = calcularEstres(state);
+
+  // Determinar título motivador según progreso
+  let tituloMotivador = '🎮 ¡MISIÓN DEL DÍA!';
+  if (e.objetivosLogrados === e.totalHabitos && e.totalHabitos > 0) {
+    tituloMotivador = '🏆 ¡MISIÓN COMPLETADA!';
+  } else if (e.objetivosLogrados > 0) {
+    tituloMotivador = `🚀 ${e.objetivosLogrados}/${e.totalHabitos} OBJETIVOS`;
+  }
 
   // Centro de clasificación: las ideas repartidas por cuánto pesan
   const clasificacionHtml = NIVELES.map(([clave, label, color, nota]) => {
@@ -80,6 +88,38 @@ export function renderBienestar(state) {
 
   return `
     <main class="bienestar">
+      <div class="jugador-header">
+        <div class="titulo-principal">${tituloMotivador}</div>
+        <div class="stats-rápido">
+          <div class="stat-box-mini">
+            <div class="stat-icon">⭐</div>
+            <div class="stat-valor">${e.nivelActual}</div>
+            <div class="stat-etiqueta">Nivel</div>
+          </div>
+          <div class="stat-box-mini">
+            <div class="stat-icon">✨</div>
+            <div class="stat-valor">${e.xpTotal}</div>
+            <div class="stat-etiqueta">XP</div>
+          </div>
+          <div class="stat-box-mini">
+            <div class="stat-icon">🔥</div>
+            <div class="stat-valor">${e.rachaActual}</div>
+            <div class="stat-etiqueta">Racha</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="jugador-progreso">
+        <div class="nivel-info">
+          <span class="nivel-actual">Nivel ${e.nivelActual}</span>
+          <span class="xp-info">${e.xpEnNivel}/${e.xpParaProximo} XP</span>
+        </div>
+        <div class="barra-nivel">
+          <div class="barra-fill" style="width:${e.progreso}%;"></div>
+        </div>
+        <div class="nivel-siguiente">Próximo nivel en ${e.xpParaProximo - e.xpEnNivel} XP</div>
+      </div>
+
       <h2 class="serif" style="margin:0 0 6px;font-size:32px;">Bienestar</h2>
       <div class="vista-sub">Cuánto te está pesando la cabeza hoy, y de dónde viene exactamente.</div>
 

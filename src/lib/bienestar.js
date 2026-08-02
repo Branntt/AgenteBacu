@@ -186,12 +186,55 @@ export function calcularEstres(state) {
   else if (pct <= 75) { nivel = 'Con tensión'; color = '#E8641B'; }
   else { nivel = 'Sobrecargado'; color = 'var(--rojo)'; }
 
+  // ---- Gamificación: puntos, nivel, racha ----
+  const stats = calcularStatsGamificacion(habitos, hoy);
+
   return {
     bruto, alivio, neto, pct, nivel, color,
     fuentes: fuentes.sort((a, b) => b.puntos - a.puntos),
     items: items.sort((a, b) => b.puntos - a.puntos),
     ideasClasificadas,
     habitos, habitosHoy: habitosHoy.length,
-    maxFuente: Math.max(1, ...fuentes.map(f => f.puntos))
+    maxFuente: Math.max(1, ...fuentes.map(f => f.puntos)),
+    ...stats
+  };
+}
+
+export function calcularStatsGamificacion(habitos, hoy) {
+  // Puntos por cada hábito completado hoy
+  const puntoPorHabito = 10;
+  const totalHabitos = habitos.length;
+  const habitosHoy = habitos.filter(h => h.fecha === hoy);
+  const xpHoy = habitosHoy.length * puntoPorHabito;
+
+  // XP acumulado (simulado basado en histórico)
+  // En un sistema real, esto vendría de una tabla de histórico
+  // Por ahora, calculamos un XP estimado basado en cuántos hábitos tiene
+  const xpTotal = totalHabitos * 50 + xpHoy;
+
+  // Nivel: cada 100 XP = 1 nivel
+  const puntosPorNivel = 100;
+  const nivelActual = Math.floor(xpTotal / puntosPorNivel) + 1;
+  const xpEnNivel = xpTotal % puntosPorNivel;
+  const xpParaProximo = puntosPorNivel;
+  const progreso = Math.round((xpEnNivel / xpParaProximo) * 100);
+
+  // Racha: días consecutivos completando todos los hábitos
+  // Por ahora calculamos una racha simulada
+  // En un sistema real, verificaríamos el histórico día a día
+  const rachaActual = habitosHoy.length === totalHabitos && totalHabitos > 0 ? 1 : 0;
+  const maxRacha = Math.floor(totalHabitos / 2) + 1;
+
+  return {
+    xpHoy,
+    xpTotal,
+    nivelActual,
+    xpEnNivel,
+    xpParaProximo,
+    progreso,
+    rachaActual,
+    maxRacha,
+    totalHabitos,
+    objetivosLogrados: habitosHoy.length
   };
 }

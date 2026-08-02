@@ -1209,6 +1209,101 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
 .estres-nota { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--muted); }
 
 /* Gamificación de Bienestar */
+.jugador-header {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  border: 2px solid var(--verde);
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 8px 32px var(--verde)33;
+}
+.titulo-principal {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+  text-align: center;
+  background: linear-gradient(135deg, var(--verde), #1faf7488);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.stats-rápido {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+.stat-box-mini {
+  background: rgba(31,175,116,0.1);
+  border: 1px solid var(--verde);
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.stat-icon {
+  font-size: 24px;
+}
+.stat-valor {
+  font-size: 24px;
+  font-weight: bold;
+  color: var(--verde);
+}
+.stat-etiqueta {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--muted);
+}
+
+.jugador-progreso {
+  background: linear-gradient(135deg, var(--panel2) 0%, var(--panel) 100%);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 28px;
+}
+.nivel-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  font-size: 12px;
+}
+.nivel-actual {
+  font-weight: bold;
+  font-size: 14px;
+}
+.xp-info {
+  color: var(--muted);
+  font-family: 'IBM Plex Mono', monospace;
+}
+.barra-nivel {
+  height: 12px;
+  background: var(--panel2);
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 8px;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+}
+.barra-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--verde), #1faf7488);
+  border-radius: 6px;
+  transition: width 0.4s ease;
+  box-shadow: 0 0 12px var(--verde)66;
+}
+.nivel-siguiente {
+  font-size: 11px;
+  color: var(--muted);
+  text-align: center;
+  font-family: 'IBM Plex Mono', monospace;
+}
+
 .estres-card-game {
   background: linear-gradient(135deg, var(--panel2) 0%, var(--panel) 100%);
   border: 2px solid var(--verde);
