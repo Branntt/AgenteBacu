@@ -530,10 +530,19 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
 .metas-columna { min-width: 0; }
 .metas-columna-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
 .metas-lista { display: flex; flex-direction: column; gap: 8px; }
-.meta-personal { display: flex; flex-direction: column; gap: 8px; background: var(--panel); border: 1px solid var(--line); padding: 10px 12px; }
-.meta-personal.cumplida { border-color: var(--verde); }
-.meta-personal.cumplida .meta-titulo { color: var(--muted); text-decoration: line-through; }
-.meta-personal-fila { display: flex; align-items: center; gap: 8px; }
+
+/* Nueva estructura de tarjeta de meta — visual mejorada */
+.meta-card { display: flex; flex-direction: column; gap: 10px; background: var(--panel); border: 1px solid var(--line); padding: 14px; }
+.meta-card.cumplida { border-color: var(--verde); background: rgba(31, 175, 116, 0.08); }
+.meta-card.cumplida .meta-titulo { color: var(--muted); text-decoration: line-through; }
+
+/* Cabecera: emoji grande + título + controles */
+.meta-card-header { display: flex; align-items: flex-start; gap: 10px; justify-content: space-between; }
+.meta-emoji-titulo { display: flex; align-items: flex-start; gap: 10px; flex: 1; min-width: 0; }
+.meta-emoji { font-size: 24px; flex-shrink: 0; }
+.meta-titulo { background: none; border: none; color: var(--text); font-size: 13px; font-weight: 500; flex: 1; min-width: 0; padding: 2px 0; }
+.meta-controles { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.meta-fecha { background: none; border: 1px solid rgba(255,255,255,0.1); color: var(--muted); font-family: 'IBM Plex Mono', monospace; font-size: 10px; padding: 4px 6px; border-radius: 4px; width: 90px; flex-shrink: 0; }
 .meta-check {
   flex-shrink: 0;
   width: 20px; height: 20px;
@@ -545,8 +554,26 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
   color: var(--verde);
   display: flex; align-items: center; justify-content: center;
 }
-.meta-titulo { background: none; border: none; color: var(--text); font-size: 13px; flex: 1; min-width: 0; }
-.meta-fecha { background: none; border: none; color: var(--muted); font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; flex-shrink: 0; width: 112px; }
+
+/* Barra de progreso — visual de avance de pasos */
+.meta-progreso-container { display: flex; align-items: center; gap: 8px; }
+.meta-barra-progreso { flex: 1; height: 5px; background: rgba(255,255,255,0.08); border-radius: 2px; overflow: hidden; }
+.meta-barra-fill { height: 100%; background: linear-gradient(90deg, var(--verde), #1faf7488); transition: width 0.3s ease; }
+.meta-progreso-texto { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--muted); white-space: nowrap; }
+
+/* Descripción de beneficio — contexto de coste-beneficio */
+.meta-descripcion { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: var(--text); font-size: 12px; padding: 6px 8px; border-radius: 4px; font-family: 'IBM Plex Mono', monospace; }
+.meta-descripcion::placeholder { color: rgba(255,255,255,0.3); font-style: italic; }
+
+/* Pasos: menos visibles pero funcionales */
+.meta-pasos-toggle { }
+.meta-pasos { display: flex; flex-direction: column; gap: 6px; padding: 8px 0 0 0; border-top: 1px solid rgba(255,255,255,0.08); max-height: 200px; overflow-y: auto; }
+
+/* Compatibilidad: mantener .meta-personal por si algo lo referencia */
+.meta-personal { display: flex; flex-direction: column; gap: 8px; background: var(--panel); border: 1px solid var(--line); padding: 10px 12px; }
+.meta-personal.cumplida { border-color: var(--verde); }
+.meta-personal.cumplida .meta-titulo { color: var(--muted); text-decoration: line-through; }
+.meta-personal-fila { display: flex; align-items: center; gap: 8px; }
 
 /* Pasos del plan de una meta — desglose simple, no solo un check de golpe */
 .meta-pasos { display: flex; flex-direction: column; gap: 4px; padding-left: 28px; }
