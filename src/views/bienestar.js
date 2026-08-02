@@ -10,11 +10,17 @@ const NIVELES = [
 
 function habitoHtml(h, hoy) {
   const hecho = h.fecha === hoy;
+  const emoji = hecho ? '🎉' : '⭕';
   return `
-    <div class="habito ${hecho ? 'hecho' : ''}">
-      <button class="habito-check" data-act="habito-toggle" data-id="${escapeHtml(h.id)}" title="${hecho ? 'Desmarcar' : 'Marcar hecho hoy'}">${hecho ? '✓' : ''}</button>
-      <input class="habito-texto" data-change="meta-personal-titulo" data-id="${escapeHtml(h.id)}" value="${escapeHtml(h.titulo)}" placeholder="Nombre del hábito…">
-      <button class="habito-quitar" data-act="meta-personal-eliminar" data-id="${escapeHtml(h.id)}" title="Quitar">✕</button>
+    <div class="habito ${hecho ? 'hecho' : ''}" data-id="${escapeHtml(h.id)}">
+      <div class="habito-header">
+        <button class="habito-check" data-act="habito-toggle" data-id="${escapeHtml(h.id)}" title="${hecho ? 'Desmarcar' : 'Marcar hecho hoy'}">
+          <span class="habito-emoji">${emoji}</span>
+        </button>
+        <input class="habito-texto" data-change="meta-personal-titulo" data-id="${escapeHtml(h.id)}" value="${escapeHtml(h.titulo)}" placeholder="Nombre del hábito…">
+        <button class="habito-quitar" data-act="meta-personal-eliminar" data-id="${escapeHtml(h.id)}" title="Quitar">✕</button>
+      </div>
+      ${hecho ? '<div class="habito-done-fx"></div>' : ''}
     </div>
   `;
 }
@@ -77,14 +83,40 @@ export function renderBienestar(state) {
       <h2 class="serif" style="margin:0 0 6px;font-size:32px;">Bienestar</h2>
       <div class="vista-sub">Cuánto te está pesando la cabeza hoy, y de dónde viene exactamente.</div>
 
-      <!-- MEDIDOR -->
-      <div class="estres-card" style="border-color:${e.color};box-shadow:0 0 24px ${e.color}33;">
-        <div class="mono-label">Nivel de estrés</div>
-        <div class="estres-valor" style="color:${e.color};">${e.pct}%</div>
-        <div class="estres-nivel" style="color:${e.color};">${e.nivel}</div>
-        <div class="estres-barra"><div class="estres-fill" style="width:${e.pct}%;background:${e.color};"></div></div>
-        <div class="estres-nota">
-          ${e.bruto} pts de carga${e.alivio > 0 ? ` · <span style="color:var(--verde);">−${e.alivio} por tus hábitos de hoy</span>` : ' · aún no marcas hábitos hoy'}
+      <!-- MEDIDOR GAMIFICADO -->
+      <div class="estres-card-game" style="border-color:${e.color};box-shadow:0 0 24px ${e.color}33;">
+        <div class="estres-game-header">
+          <div class="estres-game-title">NIVEL DE ESTRÉS</div>
+          <div class="estres-badge" style="background:${e.color};">${e.pct}%</div>
+        </div>
+
+        <div class="estres-circle-container">
+          <div class="estres-circle" style="--percentage:${e.pct};--color:${e.color};">
+            <div class="estres-circle-inner" style="background:linear-gradient(135deg, ${e.color}, ${e.color}88);">
+              <div class="estres-circle-text">
+                <div class="estres-valor" style="color:${e.color};">${e.pct}%</div>
+                <div class="estres-nivel" style="color:${e.color};">${e.nivel}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="estres-stats">
+          <div class="stat-item">
+            <span class="stat-label">Carga total</span>
+            <span class="stat-value">${e.bruto} pts</span>
+          </div>
+          ${e.alivio > 0 ? `
+            <div class="stat-item bonus">
+              <span class="stat-label">🎉 Alivio hoy</span>
+              <span class="stat-value" style="color:var(--verde);">−${e.alivio} pts</span>
+            </div>
+          ` : `
+            <div class="stat-item">
+              <span class="stat-label">💡 Tip</span>
+              <span class="stat-value">Completa hábitos hoy</span>
+            </div>
+          `}
         </div>
       </div>
 
@@ -103,12 +135,25 @@ export function renderBienestar(state) {
       <div class="vista-sub">Si resuelves los tres primeros, el medidor baja de verdad.</div>
       <div class="pesos-lista">${topHtml}</div>
 
-      <!-- HÁBITOS -->
-      <div class="section-title">Hábitos de hoy — ${e.habitosHoy}/${e.habitos.length}</div>
-      <div class="vista-sub">Cada hábito cumplido baja 5 puntos del medidor. Se reinicia solo cada día.</div>
-      <div class="habitos-grid">
-        ${habitosHtml}
-        <button class="inv-slot-add" data-act="habito-nuevo">+ Hábito</button>
+      <!-- HÁBITOS GAMIFICADOS -->
+      <div class="habitos-section">
+        <div class="habitos-header">
+          <div class="habitos-title-game">
+            <span class="habitos-icon">🎮 HÁBITOS DE HOY</span>
+            <div class="habitos-counter">
+              <div class="counter-circle" style="background:linear-gradient(135deg, #1faf74, #1faf7488);">
+                <span class="counter-num">${e.habitosHoy}</span>
+                <span class="counter-total">/${e.habitos.length}</span>
+              </div>
+            </div>
+          </div>
+          ${e.habitosHoy === e.habitos.length && e.habitos.length > 0 ? '<div class="achievement-unlock">🏆 ¡TODOS COMPLETADOS!</div>' : ''}
+        </div>
+        <div class="vista-sub">Cada hábito cumplido = 5 puntos menos de estrés. Se reinicia cada medianoche.</div>
+        <div class="habitos-grid">
+          ${habitosHtml}
+          <button class="inv-slot-add" data-act="habito-nuevo">+ Nuevo hábito</button>
+        </div>
       </div>
     </main>
   `;
