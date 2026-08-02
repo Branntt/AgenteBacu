@@ -73,15 +73,11 @@ export const UNIVERSIDAD = {
       ]
     },
     {
-      nombre: 'Instrumental Idiomas', aprob: 2, req: 7, estado: 'pend',
+      nombre: 'Instrumental Idiomas', aprob: 7, req: 7, estado: 'ok',
       cursos: [
         { curso: 'A1 Basic Breakthrough', nota: 'A', estado: 'ok' },
         { curso: 'A2-1 Waystage 1', nota: 'A', estado: 'ok' },
-        { curso: 'A2-2 Waystage 2', estado: 'pend', falta: true },
-        { curso: 'B1-1 Threshold 1', estado: 'pend' },
-        { curso: 'B1-2 Threshold 2', estado: 'pend' },
-        { curso: 'B2-1 Vantage 1', estado: 'pend' },
-        { curso: 'B2-2 Vantage 2', estado: 'pend' }
+        { curso: 'Prueba de Suficiencia en Inglés', estado: 'ok' }
       ]
     }
   ],
