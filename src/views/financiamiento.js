@@ -74,8 +74,11 @@ function botonMarcarPagada(act, id) {
 function deudaCardHtml(d) {
   const id = escapeHtml(d.id);
   return `
-    <div class="deuda-card ${d.pagada ? 'pagada' : ''}">
-      <input class="deuda-persona" data-change="deuda-persona" data-id="${id}" value="${escapeHtml(d.persona || '')}" placeholder="¿Con quién es esta deuda?">
+    <div class="deuda-card ${d.pagada ? 'pagada' : ''} ${d.urgente ? 'urgente' : ''}">
+      <div class="deuda-header-fila">
+        <input class="deuda-persona" data-change="deuda-persona" data-id="${id}" value="${escapeHtml(d.persona || '')}" placeholder="¿Con quién es esta deuda?">
+        <button class="deuda-urgente-toggle ${d.urgente ? 'activo' : ''}" data-act="deuda-urgente-toggle" data-id="${id}" title="${d.urgente ? 'Quitar urgente' : 'Marcar urgente'}">🔥</button>
+      </div>
       <div class="deuda-footer" style="flex-wrap:wrap;">
         <input class="deuda-monto-label" data-change="deuda-monto" data-id="${id}" value="${d.monto ? fmtMoney(d.monto) : ''}" placeholder="Monto" inputmode="numeric" style="background:none;border:none;width:110px;color:inherit;">
         <input type="date" data-change="deuda-fecha-limite" data-id="${id}" value="${escapeHtml(d.fecha_limite || '')}" min="2026-01-01" title="Fecha límite" style="${FECHA_LIMITE_STYLE}">
@@ -91,14 +94,24 @@ function deudaCardHtml(d) {
 // agregar/editar/eliminar nada; esa tabla y sus acciones (pagoMensualNuevo/updPagoMensual/
 // eliminarPagoMensual) y hasta el CSS (.pago-card/.pago-footer) ya existían, solo faltaba
 // esta tarjeta para conectarlos.
+// pagado_mes: ¿ya se marcó pagado ESTE mes calendario? (ultimo_pago vive en la
+// misma fila, se compara el prefijo YYYY-MM contra hoy — no hay una fila por mes,
+// solo la última fecha en que se marcó, que alcanza para saber "¿ya salió o no?").
 function pagoCardHtml(p) {
   const id = escapeHtml(p.id);
+  const hoy = hoyStr();
+  const pagadoMes = !!(p.ultimo_pago && p.ultimo_pago.slice(0, 7) === hoy.slice(0, 7));
+  const vencido = !pagadoMes && p.dia_pago && Number(p.dia_pago) < Number(hoy.slice(8, 10));
   return `
-    <div class="pago-card">
+    <div class="pago-card ${vencido ? 'vencido' : ''} ${pagadoMes ? 'pagado-mes' : ''}">
       <input class="pago-nombre" data-change="pago-mensual-nombre" data-id="${id}" value="${escapeHtml(p.nombre || '')}" placeholder="Nombre del pago o suscripción">
       <div class="pago-footer" style="flex-wrap:wrap;">
         <input class="pago-monto-label" data-change="pago-mensual-monto" data-id="${id}" value="${p.monto ? fmtMoney(p.monto) : ''}" placeholder="Monto" inputmode="numeric" style="background:none;border:none;width:110px;color:inherit;">
         <input type="number" data-change="pago-mensual-dia" data-id="${id}" value="${p.dia_pago || ''}" min="1" max="31" placeholder="Día" title="Día del mes en que se cobra" style="${FECHA_LIMITE_STYLE}width:64px;">
+        ${pagadoMes
+          ? `<span class="pago-estado" style="color:var(--verde);">✓ Pagado este mes</span>`
+          : `<button data-act="pago-mensual-marcar-pagado" data-id="${id}" class="pago-estado" style="padding:4px 10px;border-radius:6px;border:1px solid var(--line);background:var(--panel);cursor:pointer;color:${vencido ? 'var(--rojo)' : 'var(--verde)'};">${vencido ? '⚠️ Vencido — marcar pagado' : 'Marcar pagado'}</button>`
+        }
         ${botonEliminar('pago-mensual-eliminar', p.id)}
       </div>
     </div>
@@ -133,7 +146,9 @@ export function renderFinanciamiento(state) {
   const deudasPorVencer = meDebenHtml.filter(d => !esVencida(d, hoy));
 
   // Deudas que tú debes pagar
-  const yoDeboHtml = deudas.filter(d => d.direccion === 'debo' && !d.pagada);
+  // Las urgentes primero (ej. Edinson $600k antes que Andre $15k, aunque Andre sea más viejo).
+  const yoDeboHtml = deudas.filter(d => d.direccion === 'debo' && !d.pagada)
+    .sort((a, b) => (b.urgente ? 1 : 0) - (a.urgente ? 1 : 0));
   const yoDebenTotal = yoDeboHtml.reduce((sum, d) => sum + (Number(d.monto) || 0), 0);
 
   // Pagos mensuales/suscripciones — solo referencia, no entra en patrimonio (igual que antes).

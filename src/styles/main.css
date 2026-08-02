@@ -1091,7 +1091,21 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
 .deuda-card { background: var(--panel); border: 1px solid var(--line); padding: 16px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; }
 .deuda-card.pagada { opacity: 0.5; }
 .deuda-card.pagada .deuda-persona { text-decoration: line-through; }
-.deuda-persona { background: none; border: none; color: var(--text); font-size: 14px; font-weight: 600; padding: 0; width: 100%; }
+.deuda-card.urgente { border-color: var(--rojo); box-shadow: 0 0 0 1px var(--rojo); }
+.deuda-header-fila { display: flex; align-items: center; gap: 8px; }
+.deuda-persona { background: none; border: none; color: var(--text); font-size: 14px; font-weight: 600; padding: 0; flex: 1; min-width: 0; }
+.deuda-urgente-toggle {
+  flex-shrink: 0;
+  width: 28px; height: 28px;
+  background: none;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  opacity: 0.35;
+  display: flex; align-items: center; justify-content: center;
+}
+.deuda-urgente-toggle.activo { opacity: 1; border-color: var(--rojo); background: rgba(217,54,46,0.12); }
 .deuda-footer { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
 .deuda-monto-label { font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-weight: 600; }
 
@@ -1113,9 +1127,12 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
 .tabla-container { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 
 .pago-card { background: var(--panel); border: 1px solid var(--line); padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+.pago-card.vencido { border-color: var(--rojo); }
+.pago-card.pagado-mes { border-color: var(--verde); opacity: 0.7; }
 .pago-nombre { background: none; border: none; color: var(--text); font-size: 14px; font-weight: 600; padding: 0; width: 100%; }
 .pago-footer { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
 .pago-monto-label { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--muted); }
+.pago-estado { font-size: 11px; white-space: nowrap; font-family: 'IBM Plex Mono', monospace; }
 
 @media (min-width: 600px) {
   .financ-total-card { padding: 26px; }

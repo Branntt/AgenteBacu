@@ -854,6 +854,13 @@ export const actions = {
     const d = state.deudas.find(x => x.id === id);
     if (d) actions.updDeuda(id, { pagada: !d.pagada });
   },
+  // Urgente es solo una etiqueta manual (no depende de fecha ni monto) — el usuario decide
+  // qué le pesa más, ej. Edinson $600k urgente aunque Andre lleve más tiempo debiéndose.
+  // Se usa para ordenar "Debes Pagar" (urgentes primero) en financiamiento.js.
+  toggleDeudaUrgente: id => {
+    const d = state.deudas.find(x => x.id === id);
+    if (d) actions.updDeuda(id, { urgente: !d.urgente });
+  },
   eliminarDeuda: id => {
     state.deudas = state.deudas.filter(d => d.id !== id);
     notify();
@@ -875,6 +882,14 @@ export const actions = {
     state.pagosMensuales = state.pagosMensuales.filter(p => p.id !== id);
     notify();
     supabase.from('pagos_mensuales').delete().eq('id', id).then(({ error }) => marcarGuardado(!error));
+  },
+  // ultimo_pago guarda solo la ÚLTIMA fecha en que se marcó pagado — no una fila por mes.
+  // financiamiento.js compara el prefijo YYYY-MM contra hoy para saber si ya salió este mes.
+  marcarPagoMensualPagado: id => {
+    const patch = { ultimo_pago: hoyStr() };
+    state.pagosMensuales = state.pagosMensuales.map(p => p.id === id ? { ...p, ...patch } : p);
+    notify();
+    supabase.from('pagos_mensuales').update(patch).eq('id', id).then(({ error }) => marcarGuardado(!error));
   },
 
   // tipo: solo para items de Inventario > Personal (ver TIPOS_PERSONAL en constants.js) — se

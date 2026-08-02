@@ -317,11 +317,13 @@ root.addEventListener('click', e => {
     case 'deuda-nueva': actions.deudaNueva(direccion); break;
     case 'deuda-toggle': actions.toggleDeudaPagada(id); break;
     case 'deuda-eliminar': actions.eliminarDeuda(id); break;
+    case 'deuda-urgente-toggle': actions.toggleDeudaUrgente(id); break;
     case 'cc-eliminar': actions.eliminarCuentaCobro(id); break;
     case 'gasto-nuevo': actions.gastoNuevo(); break;
     case 'gasto-eliminar': actions.eliminarGasto(id); break;
     case 'pago-mensual-nuevo': actions.pagoMensualNuevo(); break;
     case 'pago-mensual-eliminar': actions.eliminarPagoMensual(id); break;
+    case 'pago-mensual-marcar-pagado': actions.marcarPagoMensualPagado(id); break;
     case 'meta-personal-nueva': actions.metaPersonalNueva(categoria); break;
     case 'inv-vista': actions.invSetVista(value); break;
     case 'finanzas-vista': actions.finanzasSetVista(value); break;
