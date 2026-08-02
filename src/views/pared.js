@@ -11,7 +11,7 @@ function cintaRealHtml(t) {
     `<option value="${escapeHtml(col)}" ${col === colActual ? 'selected' : ''}>${escapeHtml(col)}</option>`
   ).join('');
   return `
-    <div class="tarea-cinta ${t.hecha ? 'hecha' : ''}" style="background:${color};">
+    <div class="tarea-cinta ${t.hecha ? 'hecha' : ''}" style="background:${color};" draggable="true" data-id="${escapeHtml(t.id)}">
       <button class="tarea-check" data-act="tarea-toggle" data-id="${escapeHtml(t.id)}" title="${t.hecha ? 'Marcar pendiente' : 'Marcar hecha'}">${t.hecha ? '✓' : ''}</button>
       <input class="tarea-texto" data-change="tarea-texto" data-id="${escapeHtml(t.id)}" value="${escapeHtml(t.texto)}" placeholder="¿Qué hay que hacer?">
       <select class="tarea-columna" data-change="tarea-columna" data-id="${escapeHtml(t.id)}" title="Mover a columna">${opcionesColumnas}</select>

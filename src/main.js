@@ -396,29 +396,48 @@ root.addEventListener('dragstart', e => {
 });
 
 root.addEventListener('dragover', e => {
-  const zona = e.target.closest('[data-drop]');
+  const zona = e.target.closest('[data-drop], .pared-columna-items');
   if (!zona) return;
   e.preventDefault();
-  zona.classList.add('drop-activo');
+  e.dataTransfer.dropEffect = 'move';
+  zona.closest('[data-drop], .pared-columna')?.classList.add('drop-activo');
 });
 
 root.addEventListener('dragleave', e => {
-  const zona = e.target.closest('[data-drop]');
-  if (zona) zona.classList.remove('drop-activo');
+  const zona = e.target.closest('[data-drop], .pared-columna-items');
+  if (zona) zona.closest('[data-drop], .pared-columna')?.classList.remove('drop-activo');
 });
 
 root.addEventListener('drop', e => {
-  const zona = e.target.closest('[data-drop]');
-  if (!zona) return;
+  const zonaInventario = e.target.closest('[data-drop]');
+  const zonaColumna = e.target.closest('.pared-columna-items')?.closest('.pared-columna');
+
+  if (!zonaInventario && !zonaColumna) return;
   e.preventDefault();
-  zona.classList.remove('drop-activo');
+
+  zonaInventario?.classList.remove('drop-activo');
+  zonaColumna?.classList.remove('drop-activo');
+
   const idSoltado = e.dataTransfer.getData('text/plain') || dragId;
   dragId = null;
   if (!idSoltado) return;
-  const item = state.metasPersonales.find(m => m.id === idSoltado);
-  if (!item) return;
-  const equipar = zona.dataset.drop === 'equipar';
-  if (item.cumplida !== equipar) actions.updMetaPersonal(idSoltado, { cumplida: equipar });
+
+  // Si es Pared (columnas de tareas)
+  if (zonaColumna) {
+    const titulo = zonaColumna.querySelector('.pared-columna-titulo')?.textContent?.trim();
+    if (titulo) {
+      actions.updTarea(idSoltado, { columna: titulo });
+    }
+    return;
+  }
+
+  // Si es Inventario (equipar/mochila)
+  if (zonaInventario) {
+    const item = state.metasPersonales.find(m => m.id === idSoltado);
+    if (!item) return;
+    const equipar = zonaInventario.dataset.drop === 'equipar';
+    if (item.cumplida !== equipar) actions.updMetaPersonal(idSoltado, { cumplida: equipar });
+  }
 });
 
 root.addEventListener('submit', e => {
