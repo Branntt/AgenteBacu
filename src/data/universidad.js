@@ -1,5 +1,5 @@
 // Datos de la carrera de Brandon — Artes Audiovisuales (UNAB).
-// Info de un momento específico (evaluada 05/06/2026, solicitud 10, periodo Segundo Semestre 2026).
+// Info actualizada desde MiPortal (matricula actual).
 // Es una foto del cumplimiento curricular; se actualiza a mano cuando el portal cambie.
 
 export const UNIVERSIDAD = {
@@ -7,7 +7,7 @@ export const UNIVERSIDAD = {
   id: 'U00168667',
   creditosAprobados: 109,
   creditosRequeridos: 147,
-  evaluado: '2026-06-05',
+  evaluado: '2026-08-02',
   periodo: 'Segundo Semestre 2026',
 
   // Bloques del cumplimiento curricular. estado: 'ok' | 'pend'
@@ -19,18 +19,21 @@ export const UNIVERSIDAD = {
     { nombre: '5 semestre', aprob: 15, req: 15, estado: 'ok' },
     { nombre: '6 semestre', aprob: 18, req: 18, estado: 'ok' },
     {
-      nombre: '7 semestre', aprob: 0, req: 3, estado: 'pend',
-      cursos: [{ curso: 'Gestión Audiovisual', creditos: 3, estado: 'pend' }]
+      nombre: '7 semestre', aprob: 3, req: 3, estado: 'ok',
+      cursos: [{ curso: 'Gestión Audiovisual', creditos: 3, estado: 'ok', matriculado: true }]
     },
     {
-      nombre: '8 semestre', aprob: 0, req: 10, estado: 'pend',
-      cursos: [{ curso: 'Práctica Profesional', creditos: 10, estado: 'pend' }]
+      nombre: '8 semestre', aprob: 5, req: 10, estado: 'pend',
+      cursos: [
+        { curso: 'Práctica Profesional', creditos: 5, estado: 'pend' },
+        { curso: 'Electivas Ciclo Común', creditos: 5, estado: 'ok', matriculado: true }
+      ]
     },
     {
-      nombre: 'Curso Sociohumanístico', aprob: 3, req: 6, estado: 'pend',
+      nombre: 'Curso Sociohumanístico', aprob: 6, req: 6, estado: 'ok',
       cursos: [
         { curso: 'Sociohumanístico 3 semestre', creditos: 3, materia: 'Luces, cámara, historia', nota: '3.3', estado: 'ok' },
-        { curso: 'Sociohumanístico 4 semestre', creditos: 3, estado: 'pend' }
+        { curso: 'Sociohumanístico 4 semestre', creditos: 3, materia: 'Electiva Sociohumanística', estado: 'ok', matriculado: true }
       ]
     },
     {
@@ -45,9 +48,9 @@ export const UNIVERSIDAD = {
       ]
     },
     {
-      nombre: 'Electiva de Contexto', aprob: 2, req: 6, estado: 'pend',
+      nombre: 'Electiva de Contexto', aprob: 3, req: 6, estado: 'pend',
       cursos: [
-        { curso: 'Electiva de Contexto 7 semestre', creditos: 3, materia: 'Finanzas para decisiones perso.', nota: '3.8', estado: 'parcial', aprob: 2 },
+        { curso: 'Electiva de Contexto 7 semestre', creditos: 3, materia: 'Finanzas para decisiones perso.', nota: '3.8', estado: 'ok', matriculado: true },
         { curso: 'Electiva de Contexto 8 semestre', creditos: 3, estado: 'pend' }
       ]
     },
@@ -60,13 +63,13 @@ export const UNIVERSIDAD = {
       ]
     },
     {
-      nombre: 'Competencias Digitales', aprob: 2, req: 5, estado: 'pend',
+      nombre: 'Competencias Digitales', aprob: 4, req: 5, estado: 'pend',
       cursos: [
         { curso: 'Vida en Línea', materia: 'Examen Vida en Línea', estado: 'ok' },
         { curso: 'Cultura Digital', materia: 'Examen Cultura Digital', estado: 'ok' },
-        { curso: 'MS Word', estado: 'pend' },
-        { curso: 'MS Excel', estado: 'pend' },
-        { curso: 'MS PowerPoint', estado: 'pend' }
+        { curso: 'MS Word', estado: 'ok', matriculado: true },
+        { curso: 'MS Excel', estado: 'ok', matriculado: true },
+        { curso: 'MS PowerPoint', estado: 'pend', matriculado: true }
       ]
     },
     {
@@ -74,7 +77,7 @@ export const UNIVERSIDAD = {
       cursos: [
         { curso: 'A1 Basic Breakthrough', nota: 'A', estado: 'ok' },
         { curso: 'A2-1 Waystage 1', nota: 'A', estado: 'ok' },
-        { curso: 'A2-2 Waystage 2', estado: 'pend' },
+        { curso: 'A2-2 Waystage 2', estado: 'pend', falta: true },
         { curso: 'B1-1 Threshold 1', estado: 'pend' },
         { curso: 'B1-2 Threshold 2', estado: 'pend' },
         { curso: 'B2-1 Vantage 1', estado: 'pend' },
@@ -83,19 +86,26 @@ export const UNIVERSIDAD = {
     }
   ],
 
-  // Matrícula recomendada para el próximo periodo (202660)
-  matriculaRecomendada: {
+  // Matrícula actual (202660) — segundo semestre 2026
+  matriculaActual: {
     periodo: '202660',
-    creditosRequeridos: 25,
-    creditosAMatricular: 16,
+    creditosMatriculados: 16,
     cursos: [
-      { curso: 'Marca Personal Digital', nrc: '63588', sem: 2, creditos: 2 },
-      { curso: 'IA Generativa', nrc: '63597', sem: 3, creditos: 0 },
-      { curso: 'Creación de Contenido Digital', nrc: '64207', sem: 4, creditos: 2 },
-      { curso: 'Comprender el Contexto', nrc: '59495', sem: 7, creditos: 2 },
-      { curso: 'Formas del Documental', nrc: '61842', sem: 7, creditos: 2 },
-      { curso: 'Diseño Proy Grado Documental', nrc: '61839', sem: 7, creditos: 5 },
-      { curso: 'Gestión Audiovisual', nrc: '61843', sem: 7, creditos: 3 }
+      { curso: 'MS Word', nrc: '', sem: 2, creditos: 0, estado: 'matriculado' },
+      { curso: 'MS Excel', nrc: '', sem: 3, creditos: 0, estado: 'matriculado' },
+      { curso: 'Electiva Sociohumanística', nrc: '', sem: 4, creditos: 3, estado: 'matriculado' },
+      { curso: 'MS PowerPoint', nrc: '', sem: 4, creditos: 0, estado: 'matriculado' },
+      { curso: 'Electiva de Contexto', nrc: '', sem: 7, creditos: 3, estado: 'matriculado' },
+      { curso: 'Electivas Ciclo Común', nrc: '', sem: 7, creditos: 11, estado: 'matriculado' },
+      { curso: 'Gestión Audiovisual', nrc: '', sem: 7, creditos: 3, estado: 'matriculado' },
+      { curso: 'Electivas Ciclo Común', nrc: '', sem: 8, creditos: 5, estado: 'matriculado' }
     ]
-  }
+  },
+
+  // Cursos que faltan por matricular
+  cursosPendientes: [
+    { curso: 'A2-2 Waystage 2', sem: 3, creditos: 0, razon: 'Instrumental Idiomas' },
+    { curso: 'Realización Proy Documental', sem: 7, creditos: 5, razon: 'Pendiente para 7 semestre' },
+    { curso: 'Práctica Profesional', sem: 8, creditos: 5, razon: 'Pendiente para 8 semestre' }
+  ]
 };
