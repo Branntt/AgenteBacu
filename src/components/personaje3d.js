@@ -121,9 +121,10 @@ async function revisarGuardado() {
   } catch (e) { /* IndexedDB no disponible (modo privado, etc.) — se sigue sin guardado */ }
 }
 
-// Detecta cuándo el usuario le da "Volver al avatar simple" (avatarGlbUrl pasa de tener
-// algo a null) para borrar también lo guardado — si no, "volver al simple" y recargar la
-// página lo traería de vuelta solo, que no es lo que pide ese botón.
+// Detecta cuándo el usuario le da "Borrar personaje" (avatarGlbUrl pasa de tener algo a
+// null) para borrar también lo guardado — si no, recargar la página lo traería de vuelta
+// solo, que no es lo que pide ese botón. Ya no existe un "avatar simple" al que volver (se
+// quitó el SVG, 2026-08-01) — este botón deja el estado vacío (🧍 Crear personaje 3D).
 let ultimoGlbUrl;
 function sincronizarGuardado(state) {
   if (ultimoGlbUrl !== undefined && ultimoGlbUrl && !state.avatarGlbUrl) {
@@ -243,7 +244,7 @@ export function renderPersonaje3DViewer(state) {
       <div class="personaje3d-canvas-host" id="personaje3d-canvas-host"></div>
       <div class="personaje3d-botones">
         <button class="btn-ghost" data-act="personaje3d-abrir" style="min-height:0;font-size:11px;padding:7px 12px;">✎ Rehacer</button>
-        <button class="btn-text-muted" data-act="personaje3d-reset" style="min-height:0;font-size:11px;padding:7px 12px;">Volver al avatar simple</button>
+        <button class="btn-text-muted" data-act="personaje3d-reset" style="min-height:0;font-size:11px;padding:7px 12px;">🗑 Borrar personaje</button>
       </div>
     </div>
   `;
@@ -312,7 +313,7 @@ async function destruirCreador() {
 
 export function sincronizarPersonaje3D(state) {
   revisarGuardado(); // una sola vez por carga de página, ver arriba
-  sincronizarGuardado(state); // detecta "Volver al avatar simple" y borra lo guardado
+  sincronizarGuardado(state); // detecta "Borrar personaje" y borra lo guardado
 
   // Visor
   const hostViewer = document.getElementById('personaje3d-canvas-host');
