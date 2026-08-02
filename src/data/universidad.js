@@ -100,5 +100,8 @@ export const UNIVERSIDAD = {
     { curso: 'Práctica Profesional', sem: 8, creditos: 10, razon: 'Trabajo de grado - 8 semestre' },
     { curso: 'Electiva de Contexto', sem: 8, creditos: 3, razon: 'Completar contexto' },
     { curso: 'Realización Proyecto Documental', sem: 7, creditos: 5, razon: 'Trabajo de grado - 7 semestre' }
-  ]
+  ],
+
+  // Trabajos asignados por profesores
+  trabajosAsignados: []
 };
