@@ -1,7 +1,7 @@
 import { escapeHtml, fmtFecha } from '../lib/format.js';
 import { renderPersonaje3DViewer } from '../components/personaje3d.js';
 import { hoyStr, sumarDias } from '../lib/idea.js';
-import { TIPOS_PERSONAL, TIPOS_ENERGIA, ESTADOS_CARGA, MESES } from '../data/constants.js';
+import { TIPOS_PERSONAL, TIPOS_ENERGIA, ESTADOS_CARGA, MESES, obtenerIconoItem } from '../data/constants.js';
 
 const VISTAS_INV = [
   ['personal', '🎒 Personal'],
@@ -118,6 +118,20 @@ function renderPersonal(items, state) {
     <div class="vista-sub">Tu ropa y objetos personales, por categoría. Arrastrá un item sobre el personaje para equiparlo (o soltalo acá para devolverlo a la mochila) — ▲/▼ hacen lo mismo si no podés arrastrar (celular).</div>
     <div class="inv-categorias" data-drop="mochila">
       ${mochilaCategoriasHtml}
+    </div>
+
+    <div class="section-title" style="margin-top:40px;">📦 Ropa disponible (Minecraft-style)</div>
+    <div class="vista-sub">Arrastrá los items al personaje para equiparlos. Los sliders muestran las prendas disponibles para vestir.</div>
+    <div class="items-grid">
+      ${mochila.map(m => {
+        const icon = obtenerIconoItem(m.tipo, m.nombre);
+        return `
+          <div class="item-card" draggable="true" data-id="${escapeHtml(m.id)}" title="Arrastrá al personaje para equipar">
+            <div class="item-icon">${icon}</div>
+            <div class="item-nombre">${escapeHtml((m.nombre || '').substring(0, 20))}</div>
+          </div>
+        `;
+      }).join('')}
     </div>
 
     <div style="margin-top:32px;">

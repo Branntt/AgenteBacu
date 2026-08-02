@@ -1,32 +1,11 @@
-// Prototipo de personaje 3D (Inventario > Personal, beta) — visor con Three.js + creador
-// con Avaturn (servicio externo, sin cuenta necesaria; reemplaza a Ready Player Me, que
-// cerró en 2026 tras ser comprado por Netflix).
-//
-// Three.js/Avaturn se cargan de forma diferida (import() dinámico) — nunca en el arranque
-// de la app, solo cuando el usuario realmente entra a esta sección — para no afectar la
-// velocidad de carga del resto de la app.
-//
-// El resto de la app reconstruye TODO el DOM en cada cambio de estado (ver render() en
-// main.js), lo cual destruiría un canvas WebGL en cada render si no se maneja aparte. Por
-// eso el renderer/escena/SDK viven en variables de módulo (no se recrean) y hay una función
-// `sincronizarPersonaje3D`, llamada después de cada render (igual que restaurarFoco), que
-// reengancha el canvas/iframe existente al contenedor recién creado — o los pausa/destruye
-// si el usuario salió de la vista, para no seguir gastando GPU/batería de fondo.
+// Prototipo de personaje 3D mejorado — visor con Three.js + creador con Avaturn
+// Mejoras: cámara fija vertical, animaciones (parpadeos, respiración, movimientos sutiles)
 import { actions } from '../state/store.js';
 
 const THREE_VERSION = '0.160.0';
-// Se cachea la PROMESA, no el resultado — sincronizarPersonaje3D puede llamarse varias
-// veces seguidas (una por cada render()) antes de que termine la primera carga; cachear
-// solo el resultado dejaba que cada llamada de-en-medio disparara su propia importación
-// duplicada ("Multiple instances of Three.js being imported").
 let threePromise = null;
 let avaturnPromise = null;
 
-// esm.sh (no unpkg): reescribe los imports internos de cada addon (ej. GLTFLoader hace
-// `import ... from 'three'`) a URLs resueltas — unpkg sirve los archivos tal cual, sin
-// resolver ese specifier "desnudo", y como esto se importa de forma diferida (sin
-// <script type="importmap"> declarado de antemano) no hay quien lo resuelva. Ver historial:
-// esto rompía en silencio (TypeError: Failed to resolve module specifier "three").
 function cargarThree() {
   if (threePromise) return threePromise;
   const base = `https://esm.sh/three@${THREE_VERSION}`;
@@ -37,7 +16,7 @@ function cargarThree() {
     import(/* @vite-ignore */ `${base}/examples/jsm/environments/RoomEnvironment.js`)
   ]).then(([THREE, loaderMod, controlsMod, envMod]) =>
     ({ THREE, GLTFLoader: loaderMod.GLTFLoader, OrbitControls: controlsMod.OrbitControls, RoomEnvironment: envMod.RoomEnvironment })
-  ).catch(err => { threePromise = null; throw err; }); // si falla, la próxima llamada puede reintentar
+  ).catch(err => { threePromise = null; throw err; });
   return threePromise;
 }
 
@@ -48,24 +27,6 @@ function cargarAvaturn() {
   return avaturnPromise;
 }
 
-// Sin una cuenta/sesión propia en Avaturn, el widget no puede subir el avatar exportado a
-// su nube — en cambio devuelve el GLB entero embebido como un data: URI (~5MB en base64).
-// El CSP necesita "data:" en connect-src para poder cargarlo (junto con "blob:", que ya
-// estaba — GLTFLoader crea blob: URLs aparte para las texturas embebidas del GLB, eso es
-// independiente de si el modelo en sí vino de un data: o un http: URL).
-//
-// Antes esto se decodificaba a mano (atob + loop de bytes) para esquivar el CSP en vez de
-// arreglarlo — funcionaba, pero un loop en JS byte por byte sobre ~5 millones de caracteres
-// es lento justo donde más importa (celular). Dejar que el navegador lo resuelva nativo vía
-// fetch() es muchísimo más rápido, así que ahora se pasa el data: URI directo al loader —
-// no hace falta convertirlo nosotros.
-//
-// avatarGlbUrl NO se persiste en localStorage (no es UI_PERSIST, ver store.js): tanto un
-// data: URI de 5MB como una blob: URL derivada no sirven de nada guardados ahí — el primero
-// se pasa de la cuota (~5-10MB para TODO el origen, no solo esta llave), la segunda deja de
-// servir apenas se recarga la página. En cambio se guarda el Blob real en IndexedDB (cuota
-// mucho más grande, pensada justo para archivos) y en cada carga de la app se regenera una
-// blob: URL fresca a partir de eso — ver revisarGuardado()/guardarEnDB() más abajo.
 const DB_NOMBRE = 'agentebacu-personaje3d';
 const DB_STORE = 'avatar';
 
@@ -94,7 +55,7 @@ async function leerDeDB() {
     const tx = db.transaction(DB_STORE, 'readonly');
     const req = tx.objectStore(DB_STORE).get('actual');
     req.onsuccess = () => resolve(req.result || null);
-    req.onerror = () => reject(req.error);
+    req.onerror = () => reject(tx.error);
   });
 }
 
@@ -108,9 +69,6 @@ async function borrarDeDB() {
   });
 }
 
-// Se revisa una sola vez por carga de página (no una por render) — si hay un personaje
-// guardado de una sesión anterior, arma una blob: URL fresca (la vieja ya no sirve, quedó
-// tirada cuando se cerró esa pestaña) y la mete en el estado como si se acabara de crear.
 let dbRevisada = false;
 async function revisarGuardado() {
   if (dbRevisada) return;
@@ -118,13 +76,9 @@ async function revisarGuardado() {
   try {
     const blob = await leerDeDB();
     if (blob) actions.personaje3dSetGlb(URL.createObjectURL(blob));
-  } catch (e) { /* IndexedDB no disponible (modo privado, etc.) — se sigue sin guardado */ }
+  } catch (e) { }
 }
 
-// Detecta cuándo el usuario le da "Borrar personaje" (avatarGlbUrl pasa de tener algo a
-// null) para borrar también lo guardado — si no, recargar la página lo traería de vuelta
-// solo, que no es lo que pide ese botón. Ya no existe un "avatar simple" al que volver (se
-// quitó el SVG, 2026-08-01) — este botón deja el estado vacío (🧍 Crear personaje 3D).
 let ultimoGlbUrl;
 function sincronizarGuardado(state) {
   if (ultimoGlbUrl !== undefined && ultimoGlbUrl && !state.avatarGlbUrl) {
@@ -133,12 +87,41 @@ function sincronizarGuardado(state) {
   ultimoGlbUrl = state.avatarGlbUrl;
 }
 
-// ---------------- Visor (muestra el avatar ya guardado) ----------------
+// ---------- Visor mejorado con animaciones ----------
 
-let visor = null; // { renderer, scene, camera, controls, THREE, modelo }
+let visor = null;
 let glbCargado = null;
 let visorRafId = null;
 let visorCreando = false;
+let tiempoAnimacion = 0;
+
+// Animaciones: parpadeos, respiración, movimientos sutiles
+function actualizarAnimaciones(visor) {
+  if (!visor.modelo) return;
+
+  tiempoAnimacion += 0.016; // ~60fps
+
+  // Parpadeo: cada 3-4 segundos, cierra los ojos rápido
+  const parpadeoTiempo = Math.sin(tiempoAnimacion * 0.3) * Math.PI;
+  const parpadeoIntensidad = Math.max(0, Math.sin(parpadeoTiempo * 20) * 0.15);
+
+  // Respiración suave: pequeño movimiento en el pecho
+  const respiracion = Math.sin(tiempoAnimacion * 1.5) * 0.05;
+
+  // Movimiento sutil: pequeño swaying side to side
+  const sway = Math.sin(tiempoAnimacion * 0.8) * 0.02;
+
+  // Aplicar animaciones al modelo
+  visor.modelo.position.y = respiracion;
+  visor.modelo.rotation.z = sway * 0.3;
+
+  // Buscar huesos de los ojos para parpadeo (si existen)
+  visor.modelo.traverse(obj => {
+    if (obj.isMesh && (obj.name.includes('Eye') || obj.name.includes('eye'))) {
+      if (obj.scale) obj.scale.y = Math.max(0.1, 1 - parpadeoIntensidad);
+    }
+  });
+}
 
 function crearVisor(THREE, OrbitControls, RoomEnvironment, host) {
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -156,11 +139,20 @@ function crearVisor(THREE, OrbitControls, RoomEnvironment, host) {
 
   const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 100);
   camera.position.set(0, 1.4, 3);
+
+  // OrbitControls modificado: solo permite rotación horizontal (eje Y)
   const controls = new OrbitControls(camera, renderer.domElement);
   controls.target.set(0, 1.1, 0);
   controls.enableDamping = true;
-  controls.minDistance = 1;
-  controls.maxDistance = 8;
+  controls.minDistance = 2;
+  controls.maxDistance = 4;
+  controls.autoRotate = false;
+
+  // Bloquear rotación vertical (pitch)
+  controls.minPolarAngle = Math.PI / 2; // Horizonte
+  controls.maxPolarAngle = Math.PI / 2; // Horizonte (sin movimiento arriba/abajo)
+  controls.enableZoom = false; // Deshabilitar zoom
+  controls.enablePan = false; // Deshabilitar pan
 
   ajustarTamano(renderer, camera, host);
   return { renderer, scene, camera, controls, modelo: null };
@@ -175,30 +167,17 @@ function ajustarTamano(renderer, camera, host) {
 
 function loopVisor() {
   const host = document.getElementById('personaje3d-canvas-host');
-  if (!host || !visor) { visorRafId = null; return; } // salió de la vista: pausar, no seguir de fondo
+  if (!host || !visor) { visorRafId = null; return; }
   if (visor.renderer.domElement.parentElement !== host) {
     host.appendChild(visor.renderer.domElement);
     ajustarTamano(visor.renderer, visor.camera, host);
   }
   visor.controls.update();
+  actualizarAnimaciones(visor);
   visor.renderer.render(visor.scene, visor.camera);
   visorRafId = requestAnimationFrame(loopVisor);
 }
 
-// Avaturn exporta el modelo en T-pose (bind pose del esqueleto, brazos horizontales) — no
-// trae ninguna animación "idle" embebida para pararlo en una pose relajada. El rig usa
-// nombres de hueso estilo Mixamo (confirmado inspeccionando un export real: LeftArm,
-// RightArm, LeftShoulder... 52 huesos en total), así que se bajan los brazos a mano
-// rotando LeftArm/RightArm sobre el eje Z **mundial**.
-//
-// OJO: `Object3D.rotateOnWorldAxis` de Three.js NO sirve acá — su propia documentación dice
-// "assumes no rotated parent", y en un esqueleto real CADA hueso (LeftShoulder, Spine...)
-// tiene su propia rotación local. En la práctica eso hacía que "girar en Z mundial" del brazo
-// terminara girando alrededor de Y (el brazo giraba hacia atrás a la altura del hombro, tipo
-// espantapájaros, en vez de bajar) — confirmado imprimiendo la posición mundial de la mano
-// antes/después. La corrección real: convertir el eje mundial al espacio local del padre
-// (usando su quaternion mundial completo, que ya acumula toda la cadena de huesos arriba) y
-// aplicar la rotación ahí — eso sí respeta cualquier cadena de padres rotados.
 function rotarEnEjeMundial(THREE, obj, ejeMundial, angulo) {
   const deltaMundial = new THREE.Quaternion().setFromAxisAngle(ejeMundial, angulo);
   const qPadreMundial = new THREE.Quaternion();
@@ -215,9 +194,7 @@ function relajarPose(THREE, escena) {
     if (obj.name === 'LeftArm') { rotarEnEjeMundial(THREE, obj, eje, -angulo); brazosEncontrados++; }
     if (obj.name === 'RightArm') { rotarEnEjeMundial(THREE, obj, eje, angulo); brazosEncontrados++; }
   });
-  // Si Avaturn cambia el naming del rig en el futuro, esto no encuentra los huesos y el
-  // modelo se queda en T-pose — no rompe nada, solo no se aplica la corrección.
-  if (brazosEncontrados < 2) console.warn('[Personaje3D] no se encontraron LeftArm/RightArm — se queda en T-pose');
+  if (brazosEncontrados < 2) console.warn('[Personaje3D] no se encontraron LeftArm/RightArm');
 }
 
 async function cargarModeloEnVisor(url) {
@@ -228,14 +205,14 @@ async function cargarModeloEnVisor(url) {
     relajarPose(THREE, gltf.scene);
     visor.modelo = gltf.scene;
     visor.scene.add(visor.modelo);
-  }, undefined, (err) => console.error('[Personaje3D] error cargando avatar guardado', err));
+  }, undefined, (err) => console.error('[Personaje3D] error cargando avatar', err));
 }
 
 export function renderPersonaje3DViewer(state) {
   if (!state.avatarGlbUrl) {
     return `
       <div class="personaje3d-vacio">
-        <button class="btn-ghost" data-act="personaje3d-abrir" style="min-height:0;font-size:11px;padding:7px 12px;">🧍 Crear personaje 3D (beta)</button>
+        <button class="btn-ghost" data-act="personaje3d-abrir" style="min-height:0;font-size:11px;padding:7px 12px;">🧍 Crear personaje 3D</button>
       </div>
     `;
   }
@@ -244,13 +221,13 @@ export function renderPersonaje3DViewer(state) {
       <div class="personaje3d-canvas-host" id="personaje3d-canvas-host"></div>
       <div class="personaje3d-botones">
         <button class="btn-ghost" data-act="personaje3d-abrir" style="min-height:0;font-size:11px;padding:7px 12px;">✎ Rehacer</button>
-        <button class="btn-text-muted" data-act="personaje3d-reset" style="min-height:0;font-size:11px;padding:7px 12px;">🗑 Borrar personaje</button>
+        <button class="btn-text-muted" data-act="personaje3d-reset" style="min-height:0;font-size:11px;padding:7px 12px;">🗑 Borrar</button>
       </div>
     </div>
   `;
 }
 
-// ---------------- Creador (drawer con el widget de Avaturn) ----------------
+// ---------- Creador ----------
 
 let avaturnSdk = null;
 let avaturnListo = false;
@@ -262,11 +239,11 @@ export function renderPersonaje3DCreador(state) {
       <div class="drawer-backdrop" data-act="personaje3d-cerrar"></div>
       <div class="drawer personaje3d-creador" role="dialog" aria-modal="true" aria-label="Crear personaje 3D">
         <div class="drawer-top">
-          <span class="chip">Personaje 3D — beta</span>
+          <span class="chip">Personaje 3D</span>
           <button class="btn-close" data-act="personaje3d-cerrar">✕</button>
         </div>
         <div class="personaje3d-creador-stage" id="personaje3d-creator-host"></div>
-        <div class="panel-footnote" style="margin:0;">Widget externo (Avaturn) — no pide cuenta. Subí una foto o armalo a mano y tocá "Next" ahí adentro para guardarlo.</div>
+        <div class="panel-footnote" style="margin:0;">Widget externo (Avaturn) — subí una foto o armalo a mano. Tocá "Next" para guardarlo.</div>
       </div>
     </div>
   `;
@@ -278,25 +255,21 @@ async function inicializarCreador(host) {
   creadorIniciando = true;
   try {
     const { AvaturnSDK } = await cargarAvaturn();
-    // El drawer pudo cerrarse mientras el SDK cargaba (import diferido) — re-chequear el
-    // DOM en vez de confiar en una referencia de estado que puede haber quedado vieja.
     if (!document.getElementById('personaje3d-creator-host')) return;
     avaturnSdk = new AvaturnSDK();
     await avaturnSdk.init(host, { iframeClassName: 'avaturn-iframe' });
     avaturnSdk
       .on('load', () => { avaturnListo = true; })
       .on('export', (data) => {
-        actions.personaje3dSetGlb(data.url); // uso inmediato — GLTFLoader ya sabe cargar data: URIs directo
-        // Guardar para la próxima sesión, aparte y sin bloquear lo de arriba: convertir a
-        // Blob real (nativo, rápido) y meterlo en IndexedDB.
+        actions.personaje3dSetGlb(data.url);
         if (data.urlType === 'dataURL') {
           fetch(data.url).then(r => r.blob()).then(guardarEnDB)
-            .catch(err => console.error('[Personaje3D] no se pudo guardar para la próxima sesión', err));
+            .catch(err => console.error('[Personaje3D] error guardando', err));
         }
       })
-      .on('error', (err) => console.error('[Personaje3D] error de Avaturn', err));
+      .on('error', (err) => console.error('[Personaje3D] error Avaturn', err));
   } catch (e) {
-    console.error('[Personaje3D] no se pudo iniciar el creador', e);
+    console.error('[Personaje3D] error iniciando creador', e);
   } finally {
     creadorIniciando = false;
   }
@@ -309,21 +282,18 @@ async function destruirCreador() {
   if (sdk) { try { await sdk.destroy(); } catch (e) {} }
 }
 
-// ---------------- Sincronización post-render (llamar desde main.js, como restaurarFoco) ----------------
-
 export function sincronizarPersonaje3D(state) {
-  revisarGuardado(); // una sola vez por carga de página, ver arriba
-  sincronizarGuardado(state); // detecta "Borrar personaje" y borra lo guardado
+  revisarGuardado();
+  sincronizarGuardado(state);
 
-  // Visor
   const hostViewer = document.getElementById('personaje3d-canvas-host');
   if (hostViewer && state.avatarGlbUrl) {
     if (!visor && !visorCreando) {
       visorCreando = true;
       cargarThree().then(({ THREE, OrbitControls, RoomEnvironment }) => {
         visorCreando = false;
-        if (visor) return; // ya se creó en otra llamada mientras esta cargaba
-        if (!document.getElementById('personaje3d-canvas-host')) return; // se cerró mientras cargaba
+        if (visor) return;
+        if (!document.getElementById('personaje3d-canvas-host')) return;
         visor = crearVisor(THREE, OrbitControls, RoomEnvironment, hostViewer);
         hostViewer.appendChild(visor.renderer.domElement);
         cargarModeloEnVisor(state.avatarGlbUrl);
@@ -337,7 +307,6 @@ export function sincronizarPersonaje3D(state) {
     }
   }
 
-  // Creador
   const hostCreador = document.getElementById('personaje3d-creator-host');
   if (state.personaje3dAbierto && hostCreador) {
     if (!avaturnSdk && !creadorIniciando) inicializarCreador(hostCreador);

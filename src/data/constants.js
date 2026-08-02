@@ -288,3 +288,51 @@ export const HORARIO_CLASES = {
     { dia: 4, horaInicio: '08:00', horaFin: '09:59', materia: 'Seminario Creativo', profesor: 'Sergio Abello Gómez', salon: 'N41', lugar: 'Bloque N · El Jardín, UNAB' }
   ]
 };
+
+// Iconos para items del inventario por tipo/categoría
+export const ICONOS_ITEMS = {
+  // Ropa
+  camisa: '👔',
+  pantalon: '👖',
+  buzo: '🧥',
+  zapatos: '👟',
+  medias: '🧦',
+  gorra: '🧢',
+  gafas: '🕶️',
+  audifonos: '🎧',
+  aretes: '💍',
+  piercing_ceja: '💎',
+  otro: '📦',
+  // Tecnología
+  computador: '💻',
+  laptop: '💻',
+  telefono: '📱',
+  tablet: '📱',
+  monitor: '🖥️',
+  teclado: '⌨️',
+  raton: '🖱️',
+  // Equipo Audiovisual
+  camara: '📷',
+  video: '📹',
+  microfono: '🎤',
+  tripode: '🎥',
+  luz: '💡',
+  bateria: '🔋',
+  drone: '🚁',
+  // Equipo de Producción
+  sony: '📷',
+  dji: '🚁',
+  rode: '🎤',
+  luces: '💡',
+  carril: '🎬',
+  // Personales
+  cartera: '👛',
+  mochila: '🎒',
+  reloj: '⌚',
+  default: '📦'
+};
+
+export function obtenerIconoItem(tipo, nombre) {
+  if (!tipo) tipo = 'otro';
+  return ICONOS_ITEMS[tipo] || ICONOS_ITEMS[tipo.toLowerCase()] || ICONOS_ITEMS.default;
+}
