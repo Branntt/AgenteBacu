@@ -74,17 +74,19 @@ main.panorama { padding-top: 28px; }
 /* one-line description under a tab's <h2> heading — shared shape across every tab */
 .vista-sub {
   font-family: 'IBM Plex Mono', monospace;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
-  margin: 6px 0 24px;
+  margin: 8px 0 28px;
+  line-height: 1.5;
 }
 .panel {
   background: var(--panel);
   border: 1px solid var(--line);
   padding: 20px;
+  border-radius: 10px;
 }
 @media (min-width: 600px) {
-  .panel { padding: 26px; }
+  .panel { padding: 26px; border-radius: 12px; }
 }
 .dot {
   display: inline-block;
@@ -176,11 +178,13 @@ input, textarea, select {
   color: var(--text);
   font-size: 16px; /* prevents iOS Safari auto-zoom on focus */
   min-height: 44px;
+  border-radius: 8px;
+  padding: 12px 14px;
 }
-textarea { min-height: 0; }
+textarea { min-height: 0; border-radius: 8px; }
 input::placeholder, textarea::placeholder { color: var(--muted); }
 @media (min-width: 1200px) {
-  input, select { min-height: 0; font-size: inherit; }
+  input, select { min-height: 0; font-size: inherit; border-radius: 6px; }
 }
 
 /* ---------- login / loading ---------- */
