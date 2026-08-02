@@ -23,9 +23,9 @@ export const UNIVERSIDAD = {
       cursos: [{ curso: 'Gestión Audiovisual', creditos: 3, estado: 'ok', matriculado: true }]
     },
     {
-      nombre: '8 semestre', aprob: 5, req: 10, estado: 'pend',
+      nombre: '8 semestre', aprob: 5, req: 15, estado: 'pend',
       cursos: [
-        { curso: 'Práctica Profesional', creditos: 5, estado: 'pend' },
+        { curso: 'Práctica Profesional', creditos: 10, estado: 'pend' },
         { curso: 'Electivas Ciclo Común', creditos: 5, estado: 'ok', matriculado: true }
       ]
     },
