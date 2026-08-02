@@ -524,6 +524,7 @@ root.addEventListener('change', e => {
       case 'presupuesto-salud': actions.updPresupuesto('salud', value); break;
       case 'presupuesto-ahorro': actions.updPresupuesto('ahorro', value); break;
       case 'tarea-fecha': actions.updTarea(id, { fecha: value || null }); break;
+      case 'tarea-columna': actions.updTarea(id, { columna: value }); break;
       case 'cal-vista-set': actions.setCalVista(value); break;
       case 'filtro-calendario-set': actions.setFiltroCalendario(value); break;
       case 'filtro-guiones-set': actions.setFiltroGuiones(value); break;
