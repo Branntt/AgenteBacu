@@ -17,9 +17,14 @@
 //   versión más actual de la app, sin acumular basura vieja.
 // - Es solo de ida (app → Google): lo que se edite directo en Google Calendar no vuelve a la
 //   app, y una nueva sincronización lo pisa.
+// - Sincroniza fechas de ideas (publicación/rodaje), grabaciones de clientes, tareas con
+//   entrega, y el horario fijo de clases — este último como eventos recurrentes semanales
+//   (RRULE), no fecha por fecha, ver itemsClases().
 
-import { MARCAS } from '../data/constants.js';
+import { MARCAS, HORARIO_CLASES } from '../data/constants.js';
 import { persistValue, loadValue } from './storage.js';
+
+const DIAS_RRULE = ['MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU']; // índice 0 = ISO día 1 (lunes)
 
 // calendar.events (solo eventos) no alcanza: obtenerOCrearCalendario() también gestiona el
 // propio recurso "calendario" (GET/POST /calendars), que requiere el scope calendar completo
@@ -125,10 +130,37 @@ async function obtenerOCrearCalendario() {
   return cal.id;
 }
 
+// Primera fecha >= inicio que cae en diaISO (1=lunes...7=domingo) — para anclar el primer
+// evento de una clase recurrente (Google necesita una fecha/hora concreta de arranque, la
+// repetición semanal la maneja aparte el RRULE).
+function primeraFechaDelDia(inicio, diaISO) {
+  const [y, m, d] = inicio.split('-').map(Number);
+  const base = new Date(y, m - 1, d);
+  const dowBase = base.getDay() === 0 ? 7 : base.getDay();
+  base.setDate(base.getDate() + ((diaISO - dowBase + 7) % 7));
+  return `${base.getFullYear()}-${String(base.getMonth() + 1).padStart(2, '0')}-${String(base.getDate()).padStart(2, '0')}`;
+}
+
+// Horario fijo de clases (constants.js) — a diferencia de todo lo demás, no son fechas
+// sueltas sino un patrón semanal dentro del rango del semestre, así que se sincronizan como
+// UN evento recurrente por clase (con RRULE), no uno por semana.
+function itemsClases() {
+  return HORARIO_CLASES.clases.map((c, idx) => ({
+    key: `clase:${idx}`,
+    recurrente: true,
+    fecha: primeraFechaDelDia(HORARIO_CLASES.inicio, c.dia),
+    horaInicio: c.horaInicio,
+    horaFin: c.horaFin,
+    rrule: `RRULE:FREQ=WEEKLY;BYDAY=${DIAS_RRULE[c.dia - 1]};UNTIL=${HORARIO_CLASES.fin.replace(/-/g, '')}T235959Z`,
+    titulo: `🎓 ${c.materia}`,
+    descripcion: `${c.profesor} · Salón ${c.salon} · ${c.lugar}`,
+  }));
+}
+
 // Mismos filtros que entradasDeDia()/tieneEntradas() en views/calendario.js, aplanados sobre
 // todas las fechas (no por día) — lo que se sincroniza es exactamente lo que ya se ve ahí.
 function itemsASincronizar(state) {
-  const items = [];
+  const items = itemsClases();
 
   for (const i of state.ideas || []) {
     if (i.estado === 'descartada') continue;
@@ -192,10 +224,16 @@ async function upsertEvento(calId, item) {
   const body = {
     summary: item.titulo,
     description: item.descripcion,
-    start: { date: item.fecha },
-    end: { date: item.fecha },
     extendedProperties: { private: { agentebacu_key: item.key } },
   };
+  if (item.recurrente) {
+    body.start = { dateTime: `${item.fecha}T${item.horaInicio}:00`, timeZone: 'America/Bogota' };
+    body.end = { dateTime: `${item.fecha}T${item.horaFin}:00`, timeZone: 'America/Bogota' };
+    body.recurrence = [item.rrule];
+  } else {
+    body.start = { date: item.fecha };
+    body.end = { date: item.fecha };
+  }
   const base = `${API}/calendars/${encodeURIComponent(calId)}/events`;
   const url = existente ? `${base}/${existente.id}` : base;
   await apiFetch(url, { method: existente ? 'PATCH' : 'POST', headers: headers(true), body: JSON.stringify(body) });
