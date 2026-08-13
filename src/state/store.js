@@ -4,6 +4,7 @@ import { mesActual, hoyStr, lunesDe, sumarDias } from '../lib/idea.js';
 import { supabase } from '../lib/supabaseClient.js';
 import { generarCuentaCobroPDF, OBSERVACIONES_DEFAULT } from '../lib/pdfInvoice.js';
 import { generarListadoClientesPDF } from '../lib/pdfListadoClientes.js';
+import * as googleCalendar from '../lib/googleCalendar.js';
 import { MESES, COLORES_TAREA, familiaDeFormato, METAS_EQUIPO_SEED } from '../data/constants.js';
 
 export const state = {
@@ -24,6 +25,15 @@ export const state = {
   claseInfo: null,
   invVista: loadValue('ui.invVista', 'personal'),
   finanzasVista: loadValue('ui.finanzasVista', 'ingresos'),
+  // Sync S.A.O BACU → Google Calendar (ver lib/googleCalendar.js). googleConectado es de
+  // sesión (el token de Google no sobrevive un refresh de página, hay que re-obtenerlo) — el
+  // resto sí se guarda porque son preferencias/estado real de la última sincronización.
+  googleClientId: loadValue('google.clientId', ''),
+  googleConectado: false,
+  googleSincronizando: false,
+  googleUltimaSync: loadValue('google.ultimaSync', null),
+  googleUltimoResumen: loadValue('google.ultimoResumen', null),
+  googleError: null,
   // Prototipo de personaje 3D (Inventario > Personal, beta) — avatarGlbUrl es una blob: URL
   // del último avatar exportado desde Avaturn (ver dataUrlABlobUrl en personaje3d.js); null =
   // todavía no se creó ninguno. A propósito NO se carga de localStorage (no es UI_PERSIST):
@@ -447,6 +457,38 @@ export const actions = {
   setTema: v => { const ok = persistValue('sistemaEditorial.tema', v); setState({ tema: v }); marcarGuardado(ok); },
   setModoCalma: v => { const ok = persistValue('sistemaEditorial.modoCalma', v); setState({ modoCalma: v }); marcarGuardado(ok); },
   descartarAvisoGuardado: () => setState({ saveError: false }),
+
+  // --- Google Calendar (Configuraciones) ---
+  setGoogleClientId: v => { persistValue('google.clientId', v); setState({ googleClientId: v }); },
+
+  googleConectar: async () => {
+    if (!state.googleClientId) { setState({ googleError: 'Pegá primero tu Client ID de Google.' }); return; }
+    setState({ googleError: null, googleSincronizando: true });
+    try {
+      await googleCalendar.conectar(state.googleClientId);
+      setState({ googleConectado: true, googleSincronizando: false });
+      await actions.googleSincronizarAhora();
+    } catch (e) {
+      setState({ googleConectado: false, googleSincronizando: false, googleError: e.message || 'No se pudo conectar con Google Calendar.' });
+    }
+  },
+  googleDesconectar: () => {
+    googleCalendar.desconectar();
+    setState({ googleConectado: false });
+  },
+  googleSincronizarAhora: async () => {
+    setState({ googleSincronizando: true, googleError: null });
+    try {
+      const resumen = await googleCalendar.sincronizar(state);
+      setState({
+        googleSincronizando: false,
+        googleUltimaSync: loadValue('google.ultimaSync', null),
+        googleUltimoResumen: resumen,
+      });
+    } catch (e) {
+      setState({ googleSincronizando: false, googleError: e.message || 'Error sincronizando con Google Calendar.' });
+    }
+  },
 
   login: async (email, password) => {
     persistValue('sistemaEditorial.ultimoEmail', email);

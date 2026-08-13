@@ -293,6 +293,9 @@ root.addEventListener('click', e => {
     case 'guion-item-quitar': actions.removeGuionItem(id, Number(idx)); break;
     case 'guion-marcar-lista': actions.updIdea(id, { estado: 'lista' }); actions.cerrarGuion(); break;
     case 'descartar-aviso-guardado': actions.descartarAvisoGuardado(); break;
+    case 'google-conectar': actions.googleConectar(); break;
+    case 'google-desconectar': actions.googleDesconectar(); break;
+    case 'google-sincronizar': actions.googleSincronizarAhora(); break;
     case 'logout': actions.logout(); break;
     case 'rodaje-rapido-abrir': actions.rodajeRapidoAbrir(fecha); break;
     case 'rodaje-rapido-cerrar': actions.rodajeRapidoCerrar(); break;
@@ -507,6 +510,7 @@ root.addEventListener('change', e => {
       case 'snap-campo': actions.snapSetCampo(key, value); break;
       case 'tema': actions.setTema(value); break;
       case 'calma': actions.setModoCalma(value); break;
+      case 'google-client-id': actions.setGoogleClientId(value); break;
       case 'guion-campo': actions.setGuionCampo(id, campo, value); break;
       case 'guion-item-campo': actions.updGuionItem(id, Number(idx), campo, value); break;
       case 'rodaje-rapido-campo': actions.rodajeRapidoSetCampo(campo, campo === 'precio' ? parseN(value) : value); break;
