@@ -1,8 +1,8 @@
 // Sincronización unidireccional S.A.O BACU → Google Calendar.
 //
 // Todo corre en el navegador (esta app no tiene backend propio, solo Supabase). Usa Google
-// Identity Services (GIS) para pedir un access token con scope calendar.events, y la API REST
-// de Calendar directo por fetch — sin SDK de Google, para no meter otra dependencia pesada.
+// Identity Services (GIS) para pedir un access token, y la API REST de Calendar directo por
+// fetch — sin SDK de Google, para no meter otra dependencia pesada.
 //
 // Diseño:
 // - Un solo calendario secundario dedicado "S.A.O BACU" en la cuenta de Google del usuario
@@ -21,7 +21,11 @@
 import { MARCAS } from '../data/constants.js';
 import { persistValue, loadValue } from './storage.js';
 
-const SCOPE = 'https://www.googleapis.com/auth/calendar.events';
+// calendar.events (solo eventos) no alcanza: obtenerOCrearCalendario() también gestiona el
+// propio recurso "calendario" (GET/POST /calendars), que requiere el scope calendar completo
+// — sin esto, Google responde 403 "insufficient authentication scopes" en cuanto intenta
+// crear o leer el calendario "S.A.O BACU", aunque el token se haya obtenido bien.
+const SCOPE = 'https://www.googleapis.com/auth/calendar';
 const CAL_SUMMARY = 'S.A.O BACU';
 const API = 'https://www.googleapis.com/calendar/v3';
 
