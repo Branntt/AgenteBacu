@@ -262,6 +262,7 @@ root.addEventListener('click', e => {
     case 'clase-info-cerrar': actions.claseInfoCerrar(); break;
     case 'cliente-nuevo': actions.nuevoCliente(); break;
     case 'cliente-abrir': actions.abrirCliente(id); break;
+    case 'cliente-abrir-calendario': actions.abrirClienteDesdeCalendario(id); break;
     case 'cliente-detalle-cerrar': actions.cerrarClienteDetalle(); break;
     case 'cliente-eliminar': actions.eliminarCliente(id); break;
     case 'clientes-exportar': actions.exportarListadoClientes(); break;

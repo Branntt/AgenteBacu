@@ -33,9 +33,14 @@ function entryHtml(i, tipo) {
 }
 
 // Grabación agendada desde la ficha de un cliente (pestaña Clientes) — se muestra en el calendario en modo solo lectura.
+// Tocarla abre ese cliente puntual (abrirClienteDesdeCalendario en store.js). Antes usaba
+// nav-go genérico a "clientes" sin sub-vista ni id: si la sesión venía de "Tus marcas"
+// (clientesVista quedaba en 'marcas'), aterrizaba ahí en vez del tablero de clientes, y aun
+// aterrizando bien, no abría a nadie — solo el tablero general. Reporte: "los días de
+// grabación... no lleva a ningún lado".
 function entryClienteHtml(c) {
   return `
-    <div class="cal-entry is-rodaje" style="border-color:var(--verde)" data-act="nav-go" data-view="clientes" title="Editar en la pestaña Clientes">
+    <div class="cal-entry is-rodaje" style="border-color:var(--verde)" data-act="cliente-abrir-calendario" data-id="${escapeHtml(c.id)}" title="Ver cliente">
       <span class="cal-entry-bar" style="background:var(--verde)"></span>
       <span class="cal-entry-icon" aria-hidden="true">🎥</span>
       <div class="cal-entry-title"><span class="cal-entry-title-icon" aria-hidden="true">🎥</span><span class="cal-entry-tag" style="color:var(--verde);border-color:var(--verde)">Grabación</span>${escapeHtml(c.nombre || 'Cliente')}</div>

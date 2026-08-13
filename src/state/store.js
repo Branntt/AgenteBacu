@@ -693,6 +693,11 @@ export const actions = {
     supabase.from('clientes').delete().eq('id', id).then(({ error }) => marcarGuardado(!error));
   },
   abrirCliente: id => setState({ clienteSelId: id }),
+  // Desde una entrada de "Grabación" en el Calendario (views/calendario.js): fuerza la
+  // sub-vista de Clientes a 'externos' (el tablero, no "Tus marcas") y abre ese cliente
+  // puntual — a diferencia de nav-go genérico, que dejaba clientesVista en lo que fuera
+  // que estuviera antes y nunca seleccionaba a nadie.
+  abrirClienteDesdeCalendario: id => setState({ view: 'clientes', clientesVista: 'externos', clienteSelId: id }),
   cerrarClienteDetalle: () => setState({ clienteSelId: null }),
   exportarListadoClientes: () => generarListadoClientesPDF(state.clientes),
 
