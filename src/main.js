@@ -24,6 +24,7 @@ import { renderNuevoContenido } from './components/nuevoContenido.js';
 import { renderPersonaje3DCreador, sincronizarPersonaje3D } from './components/personaje3d.js';
 import { renderRevisionIdeasModal } from './components/revisionIdeasModal.js';
 import { renderNotificacionBacu } from './components/notificacionBacu.js';
+import { renderClaseInfo } from './components/claseInfo.js';
 
 const VIEWS = {
   panorama: renderPanorama,
@@ -144,12 +145,13 @@ function render() {
       ${renderPersonaje3DCreador(state)}
       ${renderRevisionIdeasModal(state)}
       ${renderNotificacionBacu(state)}
+      ${renderClaseInfo(state)}
     </div>
   `;
   restaurarFoco(foco);
   sincronizarPersonaje3D(state);
 
-  const drawerAbiertoAhora = !!(state.selId || state.clienteSelId || state.guionId || state.rodajeDraft || state.cuentaCobroDraft || state.historialAbierto || state.nuevoContenidoAbierto || state.personaje3dAbierto);
+  const drawerAbiertoAhora = !!(state.selId || state.clienteSelId || state.guionId || state.rodajeDraft || state.cuentaCobroDraft || state.historialAbierto || state.nuevoContenidoAbierto || state.personaje3dAbierto || state.claseInfo);
   if (drawerAbiertoAhora && !drawerAbiertoAntes) {
     const drawer = root.querySelector('.drawer');
     const primero = drawer && drawer.querySelector(FOCUSABLE);
@@ -207,7 +209,7 @@ if ('serviceWorker' in navigator) {
 }
 
 document.addEventListener('keydown', e => {
-  const drawerAbierto = state.selId || state.clienteSelId || state.guionId || state.rodajeDraft || state.cuentaCobroDraft || state.nuevoContenidoAbierto || state.personaje3dAbierto || state.menuAbierto;
+  const drawerAbierto = state.selId || state.clienteSelId || state.guionId || state.rodajeDraft || state.cuentaCobroDraft || state.nuevoContenidoAbierto || state.personaje3dAbierto || state.claseInfo || state.menuAbierto;
   if (!drawerAbierto) return;
 
   if (e.key === 'Escape') {
@@ -218,6 +220,7 @@ document.addEventListener('keydown', e => {
     if (state.cuentaCobroDraft) actions.cuentaCobroCerrar();
     if (state.nuevoContenidoAbierto) actions.nuevoContenidoCerrar();
     if (state.personaje3dAbierto) actions.personaje3dCerrar();
+    if (state.claseInfo) actions.claseInfoCerrar();
     if (state.menuAbierto) actions.menuCerrar();
     return;
   }
@@ -251,6 +254,12 @@ root.addEventListener('click', e => {
     case 'cal-prev': state.calVista === 'semana' ? actions.cambiaSemana(-1) : actions.cambiaMes(-1); break;
     case 'cal-next': state.calVista === 'semana' ? actions.cambiaSemana(1) : actions.cambiaMes(1); break;
     case 'cal-hoy': actions.irAHoy(); break;
+    case 'clase-info': {
+      const { materia, profesor, salon, lugar, horaInicio, horaFin } = el.dataset;
+      actions.claseInfoAbrir({ materia, profesor, salon, lugar, horaInicio, horaFin });
+      break;
+    }
+    case 'clase-info-cerrar': actions.claseInfoCerrar(); break;
     case 'cliente-nuevo': actions.nuevoCliente(); break;
     case 'cliente-abrir': actions.abrirCliente(id); break;
     case 'cliente-detalle-cerrar': actions.cerrarClienteDetalle(); break;

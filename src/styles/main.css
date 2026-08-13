@@ -1002,8 +1002,9 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
 .cal-flag.alta { color: var(--rojo); }
 
 .cal-entry.is-rodaje { border: 1px dashed var(--line2); } /* el color real lo pone cada entrada según su marca */
-/* Clases: azules y atenuadas — solo marcan el día/hora ocupados */
-.cal-entry.is-clase { border: 1px dashed var(--azul); cursor: default; opacity: .45; }
+/* Clases: azules y atenuadas — solo marcan el día/hora ocupados. Tocar una abre su
+   detalle (claseInfo.js): en Mes es la única forma de ver profesor/salón, ver debajo. */
+.cal-entry.is-clase { border: 1px dashed var(--azul); opacity: .45; }
 .cal-entry.is-clase:hover { background: var(--panel2); opacity: 1; }
 /* Mes: las clases solo muestran hora + materia (en semana va la info completa) */
 .cal-grid .cal-entry.is-clase .cal-entry-meta { display: none; }
