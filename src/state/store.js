@@ -21,6 +21,7 @@ export const state = {
   clientesVista: loadValue('ui.clientesVista', 'externos'),
   filtroCalendario: loadValue('ui.filtroCalendario', 'todas'),
   calVista: loadValue('ui.calVista', 'mes'),
+  claseInfo: null,
   invVista: loadValue('ui.invVista', 'personal'),
   finanzasVista: loadValue('ui.finanzasVista', 'ingresos'),
   // Prototipo de personaje 3D (Inventario > Personal, beta) — avatarGlbUrl es una blob: URL
@@ -613,6 +614,12 @@ export const actions = {
   irAHoy: () => setState({ month: mesActual(), semanaInicio: lunesDe(hoyStr()) }),
 
   setCalVista: v => setState({ calVista: v }),
+  // Detalle de una clase del horario fijo (solo lectura, ver data/constants.js) — el botón
+  // que la abre no tenía handler y no hacía nada al tocarlo (issue reportado: "botón
+  // desconectado" + no se podía ver profesor/salón desde la vista de Mes, donde se ocultan
+  // por espacio, ver .cal-grid .cal-entry.is-clase .cal-entry-meta en main.css).
+  claseInfoAbrir: clase => setState({ claseInfo: clase }),
+  claseInfoCerrar: () => setState({ claseInfo: null }),
   invSetVista: v => setState({ invVista: v }),
   finanzasSetVista: v => setState({ finanzasVista: v }),
 
@@ -686,6 +693,11 @@ export const actions = {
     supabase.from('clientes').delete().eq('id', id).then(({ error }) => marcarGuardado(!error));
   },
   abrirCliente: id => setState({ clienteSelId: id }),
+  // Desde una entrada de "Grabación" en el Calendario (views/calendario.js): fuerza la
+  // sub-vista de Clientes a 'externos' (el tablero, no "Tus marcas") y abre ese cliente
+  // puntual — a diferencia de nav-go genérico, que dejaba clientesVista en lo que fuera
+  // que estuviera antes y nunca seleccionaba a nadie.
+  abrirClienteDesdeCalendario: id => setState({ view: 'clientes', clientesVista: 'externos', clienteSelId: id }),
   cerrarClienteDetalle: () => setState({ clienteSelId: null }),
   exportarListadoClientes: () => generarListadoClientesPDF(state.clientes),
 
