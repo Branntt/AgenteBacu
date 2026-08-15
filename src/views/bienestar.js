@@ -1,5 +1,5 @@
 import { escapeHtml } from '../lib/format.js';
-import { calcularEstres, calcularStatsGamificacion } from '../lib/bienestar.js';
+import { calcularEstres, calcularStatsGamificacion, getGreeting, getHabitStreak, getStreakBadge, calcularQuickCheck } from '../lib/bienestar.js';
 import { hoyStr } from '../lib/idea.js';
 
 const NIVELES = [
@@ -8,19 +8,26 @@ const NIVELES = [
   ['pesada', 'Carga pesada', 'var(--rojo)', 'Vencidas o urgentes. Aquí se va tu cabeza.']
 ];
 
+// SVG progress ring constants
+const RING_R = 52;
+const RING_C = 2 * Math.PI * RING_R; // ≈ 326.73
+
 function habitoHtml(h, hoy) {
   const hecho = h.fecha === hoy;
-  const emoji = hecho ? '🎉' : '⭕';
+  const streak = getHabitStreak(h.id);
+  const badge = getStreakBadge(streak.count);
+  const streakLabel = streak.count > 0 ? `${streak.count}d` : '';
+
   return `
-    <div class="habito ${hecho ? 'hecho' : ''}" data-id="${escapeHtml(h.id)}">
-      <div class="habito-header">
-        <button class="habito-check" data-act="habito-toggle" data-id="${escapeHtml(h.id)}" title="${hecho ? 'Desmarcar' : 'Marcar hecho hoy'}">
-          <span class="habito-emoji">${emoji}</span>
-        </button>
-        <input class="habito-texto" data-change="meta-personal-titulo" data-id="${escapeHtml(h.id)}" value="${escapeHtml(h.titulo)}" placeholder="Nombre del hábito…">
-        <button class="habito-quitar" data-act="meta-personal-eliminar" data-id="${escapeHtml(h.id)}" title="Quitar">✕</button>
+    <div class="qc-habito ${hecho ? 'qc-hecho' : ''}" data-id="${escapeHtml(h.id)}">
+      <button class="qc-check" data-act="habito-toggle" data-id="${escapeHtml(h.id)}" title="${hecho ? 'Desmarcar' : 'Marcar hecho hoy'}">
+        <span class="qc-check-icon">${hecho ? '✓' : ''}</span>
+      </button>
+      <div class="qc-habito-info">
+        <input class="qc-habito-nombre" data-change="meta-personal-titulo" data-id="${escapeHtml(h.id)}" value="${escapeHtml(h.titulo)}" placeholder="Nombre del hábito…">
+        ${badge ? `<span class="qc-streak" title="Racha: ${streak.count} día${streak.count === 1 ? '' : 's'}">${badge} ${streakLabel}</span>` : ''}
       </div>
-      ${hecho ? '<div class="habito-done-fx"></div>' : ''}
+      <button class="qc-quitar" data-act="meta-personal-eliminar" data-id="${escapeHtml(h.id)}" title="Quitar">✕</button>
     </div>
   `;
 }
@@ -28,6 +35,11 @@ function habitoHtml(h, hoy) {
 export function renderBienestar(state) {
   const hoy = hoyStr();
   const e = calcularEstres(state);
+  const qc = calcularQuickCheck(e.habitos, hoy);
+  const greeting = getGreeting();
+
+  // SVG ring offset (0 = full, RING_C = empty)
+  const ringOffset = RING_C - (RING_C * qc.pct / 100);
 
   // Determinar título motivador según progreso
   let tituloMotivador = '🎮 ¡MISIÓN DEL DÍA!';
@@ -88,6 +100,9 @@ export function renderBienestar(state) {
 
   return `
     <main class="bienestar">
+      <!-- CONFETTI CANVAS (se activa con JS al completar 100%) -->
+      <canvas id="qc-confetti-canvas" aria-hidden="true"></canvas>
+
       <div class="jugador-header">
         <div class="titulo-principal">${tituloMotivador}</div>
         <div class="stats-rápido">
@@ -122,6 +137,44 @@ export function renderBienestar(state) {
 
       <h2 class="serif" style="margin:0 0 6px;font-size:32px;">Bienestar</h2>
       <div class="vista-sub">Cuánto te está pesando la cabeza hoy, y de dónde viene exactamente.</div>
+
+      <!-- QUICK CHECK: HÁBITOS DE HOY con SVG ring -->
+      <div class="qc-section">
+        <div class="qc-hero">
+          <div class="qc-ring-wrap">
+            <svg class="qc-ring-svg" viewBox="0 0 120 120" width="120" height="120">
+              <circle class="qc-ring-bg" cx="60" cy="60" r="${RING_R}" />
+              <circle class="qc-ring-fill" cx="60" cy="60" r="${RING_R}"
+                style="stroke-dasharray:${RING_C.toFixed(2)};stroke-dashoffset:${ringOffset.toFixed(2)};"
+                data-ring-c="${RING_C.toFixed(2)}" />
+            </svg>
+            <div class="qc-ring-label">
+              <span class="qc-ring-pct">${qc.pct}%</span>
+            </div>
+          </div>
+          <div class="qc-hero-text">
+            <div class="qc-greeting">${greeting}</div>
+            <div class="qc-hero-title">Quick Check</div>
+            <div class="qc-hero-sub">${qc.hechos}/${qc.total} hábitos hoy</div>
+            ${qc.pct === 100 && qc.total > 0 ? '<div class="qc-complete-badge">🏆 ¡DÍA PERFECTO!</div>' : ''}
+          </div>
+        </div>
+
+        <div class="qc-lista" id="qc-lista">
+          ${habitosHtml}
+          <button class="qc-nuevo-btn" data-act="habito-nuevo">+ Nuevo hábito</button>
+        </div>
+
+        ${qc.pct === 100 && qc.total > 0 ? `
+          <div class="qc-celebrate-msg">
+            <span>🎉 ¡Todos los hábitos completados! Cada día así construye tu mejor versión.</span>
+          </div>
+        ` : qc.hechos > 0 ? `
+          <div class="qc-progress-msg">
+            <span>💪 ¡Vas bien! Te faltan ${qc.total - qc.hechos} hábito${qc.total - qc.hechos === 1 ? '' : 's'} para completar el día.</span>
+          </div>
+        ` : ''}
+      </div>
 
       <!-- MEDIDOR GAMIFICADO -->
       <div class="estres-card-game" style="border-color:${e.color};box-shadow:0 0 24px ${e.color}33;">
@@ -174,27 +227,6 @@ export function renderBienestar(state) {
       <div class="section-title">Lo que más te pesa ahora</div>
       <div class="vista-sub">Si resuelves los tres primeros, el medidor baja de verdad.</div>
       <div class="pesos-lista">${topHtml}</div>
-
-      <!-- HÁBITOS GAMIFICADOS -->
-      <div class="habitos-section">
-        <div class="habitos-header">
-          <div class="habitos-title-game">
-            <span class="habitos-icon">🎮 HÁBITOS DE HOY</span>
-            <div class="habitos-counter">
-              <div class="counter-circle" style="background:linear-gradient(135deg, #1faf74, #1faf7488);">
-                <span class="counter-num">${e.habitosHoy}</span>
-                <span class="counter-total">/${e.habitos.length}</span>
-              </div>
-            </div>
-          </div>
-          ${e.habitosHoy === e.habitos.length && e.habitos.length > 0 ? '<div class="achievement-unlock">🏆 ¡TODOS COMPLETADOS!</div>' : ''}
-        </div>
-        <div class="vista-sub">Cada hábito cumplido = 5 puntos menos de estrés. Se reinicia cada medianoche.</div>
-        <div class="habitos-grid">
-          ${habitosHtml}
-          <button class="inv-slot-add" data-act="habito-nuevo">+ Nuevo hábito</button>
-        </div>
-      </div>
     </main>
   `;
 }

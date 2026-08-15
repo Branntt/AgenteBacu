@@ -1,7 +1,8 @@
 // Sistema de estrés: convierte la carga real de la app (ideas, clientes, plata, universidad)
 // en puntos. Los hábitos cumplidos hoy restan. Todo se calcula al vuelo, nada se guarda.
-import { hoyStr, lunesDe, sumarDias } from './idea.js';
+import { hoyStr, lunesDe, sumarDias, fstr } from './idea.js';
 import { HORARIO_CLASES } from '../data/constants.js';
+import { loadValue, persistValue } from './storage.js';
 
 // Cuánto pesa mentalmente una idea según en qué módulo está
 const PESO_IDEA = {
@@ -198,6 +199,68 @@ export function calcularEstres(state) {
     maxFuente: Math.max(1, ...fuentes.map(f => f.puntos)),
     ...stats
   };
+}
+
+// ---- Saludo según la hora del día ----
+export function getGreeting() {
+  const h = new Date().getHours();
+  if (h >= 5 && h < 12) return 'Buenos días ☀️';
+  if (h >= 12 && h < 18) return 'Buenas tardes 🌤️';
+  return 'Buenas noches 🌙';
+}
+
+// ---- Racha por hábito (calculada con localStorage) ----
+// Guarda { count, lastDate } por hábito para saber cuántos días seguidos se cumplió.
+export function getHabitStreak(habitId) {
+  return loadValue('habito.racha.' + habitId, { count: 0, lastDate: null });
+}
+
+export function updateHabitStreak(habitId, marking, hoy) {
+  const streak = getHabitStreak(habitId);
+  if (marking) {
+    // Calcular ayer
+    const [y, m, d] = hoy.split('-').map(Number);
+    const ayer = fstr(new Date(y, m - 1, d - 1));
+    if (streak.lastDate === ayer) {
+      streak.count += 1;
+    } else if (streak.lastDate === hoy) {
+      // Ya se marcó hoy, no incrementar
+    } else {
+      streak.count = 1;
+    }
+    streak.lastDate = hoy;
+  } else {
+    // Desmarcar: decrementar
+    if (streak.lastDate === hoy) {
+      streak.count = Math.max(0, streak.count - 1);
+      // Restaurar lastDate a ayer si la racha sigue
+      if (streak.count > 0) {
+        const [y, m, d] = hoy.split('-').map(Number);
+        streak.lastDate = fstr(new Date(y, m - 1, d - 1));
+      } else {
+        streak.lastDate = null;
+      }
+    }
+  }
+  persistValue('habito.racha.' + habitId, streak);
+  return streak;
+}
+
+// Badge de racha: más días, mejor badge
+export function getStreakBadge(count) {
+  if (count >= 30) return '👑';
+  if (count >= 14) return '💎';
+  if (count >= 7) return '⚡';
+  if (count >= 1) return '🔥';
+  return '';
+}
+
+// Porcentaje y datos del Quick Check
+export function calcularQuickCheck(habitos, hoy) {
+  const total = habitos.length;
+  const hechos = habitos.filter(h => h.fecha === hoy).length;
+  const pct = total > 0 ? Math.round((hechos / total) * 100) : 0;
+  return { total, hechos, pct };
 }
 
 export function calcularStatsGamificacion(habitos, hoy) {

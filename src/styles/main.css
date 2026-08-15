@@ -1743,6 +1743,284 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
 .habito-quitar { background: none; border: none; cursor: pointer; color: var(--muted); font-size: 12px; padding: 6px; flex-shrink: 0; }
 .habito-quitar:hover { color: var(--rojo); }
 
+/* ---------- Quick Check (Hábitos mejorados) ---------- */
+
+#qc-confetti-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 999;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+#qc-confetti-canvas.qc-confetti-active {
+  opacity: 1;
+}
+
+.qc-section {
+  margin-bottom: 36px;
+}
+
+.qc-hero {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: linear-gradient(135deg, var(--panel2) 0%, var(--panel) 100%);
+  border: 2px solid var(--verde);
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 16px;
+  box-shadow: 0 8px 32px rgba(31,175,116,0.15);
+}
+
+.qc-ring-wrap {
+  position: relative;
+  flex-shrink: 0;
+  width: 120px;
+  height: 120px;
+}
+
+.qc-ring-svg {
+  transform: rotate(-90deg);
+  display: block;
+}
+
+.qc-ring-bg {
+  fill: none;
+  stroke: var(--line);
+  stroke-width: 8;
+}
+
+.qc-ring-fill {
+  fill: none;
+  stroke: var(--verde);
+  stroke-width: 8;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.qc-ring-label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.qc-ring-pct {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--verde);
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+.qc-hero-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.qc-greeting {
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 4px;
+  letter-spacing: 0.5px;
+}
+
+.qc-hero-title {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+}
+
+.qc-hero-sub {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.qc-complete-badge {
+  display: inline-block;
+  margin-top: 8px;
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  color: #222;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+  animation: qcBounce 0.6s ease-in-out;
+}
+
+@keyframes qcBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+.qc-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.qc-habito {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--panel2);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px 14px;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.qc-habito:hover {
+  border-color: var(--line2);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.qc-habito.qc-hecho {
+  border-color: var(--verde);
+  background: rgba(31,175,116,0.08);
+}
+
+.qc-check {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid var(--line2);
+  background: none;
+  color: transparent;
+  font-size: 14px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.25s ease;
+  padding: 0;
+}
+
+.qc-check:hover {
+  border-color: var(--verde);
+  transform: scale(1.1);
+}
+
+.qc-hecho .qc-check {
+  border-color: var(--verde);
+  background: var(--verde);
+  color: #fff;
+}
+
+.qc-check-icon {
+  font-size: 15px;
+  line-height: 1;
+}
+
+.qc-habito-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.qc-habito-nombre {
+  background: none;
+  border: none;
+  color: inherit;
+  flex: 1;
+  min-width: 0;
+  font-family: inherit;
+  font-size: 14px;
+  padding: 2px 4px;
+}
+.qc-habito-nombre:focus {
+  outline: none;
+  border-bottom: 1px solid var(--line2);
+}
+
+.qc-hecho .qc-habito-nombre {
+  color: var(--muted);
+  text-decoration: line-through;
+}
+
+.qc-streak {
+  flex-shrink: 0;
+  font-size: 12px;
+  color: var(--verde);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.qc-quitar {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 13px;
+  padding: 6px;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 0.2s ease, color 0.2s ease;
+}
+.qc-habito:hover .qc-quitar {
+  opacity: 1;
+}
+.qc-quitar:hover {
+  color: var(--rojo);
+}
+
+.qc-nuevo-btn {
+  background: none;
+  border: 1px dashed var(--line2);
+  border-radius: 12px;
+  color: var(--muted);
+  font-family: inherit;
+  font-size: 13px;
+  padding: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+.qc-nuevo-btn:hover {
+  border-color: var(--verde);
+  color: var(--verde);
+  background: rgba(31,175,116,0.05);
+}
+
+.qc-celebrate-msg,
+.qc-progress-msg {
+  text-align: center;
+  font-size: 12px;
+  color: var(--muted);
+  padding: 10px 16px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.qc-celebrate-msg {
+  border-color: var(--verde);
+  background: rgba(31,175,116,0.06);
+  color: var(--verde);
+  font-weight: 500;
+}
+
+/* Animación de check para hábitos */
+.qc-habito.qc-just-checked {
+  animation: qcCheckPop 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes qcCheckPop {
+  0% { transform: scale(1.04); }
+  100% { transform: scale(1); }
+}
+
 @media (min-width: 600px) {
   .fuentes-grid { grid-template-columns: repeat(2, 1fr); }
   .clasif-grid { grid-template-columns: repeat(3, 1fr); }

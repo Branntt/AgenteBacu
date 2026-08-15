@@ -2,6 +2,8 @@ import { state, actions, subscribe, initAuth } from './state/store.js';
 import { persistValue, loadValue } from './lib/storage.js';
 import { TEMA_MAP } from './data/constants.js';
 import { parseN } from './lib/format.js';
+import { updateHabitStreak, calcularQuickCheck } from './lib/bienestar.js';
+import { hoyStr } from './lib/idea.js';
 import { renderHeader } from './components/header.js';
 import { renderDetalle } from './components/detalle.js';
 import { renderClienteDetalle } from './components/clienteDetalle.js';
@@ -25,6 +27,124 @@ import { renderPersonaje3DCreador, sincronizarPersonaje3D } from './components/p
 import { renderRevisionIdeasModal } from './components/revisionIdeasModal.js';
 import { renderNotificacionBacu } from './components/notificacionBacu.js';
 import { renderClaseInfo } from './components/claseInfo.js';
+
+/* ---------- Audio: sonidos sintetizados para hábitos ---------- */
+
+let audioCtx = null;
+
+function ensureAudio() {
+  if (audioCtx) return true;
+  try {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    return true;
+  } catch (e) { return false; }
+}
+
+function playTick() {
+  if (!ensureAudio()) return;
+  const now = audioCtx.currentTime;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(1100, now);
+  osc.frequency.exponentialRampToValueAtTime(800, now + 0.12);
+  gain.gain.setValueAtTime(0.08, now);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.15);
+  osc.connect(gain).connect(audioCtx.destination);
+  osc.start(now);
+  osc.stop(now + 0.2);
+}
+
+function playMiss() {
+  if (!ensureAudio()) return;
+  const now = audioCtx.currentTime;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(300, now);
+  osc.frequency.exponentialRampToValueAtTime(200, now + 0.12);
+  gain.gain.setValueAtTime(0.06, now);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.15);
+  osc.connect(gain).connect(audioCtx.destination);
+  osc.start(now);
+  osc.stop(now + 0.2);
+}
+
+function playCelebrate() {
+  if (!ensureAudio()) return;
+  const notes = [523.25, 659.25, 783.99, 1046.5]; // C5, E5, G5, C6
+  notes.forEach((freq, i) => {
+    const now = audioCtx.currentTime + i * 0.12;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(freq, now);
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(0.07, now + 0.04);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.4);
+    osc.connect(gain).connect(audioCtx.destination);
+    osc.start(now);
+    osc.stop(now + 0.5);
+  });
+}
+
+/* ---------- Confetti: canvas particles for 100% celebration ---------- */
+
+const CONFETTI_COLORS = ['#1FAF74', '#17945F', '#EFC94C', '#FFFFFF', '#88D4AB', '#7FD1AE'];
+
+function fireConfetti() {
+  const canvas = document.getElementById('qc-confetti-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  canvas.width = window.innerWidth * dpr;
+  canvas.height = window.innerHeight * dpr;
+  canvas.style.width = window.innerWidth + 'px';
+  canvas.style.height = window.innerHeight + 'px';
+  canvas.classList.add('qc-confetti-active');
+
+  const particles = Array.from({ length: 70 }, () => ({
+    x: canvas.width * 0.5 + (Math.random() - 0.5) * canvas.width * 0.4,
+    y: canvas.height * 0.5,
+    vx: (Math.random() - 0.5) * 14 * dpr,
+    vy: (Math.random() * -12 - 4) * dpr,
+    r: (Math.random() * 4 + 2) * dpr,
+    color: CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)],
+    rot: Math.random() * Math.PI * 2,
+    rv: (Math.random() - 0.5) * 0.2,
+    life: 1,
+  }));
+
+  let frame = 0;
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    let alive = false;
+    for (const p of particles) {
+      if (p.life <= 0) continue;
+      alive = true;
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += 0.25 * dpr;
+      p.rot += p.rv;
+      p.life -= 0.012;
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot);
+      ctx.globalAlpha = Math.max(0, p.life);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.r, -p.r * 0.5, p.r * 2, p.r);
+      ctx.restore();
+    }
+    frame++;
+    if (alive && frame < 180) {
+      requestAnimationFrame(draw);
+    } else {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      canvas.classList.remove('qc-confetti-active');
+    }
+  }
+  requestAnimationFrame(draw);
+}
 
 const VIEWS = {
   panorama: renderPanorama,
@@ -341,7 +461,45 @@ root.addEventListener('click', e => {
     case 'inv-vista': actions.invSetVista(value); break;
     case 'finanzas-vista': actions.finanzasSetVista(value); break;
     case 'habito-nuevo': actions.habitoNuevo(); break;
-    case 'habito-toggle': actions.habitoToggle(id); break;
+    case 'habito-toggle': {
+      const h = state.metasPersonales.find(m => m.id === id);
+      const hoy = hoyStr();
+      const wasDone = h && h.fecha === hoy;
+      const marking = !wasDone;
+
+      // Update streak BEFORE toggling (so we know the transition)
+      updateHabitStreak(id, marking, hoy);
+
+      // Toggle the habit
+      actions.habitoToggle(id);
+
+      // Sound feedback
+      if (marking) {
+        playTick();
+        // Animate the row
+        const row = el.closest('.qc-habito');
+        if (row) {
+          row.classList.remove('qc-just-checked');
+          void row.offsetWidth; // force reflow
+          row.classList.add('qc-just-checked');
+        }
+      } else {
+        playMiss();
+      }
+
+      // Check for 100% completion → confetti + celebration sound
+      if (marking) {
+        const habitos = state.metasPersonales.filter(m => m.categoria === 'habito');
+        const qc = calcularQuickCheck(habitos, hoy);
+        if (qc.pct === 100 && qc.total > 0) {
+          setTimeout(() => {
+            playCelebrate();
+            fireConfetti();
+          }, 200);
+        }
+      }
+      break;
+    }
     case 'uni-toggle': actions.uniToggleBloque(Number(idx)); break;
     case 'inv-agregar': actions.metaPersonalNueva('inv_' + value, tipo, el.dataset.parent); break;
     case 'inv-equipar': {
