@@ -218,7 +218,51 @@ async function cargarDatos() {
   notify();
   suscribirRealtime();
   verificarIdeasPorFecha();
+  migrarHabitosV2();
   sembrarMetasEquipo();
+}
+
+// Migración v2 (2026-08-15): reemplaza los hábitos viejos por la rutina real del usuario.
+// Se ejecuta una sola vez (controlada por localStorage). Borra todos los hábitos que no
+// estén en la nueva lista de METAS_EQUIPO_SEED y limpia las rachas de localStorage.
+const HABITOS_V2_KEY = 'bacu.habitos_v2_migrated';
+
+function migrarHabitosV2() {
+  if (loadValue(HABITOS_V2_KEY, false)) return; // ya migró
+
+  // Títulos de la nueva lista de hábitos
+  const nuevos = new Set(
+    METAS_EQUIPO_SEED
+      .filter(s => s.categoria === 'habito')
+      .map(s => s.titulo.toLowerCase())
+  );
+
+  // Identificar hábitos viejos que ya no están en la lista
+  const viejos = state.metasPersonales.filter(
+    m => m.categoria === 'habito' && !nuevos.has((m.titulo || '').trim().toLowerCase())
+  );
+
+  if (viejos.length) {
+    const ids = viejos.map(h => h.id);
+    state.metasPersonales = state.metasPersonales.filter(m => !ids.includes(m.id));
+    notify();
+    // Borrar de Supabase
+    ids.forEach(id => {
+      supabase.from('metas_personales').delete().eq('id', id).then(({ error }) => marcarGuardado(!error));
+    });
+  }
+
+  // Limpiar rachas viejas de localStorage
+  try {
+    const keys = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith('habito.racha.')) keys.push(k);
+    }
+    keys.forEach(k => localStorage.removeItem(k));
+  } catch (e) {}
+
+  persistValue(HABITOS_V2_KEY, true);
 }
 
 // Inserta los items de "Mejora de equipo" que aún no existan (una sola vez, comparando por título)

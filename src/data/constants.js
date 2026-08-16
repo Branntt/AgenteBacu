@@ -176,18 +176,20 @@ export const METAS_EQUIPO_SEED = [
   { categoria: 'inv_personal', titulo: 'Bandana / cubrecuello' },
   { categoria: 'inv_personal', titulo: 'Mochila' },
   // Bienestar: hábitos diarios. `fecha` guarda el último día cumplido, por eso se reinician solos.
-  // 10 hábitos basados en evidencia — cada uno reduce estrés y suma XP al completarse.
-  { categoria: 'habito', titulo: 'Dormir 7 horas' },
-  { categoria: 'habito', titulo: 'Moverme / entrenar' },
-  { categoria: 'habito', titulo: 'Comer bien' },
-  { categoria: 'habito', titulo: 'Respirar 5 minutos' },
-  { categoria: 'habito', titulo: 'Salir a caminar' },
-  { categoria: 'habito', titulo: 'Sin celular antes de dormir' },
-  // 4 nuevos hábitos (se insertan solo si no existen por título)
-  { categoria: 'habito', titulo: 'Tomar 2L de agua' },
-  { categoria: 'habito', titulo: 'Leer 20 páginas' },
-  { categoria: 'habito', titulo: '1h sin redes sociales' },
-  { categoria: 'habito', titulo: 'Journaling 5 min' }
+  // Rutina real del usuario — reemplaza los hábitos genéricos (migración v2, 2026-08-15).
+  { categoria: 'habito', titulo: 'Levantarse a las 6:00 AM' },
+  { categoria: 'habito', titulo: 'Tender la cama' },
+  { categoria: 'habito', titulo: 'Tomar agua al levantarte' },
+  { categoria: 'habito', titulo: 'Skincare' },
+  { categoria: 'habito', titulo: 'Higiene personal' },
+  { categoria: 'habito', titulo: 'Desayuno' },
+  { categoria: 'habito', titulo: '5–10 min movilidad/estiramiento' },
+  { categoria: 'habito', titulo: 'Revisar las 3 prioridades del día' },
+  { categoria: 'habito', titulo: 'No redes sociales primeros 30 min' },
+  { categoria: 'habito', titulo: 'Ir al gym / ejercicio' },
+  { categoria: 'habito', titulo: 'Dormir 7–9 horas' },
+  { categoria: 'habito', titulo: 'Registrar gastos del día' },
+  { categoria: 'habito', titulo: 'Almorzar y cenar ligero' }
 ];
 
 export const COLORES_TAREA = { verde: 'var(--verde)', brant: 'var(--brant)', novena: 'var(--novena)', rojo: 'var(--rojo)', muted: 'var(--muted)' };
