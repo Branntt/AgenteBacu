@@ -1555,44 +1555,88 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
   100% { transform: scale(1); }
 }
 
-/* ── 2. Stats strip (compact horizontal) ── */
-.stats-strip {
-  display: flex; align-items: center; justify-content: space-around;
-  background: var(--panel); border: 1px solid var(--line);
-  border-radius: 12px; padding: 14px 8px; margin-bottom: 8px;
+/* ── 2. Análisis Semanal ── */
+.as-section {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 20px 16px;
+  margin-bottom: 20px;
 }
-.stats-strip-item { text-align: center; flex: 1; }
-.stats-strip-val {
-  font-size: 20px; font-weight: 700;
+.as-title {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-align: center;
+  margin-bottom: 16px;
+}
+.as-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.as-card {
+  background: var(--panel2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 14px 10px;
+  text-align: center;
+}
+.as-card-icon { font-size: 20px; margin-bottom: 6px; }
+.as-card-val {
+  font-size: 22px; font-weight: 700; line-height: 1;
   font-family: 'IBM Plex Mono', monospace;
   color: var(--text);
 }
-.stats-strip-label {
+.as-card-label {
   font-size: 9px; text-transform: uppercase; letter-spacing: 1px;
-  color: var(--muted); margin-top: 2px;
-}
-.stats-strip-sep {
-  width: 1px; height: 28px; background: var(--line); flex-shrink: 0;
+  color: var(--muted); margin-top: 6px;
 }
 
-/* Level bar */
-.nivel-barra-wrap {
-  margin-bottom: 20px; padding: 0 2px;
+/* Rendimiento por hábito */
+.as-rend-title {
+  font-size: 11px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 1.5px; color: var(--muted);
+  margin-bottom: 10px; padding-bottom: 8px;
+  border-bottom: 1px solid var(--line);
 }
-.nivel-barra-info {
-  display: flex; justify-content: space-between; align-items: center;
-  font-size: 11px; margin-bottom: 6px;
+.as-rend-list { display: flex; flex-direction: column; gap: 8px; }
+.as-rend-row {
+  display: flex; align-items: center; gap: 10px;
 }
-.nivel-barra-xp {
-  font-family: 'IBM Plex Mono', monospace; color: var(--muted); font-size: 10px;
+.as-rend-label {
+  font-size: 12px; width: 140px; flex-shrink: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-.nivel-barra {
-  height: 8px; background: var(--panel2); border-radius: 4px;
-  overflow: hidden;
+.as-rend-bar-wrap {
+  flex: 1; height: 10px; background: var(--panel2);
+  border-radius: 5px; overflow: hidden;
 }
-.nivel-barra-fill {
-  height: 100%; background: linear-gradient(90deg, var(--verde), #1faf7488);
-  border-radius: 4px; transition: width .4s ease;
+.as-rend-bar {
+  height: 100%; border-radius: 5px;
+  transition: width .4s ease;
+}
+.as-rend-pct {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px; font-weight: 600; color: var(--muted);
+  width: 36px; text-align: right; flex-shrink: 0;
+}
+
+/* Insight */
+.as-insight {
+  margin-top: 14px;
+  background: rgba(31,175,116,.06);
+  border: 1px solid rgba(31,175,116,.2);
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+@media (max-width: 380px) {
+  .as-rend-label { width: 100px; font-size: 11px; }
 }
 
 /* ── 3. Stress compact card ── */

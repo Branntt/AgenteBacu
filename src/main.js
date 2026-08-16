@@ -2,7 +2,7 @@ import { state, actions, subscribe, initAuth } from './state/store.js';
 import { persistValue, loadValue } from './lib/storage.js';
 import { TEMA_MAP } from './data/constants.js';
 import { parseN } from './lib/format.js';
-import { updateHabitStreak, calcularQuickCheck } from './lib/bienestar.js';
+import { updateHabitStreak, calcularQuickCheck, logHabitToggle, syncHabitLogToday } from './lib/bienestar.js';
 import { hoyStr } from './lib/idea.js';
 import { renderHeader } from './components/header.js';
 import { renderDetalle } from './components/detalle.js';
@@ -318,6 +318,11 @@ const restaurarScrollAlCargar = () => {
 subscribe(render);
 subscribe(alCambiarVista);
 subscribe(sincronizarHashConVista);
+// Sync habit log once on each state change so weekly analytics capture today's data
+subscribe(() => {
+  const habitos = (state.metasPersonales || []).filter(m => m.categoria === 'habito');
+  if (habitos.length) syncHabitLogToday(habitos, hoyStr());
+});
 render();
 initAuth();
 subscribe(restaurarScrollAlCargar);
@@ -469,6 +474,8 @@ root.addEventListener('click', e => {
 
       // Update streak BEFORE toggling (so we know the transition)
       updateHabitStreak(id, marking, hoy);
+      // Log for weekly analytics
+      logHabitToggle(id, marking, hoy);
 
       // Toggle the habit
       actions.habitoToggle(id);

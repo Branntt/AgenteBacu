@@ -1,5 +1,5 @@
 import { escapeHtml } from '../lib/format.js';
-import { calcularEstres, calcularStatsGamificacion, getGreeting, getHabitStreak, getStreakBadge, calcularQuickCheck, ordenarHabitos, getBloqueHabito } from '../lib/bienestar.js';
+import { calcularEstres, getGreeting, getHabitStreak, getStreakBadge, calcularQuickCheck, ordenarHabitos, getBloqueHabito, calcularAnalisisSemanal } from '../lib/bienestar.js';
 import { hoyStr } from '../lib/idea.js';
 
 const NIVELES = [
@@ -86,6 +86,66 @@ export function renderBienestar(state) {
     motivText = `<div class="qc-progress-msg"><span>💪 ¡Vas bien! Te falta${faltan === 1 ? '' : 'n'} ${faltan} hábito${faltan === 1 ? '' : 's'}.</span></div>`;
   }
 
+  // ── Análisis semanal ──
+  const analisis = calcularAnalisisSemanal(sortedHabitos, hoy);
+
+  let analisisHtml = '';
+  if (analisis) {
+    const rendBarsHtml = analisis.rendimiento.map(r => {
+      const barColor = r.pct >= 70 ? 'var(--verde)' : (r.pct >= 40 ? '#EFC94C' : 'var(--rojo)');
+      return `
+        <div class="as-rend-row">
+          <span class="as-rend-label">${escapeHtml(r.titulo)}</span>
+          <div class="as-rend-bar-wrap">
+            <div class="as-rend-bar" style="width:${r.pct}%;background:${barColor};"></div>
+          </div>
+          <span class="as-rend-pct">${r.pct}%</span>
+        </div>
+      `;
+    }).join('');
+
+    const deltaSign = analisis.delta > 0 ? '+' : '';
+    const deltaColor = analisis.delta > 0 ? 'var(--verde)' : (analisis.delta < 0 ? 'var(--rojo)' : 'var(--muted)');
+
+    analisisHtml = `
+      <div class="as-section">
+        <div class="as-title">ANÁLISIS SEMANAL</div>
+
+        <div class="as-grid">
+          <div class="as-card">
+            <div class="as-card-icon">📊</div>
+            <div class="as-card-val" style="color:var(--verde);">${analisis.consistencia}%</div>
+            <div class="as-card-label">CONSISTENCIA</div>
+          </div>
+          <div class="as-card">
+            <div class="as-card-icon">🏆</div>
+            <div class="as-card-val">${analisis.mejorDiaLabel}</div>
+            <div class="as-card-label">MEJOR DÍA</div>
+          </div>
+          <div class="as-card">
+            <div class="as-card-icon">⚡</div>
+            <div class="as-card-val">${analisis.completadosSemana}/${analisis.totalPosibleSemana}</div>
+            <div class="as-card-label">COMPLETADOS</div>
+          </div>
+          <div class="as-card">
+            <div class="as-card-icon">📈</div>
+            <div class="as-card-val" style="color:${deltaColor};">${deltaSign}${analisis.delta}%</div>
+            <div class="as-card-label">VS SEMANA ANT.</div>
+          </div>
+        </div>
+
+        <div class="as-rend-title">RENDIMIENTO POR HÁBITO</div>
+        <div class="as-rend-list">
+          ${rendBarsHtml}
+        </div>
+
+        <div class="as-insight">
+          ${escapeHtml(analisis.insight)}
+        </div>
+      </div>
+    `;
+  }
+
   // ── Clasificación de ideas (optimizada: inline compact) ──
   const clasificacionHtml = NIVELES.map(([clave, label, color]) => {
     const items = e.ideasClasificadas.filter(x => x.nivel === clave);
@@ -166,38 +226,8 @@ export function renderBienestar(state) {
         ${motivText}
       </div>
 
-      <!-- ═══ SECCIÓN 2: DATOS DE HÁBITOS (stats rápidas) ═══ -->
-      <div class="stats-strip">
-        <div class="stats-strip-item">
-          <div class="stats-strip-val" style="color:var(--verde);">${e.nivelActual}</div>
-          <div class="stats-strip-label">Nivel</div>
-        </div>
-        <div class="stats-strip-sep"></div>
-        <div class="stats-strip-item">
-          <div class="stats-strip-val">${e.xpTotal}</div>
-          <div class="stats-strip-label">XP total</div>
-        </div>
-        <div class="stats-strip-sep"></div>
-        <div class="stats-strip-item">
-          <div class="stats-strip-val">${e.rachaActual}</div>
-          <div class="stats-strip-label">Racha</div>
-        </div>
-        <div class="stats-strip-sep"></div>
-        <div class="stats-strip-item">
-          <div class="stats-strip-val">${e.xpHoy}</div>
-          <div class="stats-strip-label">XP hoy</div>
-        </div>
-      </div>
-
-      <div class="nivel-barra-wrap">
-        <div class="nivel-barra-info">
-          <span>Nivel ${e.nivelActual}</span>
-          <span class="nivel-barra-xp">${e.xpEnNivel}/${e.xpParaProximo} XP</span>
-        </div>
-        <div class="nivel-barra">
-          <div class="nivel-barra-fill" style="width:${e.progreso}%;"></div>
-        </div>
-      </div>
+      <!-- ═══ SECCIÓN 2: ANÁLISIS SEMANAL ═══ -->
+      ${analisisHtml}
 
       <!-- ═══ SECCIÓN 3: NIVEL DE ESTRÉS ═══ -->
       <div class="estres-compact" style="border-color:${e.color};">

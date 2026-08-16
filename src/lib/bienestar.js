@@ -302,6 +302,145 @@ export function calcularStatsGamificacion(habitos, hoy) {
   };
 }
 
+// ---- Registro semanal de hábitos (localStorage) ----
+// Guarda qué hábitos se completaron cada día para calcular estadísticas semanales.
+// Estructura: { "2026-08-11": ["id1","id2"], "2026-08-12": ["id1"], ... }
+const LOG_KEY = 'bacu.habitos.log';
+
+function getHabitLog() {
+  return loadValue(LOG_KEY, {});
+}
+
+function saveHabitLog(log) {
+  // Limpieza: solo guardar últimas 3 semanas (21 días) para no crecer infinito
+  const keys = Object.keys(log).sort();
+  if (keys.length > 21) {
+    const cutoff = keys[keys.length - 21];
+    for (const k of keys) { if (k < cutoff) delete log[k]; }
+  }
+  persistValue(LOG_KEY, log);
+}
+
+export function logHabitToggle(habitId, marking, hoy) {
+  const log = getHabitLog();
+  if (!log[hoy]) log[hoy] = [];
+  if (marking) {
+    if (!log[hoy].includes(habitId)) log[hoy].push(habitId);
+  } else {
+    log[hoy] = log[hoy].filter(id => id !== habitId);
+  }
+  saveHabitLog(log);
+}
+
+// Inicializa el log del día actual con los hábitos ya completados hoy
+// (para que los datos que ya estaban antes de este feature se capturen)
+export function syncHabitLogToday(habitos, hoy) {
+  const log = getHabitLog();
+  const hechosHoy = habitos.filter(h => h.fecha === hoy).map(h => h.id);
+  if (hechosHoy.length > 0 || log[hoy]) {
+    log[hoy] = hechosHoy;
+    saveHabitLog(log);
+  }
+}
+
+const DIAS_SEMANA = ['DOM', 'LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB'];
+
+export function calcularAnalisisSemanal(habitos, hoy) {
+  const log = getHabitLog();
+  const totalHabitos = habitos.length;
+  if (totalHabitos === 0) return null;
+
+  const lunes = lunesDe(hoy);
+  // Cuántos días han pasado esta semana (incluyendo hoy)
+  const [ay, am, ad] = hoy.split('-').map(Number);
+  const hoyDate = new Date(ay, am - 1, ad);
+  const [ly, lm, ld] = lunes.split('-').map(Number);
+  const lunesDate = new Date(ly, lm - 1, ld);
+  const diasTranscurridos = Math.floor((hoyDate - lunesDate) / 86400000) + 1;
+
+  // Completados esta semana
+  let completadosSemana = 0;
+  let totalPosibleSemana = 0;
+  const porDia = {}; // { "LUN": count, ... }
+  let mejorDiaCount = 0;
+  let mejorDiaLabel = '';
+
+  for (let i = 0; i < diasTranscurridos; i++) {
+    const fecha = sumarDias(lunes, i);
+    const hechos = (log[fecha] || []).length;
+    completadosSemana += hechos;
+    totalPosibleSemana += totalHabitos;
+
+    const [fy, fm, fd] = fecha.split('-').map(Number);
+    const dow = new Date(fy, fm - 1, fd).getDay();
+    const diaLabel = DIAS_SEMANA[dow];
+    porDia[diaLabel] = hechos;
+
+    if (hechos > mejorDiaCount) {
+      mejorDiaCount = hechos;
+      mejorDiaLabel = diaLabel;
+    }
+  }
+
+  const consistencia = totalPosibleSemana > 0
+    ? Math.round((completadosSemana / totalPosibleSemana) * 100)
+    : 0;
+
+  // Semana anterior para comparación
+  const lunesAnt = sumarDias(lunes, -7);
+  let completadosAnt = 0;
+  let totalPosibleAnt = 0;
+  for (let i = 0; i < 7; i++) {
+    const fecha = sumarDias(lunesAnt, i);
+    completadosAnt += (log[fecha] || []).length;
+    totalPosibleAnt += totalHabitos;
+  }
+  const consistenciaAnt = totalPosibleAnt > 0
+    ? Math.round((completadosAnt / totalPosibleAnt) * 100)
+    : 0;
+  const delta = consistencia - consistenciaAnt;
+
+  // Rendimiento por hábito esta semana
+  const rendimiento = habitos.map(h => {
+    let hechos = 0;
+    for (let i = 0; i < diasTranscurridos; i++) {
+      const fecha = sumarDias(lunes, i);
+      if ((log[fecha] || []).includes(h.id)) hechos++;
+    }
+    const pct = diasTranscurridos > 0 ? Math.round((hechos / diasTranscurridos) * 100) : 0;
+    return { id: h.id, titulo: h.titulo, pct, hechos, total: diasTranscurridos };
+  }).sort((a, b) => b.pct - a.pct);
+
+  // Hábito más débil
+  const masDebil = rendimiento.length ? rendimiento[rendimiento.length - 1] : null;
+
+  // Insight motivacional
+  let insight = '';
+  if (consistencia === 100) {
+    insight = `¡Semana perfecta! 100% de consistencia. Estás en tu mejor momento. 🔥`;
+  } else if (consistencia >= 70) {
+    insight = `Semana en progreso. ${consistencia}% de consistencia.${mejorDiaLabel ? ` Tu mejor día fue ${mejorDiaLabel}.` : ''}${masDebil ? ` 💡 "${masDebil.titulo}" es tu hábito más débil (${masDebil.pct}%). Enfócate ahí.` : ''}`;
+  } else if (consistencia >= 40) {
+    insight = `Vas a mitad de camino. ${consistencia}% de consistencia.${masDebil ? ` 💡 Empieza por "${masDebil.titulo}" (${masDebil.pct}%).` : ''} ¡Cada día es una nueva oportunidad!`;
+  } else if (completadosSemana > 0) {
+    insight = `Apenas empezando esta semana. ${completadosSemana} hábitos completados. ¡Hoy es buen día para sumar más!`;
+  } else {
+    insight = `Esta semana aún no arranca. ¡Marca tu primer hábito y empieza la racha! 🚀`;
+  }
+
+  return {
+    consistencia,
+    completadosSemana,
+    totalPosibleSemana,
+    mejorDiaLabel: mejorDiaLabel || '—',
+    delta,
+    rendimiento,
+    masDebil,
+    insight,
+    diasTranscurridos
+  };
+}
+
 // ---- Orden canónico de hábitos (según el seed) ----
 // Los hábitos se muestran en el orden del día: mañana → día → noche.
 // Construimos un mapa título→posición a partir del seed para ordenar los
