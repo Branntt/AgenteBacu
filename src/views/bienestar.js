@@ -1,12 +1,18 @@
 import { escapeHtml } from '../lib/format.js';
-import { calcularEstres, calcularStatsGamificacion, getGreeting, getHabitStreak, getStreakBadge, calcularQuickCheck } from '../lib/bienestar.js';
+import { calcularEstres, calcularStatsGamificacion, getGreeting, getHabitStreak, getStreakBadge, calcularQuickCheck, ordenarHabitos, getBloqueHabito } from '../lib/bienestar.js';
 import { hoyStr } from '../lib/idea.js';
 
 const NIVELES = [
-  ['ligera', 'Carga ligera', 'var(--verde)', 'Se resuelven rápido — no te quitan el sueño.'],
-  ['media', 'Carga media', '#EFC94C', 'Piden tiempo y foco, pero están bajo control.'],
-  ['pesada', 'Carga pesada', 'var(--rojo)', 'Vencidas o urgentes. Aquí se va tu cabeza.']
+  ['ligera', 'Carga ligera', 'var(--verde)', 'Se resuelven rápido.'],
+  ['media', 'Carga media', '#EFC94C', 'Piden tiempo y foco.'],
+  ['pesada', 'Carga pesada', 'var(--rojo)', 'Vencidas o urgentes.']
 ];
+
+const BLOQUE_META = {
+  manana: { emoji: '☀️', label: 'Mañana' },
+  dia:    { emoji: '🌤️', label: 'Día' },
+  noche:  { emoji: '🌙', label: 'Noche' }
+};
 
 // SVG progress ring constants
 const RING_R = 52;
@@ -24,7 +30,7 @@ function habitoHtml(h, hoy) {
         <span class="qc-check-icon">${hecho ? '✓' : ''}</span>
       </button>
       <div class="qc-habito-info">
-        <input class="qc-habito-nombre" data-change="meta-personal-titulo" data-id="${escapeHtml(h.id)}" value="${escapeHtml(h.titulo)}" placeholder="Nombre del hábito…">
+        <span class="qc-habito-label">${escapeHtml(h.titulo)}</span>
         ${badge ? `<span class="qc-streak" title="Racha: ${streak.count} día${streak.count === 1 ? '' : 's'}">${badge} ${streakLabel}</span>` : ''}
       </div>
       <button class="qc-quitar" data-act="meta-personal-eliminar" data-id="${escapeHtml(h.id)}" title="Quitar">✕</button>
@@ -35,114 +41,105 @@ function habitoHtml(h, hoy) {
 export function renderBienestar(state) {
   const hoy = hoyStr();
   const e = calcularEstres(state);
-  const qc = calcularQuickCheck(e.habitos, hoy);
+  const sortedHabitos = ordenarHabitos(e.habitos);
+  const qc = calcularQuickCheck(sortedHabitos, hoy);
   const greeting = getGreeting();
 
   // SVG ring offset (0 = full, RING_C = empty)
   const ringOffset = RING_C - (RING_C * qc.pct / 100);
 
-  // Determinar título motivador según progreso
-  let tituloMotivador = '🎮 ¡MISIÓN DEL DÍA!';
-  if (e.objetivosLogrados === e.totalHabitos && e.totalHabitos > 0) {
-    tituloMotivador = '🏆 ¡MISIÓN COMPLETADA!';
-  } else if (e.objetivosLogrados > 0) {
-    tituloMotivador = `🚀 ${e.objetivosLogrados}/${e.totalHabitos} OBJETIVOS`;
+  // Agrupar hábitos por bloque del día
+  const bloques = { manana: [], dia: [], noche: [] };
+  sortedHabitos.forEach(h => {
+    const b = getBloqueHabito(h);
+    (bloques[b] || bloques.dia).push(h);
+  });
+
+  // Render hábitos agrupados por bloque
+  const bloquesHtml = Object.entries(bloques)
+    .filter(([, items]) => items.length > 0)
+    .map(([key, items]) => {
+      const meta = BLOQUE_META[key] || BLOQUE_META.dia;
+      const hechos = items.filter(h => h.fecha === hoy).length;
+      const total = items.length;
+      const todoListo = hechos === total;
+      return `
+        <div class="qc-bloque ${todoListo ? 'qc-bloque-listo' : ''}">
+          <div class="qc-bloque-head">
+            <span class="qc-bloque-emoji">${meta.emoji}</span>
+            <span class="qc-bloque-label">${meta.label}</span>
+            <span class="qc-bloque-count">${hechos}/${total}</span>
+          </div>
+          <div class="qc-bloque-items">
+            ${items.map(h => habitoHtml(h, hoy)).join('')}
+          </div>
+        </div>
+      `;
+    }).join('');
+
+  // Motivational text
+  let motivText = '';
+  if (qc.pct === 100 && qc.total > 0) {
+    motivText = `<div class="qc-celebrate-msg"><span>🎉 ¡Todos los hábitos completados! Cada día así construye tu mejor versión.</span></div>`;
+  } else if (qc.hechos > 0) {
+    const faltan = qc.total - qc.hechos;
+    motivText = `<div class="qc-progress-msg"><span>💪 ¡Vas bien! Te falta${faltan === 1 ? '' : 'n'} ${faltan} hábito${faltan === 1 ? '' : 's'}.</span></div>`;
   }
 
-  // Centro de clasificación: las ideas repartidas por cuánto pesan
-  const clasificacionHtml = NIVELES.map(([clave, label, color, nota]) => {
+  // ── Clasificación de ideas (optimizada: inline compact) ──
+  const clasificacionHtml = NIVELES.map(([clave, label, color]) => {
     const items = e.ideasClasificadas.filter(x => x.nivel === clave);
-    const lista = items.length
-      ? items.map(x => `
-          <div class="clasif-item" data-act="idea-abrir" data-id="${escapeHtml(x.idea.id)}">
-            <span class="clasif-item-titulo">${escapeHtml(x.idea.titulo || 'Sin título')}</span>
-            <span class="clasif-item-pts" style="color:${color};">${x.puntos}</span>
-          </div>
-        `).join('')
-      : '<div class="empty-note">Nada aquí.</div>';
+    if (!items.length) return '';
+    const lista = items.map(x => `
+      <div class="clasif-row" data-act="idea-abrir" data-id="${escapeHtml(x.idea.id)}">
+        <span class="clasif-dot" style="background:${color};"></span>
+        <span class="clasif-row-titulo">${escapeHtml(x.idea.titulo || 'Sin título')}</span>
+        <span class="clasif-row-pts">${x.puntos}</span>
+      </div>
+    `).join('');
     return `
-      <div class="clasif-col">
-        <div class="clasif-head">
-          <span><span class="dot" style="width:8px;height:8px;background:${color};margin-right:8px;"></span>${label}</span>
-          <span class="banco-col-count">${items.length}</span>
+      <div class="clasif-group">
+        <div class="clasif-group-head">
+          <span class="clasif-group-label">${label}</span>
+          <span class="clasif-group-count">${items.length}</span>
         </div>
-        <div class="desarrollo-col-sub">${nota}</div>
-        <div class="clasif-lista">${lista}</div>
+        ${lista}
       </div>
     `;
-  }).join('');
+  }).join('') || '<div class="empty-note">Sin ideas activas.</div>';
 
+  // ── Fuentes de estrés ──
   const fuentesHtml = e.fuentes.length ? e.fuentes.map(f => `
-    <div class="fuente-row" data-act="nav-go" data-view="${f.view}" data-vista="${f.vista || ''}">
-      <div class="fuente-top">
-        <span class="fuente-label">${f.emoji} ${f.label}</span>
-        <span class="fuente-pts">${f.puntos} pts</span>
+    <div class="fuente-chip" data-act="nav-go" data-view="${f.view}" data-vista="${f.vista || ''}">
+      <span class="fuente-chip-emoji">${f.emoji}</span>
+      <div class="fuente-chip-body">
+        <span class="fuente-chip-label">${f.label}</span>
+        <span class="fuente-chip-pts">${f.puntos} pts</span>
       </div>
-      <div class="fuente-barra"><div class="fuente-fill" style="width:${Math.round(f.puntos / e.maxFuente * 100)}%;background:${e.color};"></div></div>
-      <div class="fuente-detalle">${escapeHtml(f.detalle)}</div>
     </div>
-  `).join('') : '<div class="empty-note">Nada te está pesando ahora mismo. Disfrútalo.</div>';
+  `).join('') : '';
 
-  const topHtml = e.items.slice(0, 8).map((it, n) => `
+  // ── Top items que más pesan ──
+  const topHtml = e.items.slice(0, 5).map((it, n) => `
     <div class="peso-row" data-act="nav-go" data-view="${it.view}" data-vista="${it.vista || ''}">
-      <span class="peso-num">${String(n + 1).padStart(2, '0')}</span>
+      <span class="peso-num">${n + 1}</span>
       <div class="peso-cuerpo">
         <div class="peso-titulo">${escapeHtml(it.titulo)}</div>
         <div class="peso-motivo">${escapeHtml(it.motivo)}</div>
       </div>
       <span class="peso-pts">${it.puntos}</span>
     </div>
-  `).join('') || '<div class="empty-note">Sin pendientes registrados.</div>';
-
-  const habitosHtml = e.habitos.length
-    ? e.habitos.map(h => habitoHtml(h, hoy)).join('')
-    : '<div class="empty-note">Agrega tu primer hábito abajo.</div>';
+  `).join('') || '<div class="empty-note">Sin pendientes.</div>';
 
   return `
     <main class="bienestar">
-      <!-- CONFETTI CANVAS (se activa con JS al completar 100%) -->
       <canvas id="qc-confetti-canvas" aria-hidden="true"></canvas>
 
-      <div class="jugador-header">
-        <div class="titulo-principal">${tituloMotivador}</div>
-        <div class="stats-rápido">
-          <div class="stat-box-mini">
-            <div class="stat-icon">⭐</div>
-            <div class="stat-valor">${e.nivelActual}</div>
-            <div class="stat-etiqueta">Nivel</div>
-          </div>
-          <div class="stat-box-mini">
-            <div class="stat-icon">✨</div>
-            <div class="stat-valor">${e.xpTotal}</div>
-            <div class="stat-etiqueta">XP</div>
-          </div>
-          <div class="stat-box-mini">
-            <div class="stat-icon">🔥</div>
-            <div class="stat-valor">${e.rachaActual}</div>
-            <div class="stat-etiqueta">Racha</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="jugador-progreso">
-        <div class="nivel-info">
-          <span class="nivel-actual">Nivel ${e.nivelActual}</span>
-          <span class="xp-info">${e.xpEnNivel}/${e.xpParaProximo} XP</span>
-        </div>
-        <div class="barra-nivel">
-          <div class="barra-fill" style="width:${e.progreso}%;"></div>
-        </div>
-        <div class="nivel-siguiente">Próximo nivel en ${e.xpParaProximo - e.xpEnNivel} XP</div>
-      </div>
-
-      <h2 class="serif" style="margin:0 0 6px;font-size:32px;">Bienestar</h2>
-      <div class="vista-sub">Cuánto te está pesando la cabeza hoy, y de dónde viene exactamente.</div>
-
-      <!-- QUICK CHECK: HÁBITOS DE HOY con SVG ring -->
-      <div class="qc-section">
-        <div class="qc-hero">
-          <div class="qc-ring-wrap">
-            <svg class="qc-ring-svg" viewBox="0 0 120 120" width="120" height="120">
+      <!-- ═══ SECCIÓN 1: RUTINA DEL DÍA (lo más importante) ═══ -->
+      <div class="rutina-hero">
+        <div class="rutina-hero-top">
+          <div class="rutina-ring-wrap">
+            <svg class="qc-ring-svg" viewBox="0 0 120 120" width="100" height="100">
               <circle class="qc-ring-bg" cx="60" cy="60" r="${RING_R}" />
               <circle class="qc-ring-fill" cx="60" cy="60" r="${RING_R}"
                 style="stroke-dasharray:${RING_C.toFixed(2)};stroke-dashoffset:${ringOffset.toFixed(2)};"
@@ -152,81 +149,94 @@ export function renderBienestar(state) {
               <span class="qc-ring-pct">${qc.pct}%</span>
             </div>
           </div>
-          <div class="qc-hero-text">
+          <div class="rutina-hero-info">
             <div class="qc-greeting">${greeting}</div>
-            <div class="qc-hero-title">Quick Check</div>
-            <div class="qc-hero-sub">${qc.hechos}/${qc.total} hábitos hoy</div>
+            <div class="rutina-hero-title">Mi rutina</div>
+            <div class="rutina-hero-sub">${qc.hechos} de ${qc.total} hábitos hoy</div>
             ${qc.pct === 100 && qc.total > 0 ? '<div class="qc-complete-badge">🏆 ¡DÍA PERFECTO!</div>' : ''}
           </div>
         </div>
+      </div>
 
-        <div class="qc-lista" id="qc-lista">
-          ${habitosHtml}
+      <div class="qc-section">
+        <div class="qc-bloques" id="qc-lista">
+          ${bloquesHtml}
           <button class="qc-nuevo-btn" data-act="habito-nuevo">+ Nuevo hábito</button>
         </div>
-
-        ${qc.pct === 100 && qc.total > 0 ? `
-          <div class="qc-celebrate-msg">
-            <span>🎉 ¡Todos los hábitos completados! Cada día así construye tu mejor versión.</span>
-          </div>
-        ` : qc.hechos > 0 ? `
-          <div class="qc-progress-msg">
-            <span>💪 ¡Vas bien! Te faltan ${qc.total - qc.hechos} hábito${qc.total - qc.hechos === 1 ? '' : 's'} para completar el día.</span>
-          </div>
-        ` : ''}
+        ${motivText}
       </div>
 
-      <!-- MEDIDOR GAMIFICADO -->
-      <div class="estres-card-game" style="border-color:${e.color};box-shadow:0 0 24px ${e.color}33;">
-        <div class="estres-game-header">
-          <div class="estres-game-title">NIVEL DE ESTRÉS</div>
-          <div class="estres-badge" style="background:${e.color};">${e.pct}%</div>
+      <!-- ═══ SECCIÓN 2: DATOS DE HÁBITOS (stats rápidas) ═══ -->
+      <div class="stats-strip">
+        <div class="stats-strip-item">
+          <div class="stats-strip-val" style="color:var(--verde);">${e.nivelActual}</div>
+          <div class="stats-strip-label">Nivel</div>
         </div>
-
-        <div class="estres-circle-container">
-          <div class="estres-circle" style="--percentage:${e.pct};--color:${e.color};">
-            <div class="estres-circle-inner" style="background:linear-gradient(135deg, ${e.color}, ${e.color}88);">
-              <div class="estres-circle-text">
-                <div class="estres-valor" style="color:${e.color};">${e.pct}%</div>
-                <div class="estres-nivel" style="color:${e.color};">${e.nivel}</div>
-              </div>
-            </div>
-          </div>
+        <div class="stats-strip-sep"></div>
+        <div class="stats-strip-item">
+          <div class="stats-strip-val">${e.xpTotal}</div>
+          <div class="stats-strip-label">XP total</div>
         </div>
+        <div class="stats-strip-sep"></div>
+        <div class="stats-strip-item">
+          <div class="stats-strip-val">${e.rachaActual}</div>
+          <div class="stats-strip-label">Racha</div>
+        </div>
+        <div class="stats-strip-sep"></div>
+        <div class="stats-strip-item">
+          <div class="stats-strip-val">${e.xpHoy}</div>
+          <div class="stats-strip-label">XP hoy</div>
+        </div>
+      </div>
 
-        <div class="estres-stats">
-          <div class="stat-item">
-            <span class="stat-label">Carga total</span>
-            <span class="stat-value">${e.bruto} pts</span>
+      <div class="nivel-barra-wrap">
+        <div class="nivel-barra-info">
+          <span>Nivel ${e.nivelActual}</span>
+          <span class="nivel-barra-xp">${e.xpEnNivel}/${e.xpParaProximo} XP</span>
+        </div>
+        <div class="nivel-barra">
+          <div class="nivel-barra-fill" style="width:${e.progreso}%;"></div>
+        </div>
+      </div>
+
+      <!-- ═══ SECCIÓN 3: NIVEL DE ESTRÉS ═══ -->
+      <div class="estres-compact" style="border-color:${e.color};">
+        <div class="estres-compact-left">
+          <div class="estres-compact-title">Estrés</div>
+          <div class="estres-compact-pct" style="color:${e.color};">${e.pct}%</div>
+          <div class="estres-compact-nivel" style="color:${e.color};">${e.nivel}</div>
+        </div>
+        <div class="estres-compact-right">
+          <div class="estres-compact-stat">
+            <span class="estres-compact-stat-label">Carga</span>
+            <span class="estres-compact-stat-val">${e.bruto} pts</span>
           </div>
           ${e.alivio > 0 ? `
-            <div class="stat-item bonus">
-              <span class="stat-label">🎉 Alivio hoy</span>
-              <span class="stat-value" style="color:var(--verde);">−${e.alivio} pts</span>
+            <div class="estres-compact-stat estres-alivio">
+              <span class="estres-compact-stat-label">Alivio</span>
+              <span class="estres-compact-stat-val" style="color:var(--verde);">−${e.alivio}</span>
             </div>
-          ` : `
-            <div class="stat-item">
-              <span class="stat-label">💡 Tip</span>
-              <span class="stat-value">Completa hábitos hoy</span>
-            </div>
-          `}
+          ` : ''}
+          <div class="estres-compact-stat">
+            <span class="estres-compact-stat-label">Neto</span>
+            <span class="estres-compact-stat-val">${e.neto} pts</span>
+          </div>
         </div>
       </div>
 
-      <!-- DE DÓNDE VIENE -->
-      <div class="section-title">De dónde viene</div>
-      <div class="vista-sub">Toca una fuente para ir a resolverla.</div>
-      <div class="fuentes-grid">${fuentesHtml}</div>
+      ${fuentesHtml ? `
+        <div class="section-label">De dónde viene</div>
+        <div class="fuentes-chips">${fuentesHtml}</div>
+      ` : ''}
 
-      <!-- CENTRO DE CLASIFICACIÓN -->
-      <div class="section-title">Centro de clasificación de ideas</div>
-      <div class="vista-sub">Cada idea pesa según en qué módulo está, si tiene fecha vencida y su prioridad.</div>
-      <div class="clasif-grid">${clasificacionHtml}</div>
+      ${e.items.length ? `
+        <div class="section-label">Lo que más pesa</div>
+        <div class="pesos-lista">${topHtml}</div>
+      ` : ''}
 
-      <!-- LO QUE MÁS PESA -->
-      <div class="section-title">Lo que más te pesa ahora</div>
-      <div class="vista-sub">Si resuelves los tres primeros, el medidor baja de verdad.</div>
-      <div class="pesos-lista">${topHtml}</div>
+      <!-- ═══ SECCIÓN 4: CENTRO DE CLASIFICACIÓN DE IDEAS (optimizado) ═══ -->
+      <div class="section-label">Clasificación de ideas</div>
+      <div class="clasif-compact">${clasificacionHtml}</div>
     </main>
   `;
 }

@@ -1,7 +1,7 @@
 // Sistema de estrés: convierte la carga real de la app (ideas, clientes, plata, universidad)
 // en puntos. Los hábitos cumplidos hoy restan. Todo se calcula al vuelo, nada se guarda.
 import { hoyStr, lunesDe, sumarDias, fstr } from './idea.js';
-import { HORARIO_CLASES } from '../data/constants.js';
+import { HORARIO_CLASES, METAS_EQUIPO_SEED } from '../data/constants.js';
 import { loadValue, persistValue } from './storage.js';
 
 // Cuánto pesa mentalmente una idea según en qué módulo está
@@ -300,4 +300,34 @@ export function calcularStatsGamificacion(habitos, hoy) {
     totalHabitos,
     objetivosLogrados: habitosHoy.length
   };
+}
+
+// ---- Orden canónico de hábitos (según el seed) ----
+// Los hábitos se muestran en el orden del día: mañana → día → noche.
+// Construimos un mapa título→posición a partir del seed para ordenar los
+// hábitos del usuario aunque se hayan insertado en cualquier orden.
+const HABIT_ORDER = (() => {
+  const seeds = METAS_EQUIPO_SEED.filter(s => s.categoria === 'habito');
+  const map = {};
+  seeds.forEach((s, i) => { map[s.titulo.toLowerCase()] = i; });
+  return map;
+})();
+
+const HABIT_BLOCK = (() => {
+  const seeds = METAS_EQUIPO_SEED.filter(s => s.categoria === 'habito');
+  const map = {};
+  seeds.forEach(s => { map[s.titulo.toLowerCase()] = s.bloque || 'dia'; });
+  return map;
+})();
+
+export function ordenarHabitos(habitos) {
+  return [...habitos].sort((a, b) => {
+    const posA = HABIT_ORDER[(a.titulo || '').toLowerCase()] ?? 999;
+    const posB = HABIT_ORDER[(b.titulo || '').toLowerCase()] ?? 999;
+    return posA - posB;
+  });
+}
+
+export function getBloqueHabito(habito) {
+  return HABIT_BLOCK[(habito.titulo || '').toLowerCase()] || 'dia';
 }
