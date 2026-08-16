@@ -697,6 +697,7 @@ root.addEventListener('change', e => {
       case 'pago-mensual-monto': actions.updPagoMensual(id, { monto: parseN(value) }); break;
       case 'pago-mensual-dia': actions.updPagoMensual(id, { dia_pago: parseN(value) || null }); break;
       case 'meta-personal-titulo': actions.updMetaPersonal(id, { titulo: value }); break;
+      case 'meta-personal-bloque': actions.updMetaPersonal(id, { bloque: value || null }); break;
       case 'meta-personal-tipo': actions.updMetaPersonal(id, { tipo: value || null }); break;
       case 'meta-personal-fecha': actions.updMetaPersonal(id, { fecha: value || null }); break;
       case 'meta-personal-descripcion': actions.updMetaPersonal(id, { descripcion: value || null }); break;

@@ -23,6 +23,7 @@ function habitoHtml(h, hoy) {
   const streak = getHabitStreak(h.id);
   const badge = getStreakBadge(streak.count);
   const streakLabel = streak.count > 0 ? `${streak.count}d` : '';
+  const bloque = getBloqueHabito(h);
 
   return `
     <div class="qc-habito ${hecho ? 'qc-hecho' : ''}" data-id="${escapeHtml(h.id)}">
@@ -30,9 +31,14 @@ function habitoHtml(h, hoy) {
         <span class="qc-check-icon">${hecho ? '✓' : ''}</span>
       </button>
       <div class="qc-habito-info">
-        <span class="qc-habito-label">${escapeHtml(h.titulo)}</span>
+        <input class="qc-habito-nombre" data-change="meta-personal-titulo" data-id="${escapeHtml(h.id)}" value="${escapeHtml(h.titulo)}" placeholder="Nombre del hábito…">
         ${badge ? `<span class="qc-streak" title="Racha: ${streak.count} día${streak.count === 1 ? '' : 's'}">${badge} ${streakLabel}</span>` : ''}
       </div>
+      <select class="qc-bloque-select" data-change="meta-personal-bloque" data-id="${escapeHtml(h.id)}" title="Bloque del día">
+        <option value="manana" ${bloque === 'manana' ? 'selected' : ''}>☀️</option>
+        <option value="dia" ${bloque === 'dia' ? 'selected' : ''}>🌤️</option>
+        <option value="noche" ${bloque === 'noche' ? 'selected' : ''}>🌙</option>
+      </select>
       <button class="qc-quitar" data-act="meta-personal-eliminar" data-id="${escapeHtml(h.id)}" title="Quitar">✕</button>
     </div>
   `;
