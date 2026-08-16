@@ -459,8 +459,15 @@ const HABIT_BLOCK = (() => {
   return map;
 })();
 
+const BLOQUE_ORDER = { manana: 0, dia: 1, noche: 2 };
+
 export function ordenarHabitos(habitos) {
   return [...habitos].sort((a, b) => {
+    // Primero por bloque del día (mañana → día → noche)
+    const bloA = BLOQUE_ORDER[getBloqueHabito(a)] ?? 1;
+    const bloB = BLOQUE_ORDER[getBloqueHabito(b)] ?? 1;
+    if (bloA !== bloB) return bloA - bloB;
+    // Dentro del mismo bloque, por orden del seed
     const posA = HABIT_ORDER[(a.titulo || '').toLowerCase()] ?? 999;
     const posB = HABIT_ORDER[(b.titulo || '').toLowerCase()] ?? 999;
     return posA - posB;
@@ -468,5 +475,7 @@ export function ordenarHabitos(habitos) {
 }
 
 export function getBloqueHabito(habito) {
+  // Prioridad: bloque guardado en el hábito > bloque del seed > default 'dia'
+  if (habito.bloque) return habito.bloque;
   return HABIT_BLOCK[(habito.titulo || '').toLowerCase()] || 'dia';
 }
