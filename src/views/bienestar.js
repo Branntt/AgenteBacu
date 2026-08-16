@@ -1,5 +1,5 @@
 import { escapeHtml } from '../lib/format.js';
-import { calcularEstres, getGreeting, getHabitStreak, getStreakBadge, calcularQuickCheck, ordenarHabitos, getBloqueHabito, calcularAnalisisSemanal } from '../lib/bienestar.js';
+import { calcularEstres, getGreeting, getHabitStreak, getStreakBadge, calcularQuickCheck, ordenarHabitos, getBloqueHabito, calcularAnalisisSemanal, calcularAnalisisMensual } from '../lib/bienestar.js';
 import { hoyStr } from '../lib/idea.js';
 
 const NIVELES = [
@@ -152,6 +152,88 @@ export function renderBienestar(state) {
     `;
   }
 
+  // ── Análisis mensual ──
+  const mensual = calcularAnalisisMensual(sortedHabitos, hoy);
+
+  let mensualHtml = '';
+  if (mensual) {
+    const rendMensualHtml = mensual.rendimiento.map(r => {
+      const barColor = r.pct >= 70 ? 'var(--verde)' : (r.pct >= 40 ? '#EFC94C' : 'var(--rojo)');
+      return `
+        <div class="as-rend-row">
+          <span class="as-rend-label">${escapeHtml(r.titulo)}</span>
+          <div class="as-rend-bar-wrap">
+            <div class="as-rend-bar" style="width:${r.pct}%;background:${barColor};"></div>
+          </div>
+          <span class="as-rend-pct">${r.pct}%</span>
+        </div>
+      `;
+    }).join('');
+
+    // Mini chart: barras por semana
+    const semanasBarHtml = mensual.semanasData.map(s => {
+      const barColor = s.pct >= 70 ? 'var(--verde)' : (s.pct >= 40 ? '#EFC94C' : 'var(--rojo)');
+      return `
+        <div class="am-semana-col">
+          <div class="am-semana-bar-wrap">
+            <div class="am-semana-bar" style="height:${s.pct}%;background:${barColor};"></div>
+          </div>
+          <span class="am-semana-label">${s.label}</span>
+          <span class="am-semana-pct">${s.pct}%</span>
+        </div>
+      `;
+    }).join('');
+
+    const deltaMSign = mensual.deltaMes > 0 ? '+' : '';
+    const deltaMColor = mensual.deltaMes > 0 ? 'var(--verde)' : (mensual.deltaMes < 0 ? 'var(--rojo)' : 'var(--muted)');
+
+    mensualHtml = `
+      <div class="am-section">
+        <div class="am-title">📅 RESUMEN DE ${mensual.mesNombre.toUpperCase()} ${mensual.anio}</div>
+        <div class="am-sub">${mensual.progresoDias}</div>
+
+        <div class="as-grid">
+          <div class="as-card">
+            <div class="as-card-icon">📊</div>
+            <div class="as-card-val" style="color:var(--verde);">${mensual.consistencia}%</div>
+            <div class="as-card-label">CONSISTENCIA</div>
+          </div>
+          <div class="as-card">
+            <div class="as-card-icon">⭐</div>
+            <div class="as-card-val">${mensual.diasPerfectos}</div>
+            <div class="as-card-label">DÍAS PERFECTOS</div>
+          </div>
+          <div class="as-card">
+            <div class="as-card-icon">✅</div>
+            <div class="as-card-val">${mensual.completadosMes}/${mensual.totalPosibleMes}</div>
+            <div class="as-card-label">COMPLETADOS</div>
+          </div>
+          <div class="as-card">
+            <div class="as-card-icon">📈</div>
+            <div class="as-card-val" style="color:${deltaMColor};">${deltaMSign}${mensual.deltaMes}%</div>
+            <div class="as-card-label">VS MES ANT.</div>
+          </div>
+        </div>
+
+        ${mensual.semanasData.length > 1 ? `
+          <div class="as-rend-title">CONSISTENCIA POR SEMANA</div>
+          <div class="am-semanas-chart">
+            ${semanasBarHtml}
+          </div>
+        ` : ''}
+
+        <div class="as-rend-title">RENDIMIENTO POR HÁBITO</div>
+        <div class="as-rend-list">
+          ${rendMensualHtml}
+        </div>
+
+        <div class="as-insight">
+          ${escapeHtml(mensual.resumen)}
+        </div>
+      </div>
+    `;
+  }
+
   // ── Clasificación de ideas (optimizada: inline compact) ──
   const clasificacionHtml = NIVELES.map(([clave, label, color]) => {
     const items = e.ideasClasificadas.filter(x => x.nivel === clave);
@@ -273,6 +355,9 @@ export function renderBienestar(state) {
       <!-- ═══ SECCIÓN 4: CENTRO DE CLASIFICACIÓN DE IDEAS (optimizado) ═══ -->
       <div class="section-label">Clasificación de ideas</div>
       <div class="clasif-compact">${clasificacionHtml}</div>
+
+      <!-- ═══ SECCIÓN 5: RESUMEN MENSUAL ═══ -->
+      ${mensualHtml}
     </main>
   `;
 }
