@@ -578,6 +578,7 @@ export function calcularAnalisisMensual(habitos, hoy) {
   };
 }
 
+
 // ---- Orden canónico de hábitos (según el seed) ----
 // Los hábitos se muestran en el orden del día: mañana → día → noche.
 // Construimos un mapa título→posición a partir del seed para ordenar los
