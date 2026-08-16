@@ -273,6 +273,7 @@ function sembrarMetasEquipo() {
   const rows = faltantes.map((s, i) => {
     const r = { id: 'mp' + Date.now() + '-' + i, categoria: s.categoria, titulo: s.titulo, fecha: null, cumplida: false };
     if (s.tipo) r.tipo = s.tipo;
+    if (s.bloque) r.bloque = s.bloque;
     return r;
   });
   state.metasPersonales = state.metasPersonales.concat(rows);

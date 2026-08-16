@@ -1372,658 +1372,360 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
 .estres-fill { height: 100%; border-radius: 5px; transition: width .4s ease; }
 .estres-nota { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--muted); }
 
-/* Gamificación de Bienestar */
-.jugador-header {
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-  border: 2px solid var(--verde);
-  border-radius: 16px;
-  padding: 24px;
-  margin-bottom: 24px;
-  box-shadow: 0 8px 32px var(--verde)33;
-}
-.titulo-principal {
-  font-size: 28px;
-  font-weight: 700;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  margin-bottom: 20px;
-  text-align: center;
-  background: linear-gradient(135deg, var(--verde), #1faf7488);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-.stats-rápido {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-}
-.stat-box-mini {
-  background: rgba(31,175,116,0.1);
-  border: 1px solid var(--verde);
-  border-radius: 12px;
-  padding: 16px;
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-}
-.stat-icon {
-  font-size: 24px;
-}
-.stat-valor {
-  font-size: 24px;
-  font-weight: bold;
-  color: var(--verde);
-}
-.stat-etiqueta {
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  color: var(--muted);
-}
+/* ═══════════════════════════════════════════════════
+   Bienestar — Rediseño v3 (2026-08-16)
+   Orden: Rutina → Stats → Estrés → Clasificación
+   ═══════════════════════════════════════════════════ */
 
-.jugador-progreso {
-  background: linear-gradient(135deg, var(--panel2) 0%, var(--panel) 100%);
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  padding: 20px;
-  margin-bottom: 28px;
-}
-.nivel-info {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
-  font-size: 12px;
-}
-.nivel-actual {
-  font-weight: bold;
-  font-size: 14px;
-}
-.xp-info {
-  color: var(--muted);
-  font-family: 'IBM Plex Mono', monospace;
-}
-.barra-nivel {
-  height: 12px;
-  background: var(--panel2);
-  border-radius: 6px;
-  overflow: hidden;
-  margin-bottom: 8px;
-  box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
-}
-.barra-fill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--verde), #1faf7488);
-  border-radius: 6px;
-  transition: width 0.4s ease;
-  box-shadow: 0 0 12px var(--verde)66;
-}
-.nivel-siguiente {
-  font-size: 11px;
-  color: var(--muted);
-  text-align: center;
-  font-family: 'IBM Plex Mono', monospace;
-}
-
-.estres-card-game {
-  background: linear-gradient(135deg, var(--panel2) 0%, var(--panel) 100%);
-  border: 2px solid var(--verde);
-  border-radius: 16px;
-  padding: 28px 24px;
-  margin-bottom: 36px;
-  box-shadow: 0 8px 24px var(--verde)22;
-}
-.estres-game-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
-}
-.estres-game-title {
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: var(--text);
-}
-.estres-badge {
-  font-size: 24px;
-  font-weight: bold;
-  padding: 8px 16px;
-  border-radius: 8px;
-  color: white;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-}
-.estres-circle-container {
-  display: flex;
-  justify-content: center;
-  margin: 24px 0;
-}
-.estres-circle {
-  width: 140px;
-  height: 140px;
-  border-radius: 50%;
-  position: relative;
-  background: conic-gradient(var(--verde), var(--verde) calc(var(--percentage)*3.6deg), var(--panel2) 0);
-  box-shadow: 0 0 20px var(--verde)44;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.estres-circle-inner {
-  width: 130px;
-  height: 130px;
-  border-radius: 50%;
-  background: var(--panel) !important;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-}
-.estres-circle-text {
-  text-align: center;
-}
-.estres-valor {
-  font-size: 48px;
-  font-weight: bold;
-  line-height: 1;
-  margin: 0;
-}
-.estres-nivel {
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 11px;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  margin-top: 4px;
-}
-.estres-stats {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin-top: 20px;
-}
-.stat-item {
-  background: var(--panel); border: 1px solid var(--line); border-radius: 8px;
-  padding: 12px;
-  text-align: center;
-}
-.stat-item.bonus {
-  border-color: var(--verde);
-  background: rgba(31,175,116,0.08);
-}
-.stat-label {
-  display: block;
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 10px;
-  color: var(--muted);
-  margin-bottom: 4px;
-}
-.stat-value {
-  display: block;
-  font-size: 16px;
-  font-weight: bold;
-  color: var(--text);
-}
-
-/* Hábitos Gamificados */
-.habitos-section {
-  margin-bottom: 40px;
-}
-.habitos-header {
-  position: relative;
-  margin-bottom: 20px;
-}
-.habitos-title-game {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-  padding-bottom: 12px;
-  border-bottom: 2px solid var(--line);
-}
-.habitos-icon {
-  font-size: 18px;
-  font-weight: 700;
-  letter-spacing: 1px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.habitos-counter {
-  flex-shrink: 0;
-}
-.counter-circle {
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 12px rgba(31,175,116,0.3);
-  color: white;
-  font-weight: bold;
-}
-.counter-num {
-  font-size: 32px;
-  line-height: 1;
-}
-.counter-total {
-  font-size: 12px;
-  opacity: 0.9;
-}
-.achievement-unlock {
-  position: absolute;
-  top: -10px;
-  right: 0;
-  background: linear-gradient(135deg, #FFD700, #FFA500);
-  color: #222;
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-size: 11px;
-  font-weight: bold;
-  animation: bounce 0.6s ease-in-out;
-}
-@keyframes bounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
-}
-
-.habito-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.habito-emoji {
-  font-size: 16px;
-}
-.habito-done-fx {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  animation: celebration 0.6s ease-out forwards;
-}
-@keyframes celebration {
-  0% {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
-  }
-  100% {
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(1.5);
-  }
-}
-.habito {
-  position: relative;
-  transition: all 0.3s ease;
-}
-.habito:hover {
-  border-color: var(--line2);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-}
-.habito.hecho {
-  animation: slideIn 0.4s ease-out;
-}
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-.habito-check {
-  transition: all 0.3s ease;
-}
-.habito-check:hover {
-  transform: scale(1.1);
-}
-
-.fuentes-grid { display: grid; grid-template-columns: 1fr; gap: 12px; margin-bottom: 36px; }
-.fuente-row {
-  background: var(--panel); border: 1px solid var(--line); border-radius: 8px;
-  padding: 14px 16px; cursor: pointer;
-}
-.fuente-row:hover { border-color: var(--line2); }
-.fuente-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-.fuente-label { font-size: 14px; font-weight: 600; }
-.fuente-pts { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--muted); }
-.fuente-barra { height: 6px; background: var(--panel2); border-radius: 3px; overflow: hidden; margin-bottom: 8px; }
-.fuente-fill { height: 100%; border-radius: 3px; }
-.fuente-detalle { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: var(--muted); }
-
-.clasif-grid { display: grid; grid-template-columns: 1fr; gap: 14px; margin-bottom: 36px; }
-.clasif-col { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px; }
-.clasif-head { display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 600; }
-.clasif-lista { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
-.clasif-item {
-  display: flex; justify-content: space-between; align-items: center; gap: 8px;
-  background: var(--panel2); border-radius: 6px; padding: 9px 11px; cursor: pointer; font-size: 12.5px;
-}
-.clasif-item:hover { background: var(--line); }
-.clasif-item-titulo { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.clasif-item-pts { font-family: 'IBM Plex Mono', monospace; font-weight: bold; flex-shrink: 0; }
-
-.pesos-lista { display: flex; flex-direction: column; gap: 8px; margin-bottom: 36px; }
-.peso-row {
-  display: flex; align-items: center; gap: 12px; cursor: pointer;
-  background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px;
-}
-.peso-row:hover { border-color: var(--line2); }
-.peso-num { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--muted); flex-shrink: 0; }
-.peso-cuerpo { flex: 1; min-width: 0; }
-.peso-titulo { font-size: 13px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.peso-motivo { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: var(--muted); margin-top: 2px; }
-.peso-pts { font-family: 'IBM Plex Mono', monospace; font-size: 15px; font-weight: bold; color: var(--rojo); flex-shrink: 0; }
-
-.habitos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; margin-bottom: 40px; }
-.habito {
-  display: flex; align-items: center; gap: 8px;
-  background: var(--panel2); border: 1px solid var(--line); border-radius: 8px; padding: 9px 11px;
-}
-.habito.hecho { border-color: var(--verde); background: rgba(31,175,116,0.08); }
-.habito-check {
-  width: 24px; height: 24px; flex-shrink: 0; border-radius: 6px; cursor: pointer;
-  border: 1.5px solid var(--line2); background: none; color: var(--verde);
-  font-size: 13px; line-height: 1; padding: 0;
-}
-.habito.hecho .habito-check { border-color: var(--verde); background: rgba(31,175,116,0.18); }
-.habito-texto { background: none; border: none; color: inherit; flex: 1; min-width: 0; font-family: inherit; font-size: 13px; padding: 4px; }
-.habito.hecho .habito-texto { color: var(--muted); text-decoration: line-through; }
-.habito-quitar { background: none; border: none; cursor: pointer; color: var(--muted); font-size: 12px; padding: 6px; flex-shrink: 0; }
-.habito-quitar:hover { color: var(--rojo); }
-
-/* ---------- Quick Check (Hábitos mejorados) ---------- */
-
+/* ── Confetti canvas ── */
 #qc-confetti-canvas {
-  position: fixed;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 999;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.3s ease;
+  position: fixed; inset: 0; width: 100%; height: 100%;
+  z-index: 999; pointer-events: none;
+  opacity: 0; transition: opacity .3s ease;
 }
-#qc-confetti-canvas.qc-confetti-active {
-  opacity: 1;
-}
+#qc-confetti-canvas.qc-confetti-active { opacity: 1; }
 
-.qc-section {
-  margin-bottom: 36px;
+/* ── 1. Rutina hero (ring + greeting) ── */
+.rutina-hero {
+  background: var(--panel);
+  border: 1px solid var(--verde);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 12px;
 }
-
-.qc-hero {
+.rutina-hero-top {
   display: flex;
   align-items: center;
-  gap: 20px;
-  background: linear-gradient(135deg, var(--panel2) 0%, var(--panel) 100%);
-  border: 2px solid var(--verde);
-  border-radius: 16px;
-  padding: 24px;
-  margin-bottom: 16px;
-  box-shadow: 0 8px 32px rgba(31,175,116,0.15);
+  gap: 18px;
 }
-
-.qc-ring-wrap {
+.rutina-ring-wrap {
   position: relative;
   flex-shrink: 0;
-  width: 120px;
-  height: 120px;
+  width: 100px;
+  height: 100px;
 }
-
-.qc-ring-svg {
-  transform: rotate(-90deg);
-  display: block;
-}
-
-.qc-ring-bg {
-  fill: none;
-  stroke: var(--line);
-  stroke-width: 8;
-}
-
+.qc-ring-svg { transform: rotate(-90deg); display: block; }
+.qc-ring-bg { fill: none; stroke: var(--line); stroke-width: 8; }
 .qc-ring-fill {
-  fill: none;
-  stroke: var(--verde);
-  stroke-width: 8;
-  stroke-linecap: round;
-  transition: stroke-dashoffset 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  fill: none; stroke: var(--verde); stroke-width: 8; stroke-linecap: round;
+  transition: stroke-dashoffset .6s cubic-bezier(.22,1,.36,1);
 }
-
 .qc-ring-label {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
 }
-
 .qc-ring-pct {
-  font-size: 28px;
-  font-weight: 700;
-  color: var(--verde);
+  font-size: 24px; font-weight: 700; color: var(--verde);
   font-family: 'IBM Plex Mono', monospace;
 }
-
-.qc-hero-text {
-  flex: 1;
-  min-width: 0;
-}
-
+.rutina-hero-info { flex: 1; min-width: 0; }
 .qc-greeting {
-  font-size: 13px;
-  color: var(--muted);
-  margin-bottom: 4px;
-  letter-spacing: 0.5px;
+  font-size: 12px; color: var(--muted); margin-bottom: 2px;
+  letter-spacing: .5px;
 }
-
-.qc-hero-title {
-  font-size: 24px;
-  font-weight: 700;
-  letter-spacing: 1px;
-  margin-bottom: 4px;
+.rutina-hero-title {
+  font-size: 22px; font-weight: 700; letter-spacing: .5px; margin-bottom: 2px;
 }
-
-.qc-hero-sub {
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 12px;
-  color: var(--muted);
+.rutina-hero-sub {
+  font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--muted);
 }
-
 .qc-complete-badge {
-  display: inline-block;
-  margin-top: 8px;
+  display: inline-block; margin-top: 6px;
   background: linear-gradient(135deg, #FFD700, #FFA500);
-  color: #222;
-  padding: 4px 12px;
-  border-radius: 20px;
-  font-size: 11px;
-  font-weight: bold;
-  letter-spacing: 0.5px;
-  animation: qcBounce 0.6s ease-in-out;
+  color: #222; padding: 3px 10px; border-radius: 20px;
+  font-size: 10px; font-weight: bold; letter-spacing: .5px;
+  animation: qcBounce .6s ease-in-out;
 }
-
 @keyframes qcBounce {
   0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-6px); }
+  50% { transform: translateY(-5px); }
 }
 
-.qc-lista {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-bottom: 12px;
-}
+/* ── Habit blocks (morning/day/night) ── */
+.qc-section { margin-bottom: 20px; }
+.qc-bloques { display: flex; flex-direction: column; gap: 16px; }
 
-.qc-habito {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: var(--panel2);
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  padding: 12px 14px;
-  transition: all 0.3s ease;
-  position: relative;
-}
-
-.qc-habito:hover {
-  border-color: var(--line2);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-}
-
-.qc-habito.qc-hecho {
-  border-color: var(--verde);
-  background: rgba(31,175,116,0.08);
-}
-
-.qc-check {
-  width: 32px;
-  height: 32px;
-  flex-shrink: 0;
-  border-radius: 50%;
-  cursor: pointer;
-  border: 2px solid var(--line2);
-  background: none;
-  color: transparent;
-  font-size: 14px;
-  font-weight: bold;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.25s ease;
-  padding: 0;
-}
-
-.qc-check:hover {
-  border-color: var(--verde);
-  transform: scale(1.1);
-}
-
-.qc-hecho .qc-check {
-  border-color: var(--verde);
-  background: var(--verde);
-  color: #fff;
-}
-
-.qc-check-icon {
-  font-size: 15px;
-  line-height: 1;
-}
-
-.qc-habito-info {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.qc-habito-nombre {
-  background: none;
-  border: none;
-  color: inherit;
-  flex: 1;
-  min-width: 0;
-  font-family: inherit;
-  font-size: 14px;
-  padding: 2px 4px;
-}
-.qc-habito-nombre:focus {
-  outline: none;
-  border-bottom: 1px solid var(--line2);
-}
-
-.qc-hecho .qc-habito-nombre {
-  color: var(--muted);
-  text-decoration: line-through;
-}
-
-.qc-streak {
-  flex-shrink: 0;
-  font-size: 12px;
-  color: var(--verde);
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-.qc-quitar {
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: var(--muted);
-  font-size: 13px;
-  padding: 6px;
-  flex-shrink: 0;
-  opacity: 0;
-  transition: opacity 0.2s ease, color 0.2s ease;
-}
-.qc-habito:hover .qc-quitar {
-  opacity: 1;
-}
-.qc-quitar:hover {
-  color: var(--rojo);
-}
-
-.qc-nuevo-btn {
-  background: none;
-  border: 1px dashed var(--line2);
-  border-radius: 12px;
-  color: var(--muted);
-  font-family: inherit;
-  font-size: 13px;
-  padding: 12px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  text-align: center;
-}
-.qc-nuevo-btn:hover {
-  border-color: var(--verde);
-  color: var(--verde);
-  background: rgba(31,175,116,0.05);
-}
-
-.qc-celebrate-msg,
-.qc-progress-msg {
-  text-align: center;
-  font-size: 12px;
-  color: var(--muted);
-  padding: 10px 16px;
+.qc-bloque {
   background: var(--panel);
   border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px;
+}
+.qc-bloque-listo {
+  border-color: var(--verde);
+  background: rgba(31,175,116,0.04);
+}
+.qc-bloque-head {
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 10px; padding-bottom: 8px;
+  border-bottom: 1px solid var(--line);
+}
+.qc-bloque-emoji { font-size: 16px; }
+.qc-bloque-label {
+  font-size: 13px; font-weight: 600; flex: 1;
+  text-transform: uppercase; letter-spacing: 1px;
+}
+.qc-bloque-count {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px; color: var(--muted);
+}
+.qc-bloque-listo .qc-bloque-count { color: var(--verde); }
+.qc-bloque-items { display: flex; flex-direction: column; gap: 6px; }
+
+/* ── Individual habit row ── */
+.qc-habito {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--panel2);
+  border: 1px solid transparent;
   border-radius: 10px;
+  padding: 10px 12px;
+  transition: all .25s ease;
+}
+.qc-habito:hover {
+  border-color: var(--line2);
+  box-shadow: 0 1px 6px rgba(0,0,0,.06);
+}
+.qc-habito.qc-hecho {
+  border-color: rgba(31,175,116,0.3);
+  background: rgba(31,175,116,0.06);
+}
+.qc-check {
+  width: 28px; height: 28px; flex-shrink: 0; border-radius: 50%;
+  cursor: pointer; border: 2px solid var(--line2); background: none;
+  color: transparent; font-size: 13px; font-weight: bold;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .2s ease; padding: 0;
+}
+.qc-check:hover { border-color: var(--verde); transform: scale(1.08); }
+.qc-hecho .qc-check {
+  border-color: var(--verde); background: var(--verde); color: #fff;
+}
+.qc-check-icon { font-size: 13px; line-height: 1; }
+
+.qc-habito-info {
+  flex: 1; min-width: 0;
+  display: flex; align-items: center; gap: 8px;
+}
+.qc-habito-label {
+  flex: 1; min-width: 0; font-size: 13px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.qc-hecho .qc-habito-label {
+  color: var(--muted); text-decoration: line-through;
+}
+.qc-streak {
+  flex-shrink: 0; font-size: 11px; color: var(--verde);
+  font-weight: 600; white-space: nowrap;
+}
+.qc-quitar {
+  background: none; border: none; cursor: pointer;
+  color: var(--muted); font-size: 12px; padding: 4px;
+  flex-shrink: 0; opacity: 0;
+  transition: opacity .2s ease, color .2s ease;
+}
+.qc-habito:hover .qc-quitar { opacity: 1; }
+.qc-quitar:hover { color: var(--rojo); }
+
+.qc-nuevo-btn {
+  background: none; border: 1px dashed var(--line2);
+  border-radius: 10px; color: var(--muted);
+  font-family: inherit; font-size: 12px; padding: 10px;
+  cursor: pointer; transition: all .2s ease; text-align: center;
+}
+.qc-nuevo-btn:hover {
+  border-color: var(--verde); color: var(--verde);
+  background: rgba(31,175,116,.05);
+}
+
+.qc-celebrate-msg, .qc-progress-msg {
+  text-align: center; font-size: 12px; color: var(--muted);
+  padding: 8px 14px; margin-top: 12px;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
 }
 .qc-celebrate-msg {
-  border-color: var(--verde);
-  background: rgba(31,175,116,0.06);
-  color: var(--verde);
-  font-weight: 500;
+  border-color: var(--verde); background: rgba(31,175,116,.06);
+  color: var(--verde); font-weight: 500;
 }
 
-/* Animación de check para hábitos */
 .qc-habito.qc-just-checked {
-  animation: qcCheckPop 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  animation: qcCheckPop .4s cubic-bezier(.22,1,.36,1);
 }
-
 @keyframes qcCheckPop {
-  0% { transform: scale(1.04); }
+  0% { transform: scale(1.03); }
   100% { transform: scale(1); }
 }
 
+/* ── 2. Stats strip (compact horizontal) ── */
+.stats-strip {
+  display: flex; align-items: center; justify-content: space-around;
+  background: var(--panel); border: 1px solid var(--line);
+  border-radius: 12px; padding: 14px 8px; margin-bottom: 8px;
+}
+.stats-strip-item { text-align: center; flex: 1; }
+.stats-strip-val {
+  font-size: 20px; font-weight: 700;
+  font-family: 'IBM Plex Mono', monospace;
+  color: var(--text);
+}
+.stats-strip-label {
+  font-size: 9px; text-transform: uppercase; letter-spacing: 1px;
+  color: var(--muted); margin-top: 2px;
+}
+.stats-strip-sep {
+  width: 1px; height: 28px; background: var(--line); flex-shrink: 0;
+}
+
+/* Level bar */
+.nivel-barra-wrap {
+  margin-bottom: 20px; padding: 0 2px;
+}
+.nivel-barra-info {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 11px; margin-bottom: 6px;
+}
+.nivel-barra-xp {
+  font-family: 'IBM Plex Mono', monospace; color: var(--muted); font-size: 10px;
+}
+.nivel-barra {
+  height: 8px; background: var(--panel2); border-radius: 4px;
+  overflow: hidden;
+}
+.nivel-barra-fill {
+  height: 100%; background: linear-gradient(90deg, var(--verde), #1faf7488);
+  border-radius: 4px; transition: width .4s ease;
+}
+
+/* ── 3. Stress compact card ── */
+.estres-compact {
+  display: flex; align-items: stretch; gap: 16px;
+  background: var(--panel); border: 1px solid var(--line);
+  border-radius: 12px; padding: 16px 18px; margin-bottom: 16px;
+}
+.estres-compact-left {
+  display: flex; flex-direction: column; justify-content: center;
+  min-width: 80px;
+}
+.estres-compact-title {
+  font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px;
+  color: var(--muted); margin-bottom: 4px;
+}
+.estres-compact-pct {
+  font-size: 36px; font-weight: 700; line-height: 1;
+  font-family: 'IBM Plex Mono', monospace;
+}
+.estres-compact-nivel {
+  font-size: 10px; text-transform: uppercase; letter-spacing: 1px;
+  margin-top: 2px;
+}
+.estres-compact-right {
+  flex: 1; display: flex; flex-direction: column;
+  justify-content: center; gap: 6px;
+  border-left: 1px solid var(--line); padding-left: 16px;
+}
+.estres-compact-stat {
+  display: flex; justify-content: space-between; align-items: center;
+}
+.estres-compact-stat-label {
+  font-family: 'IBM Plex Mono', monospace; font-size: 10px;
+  color: var(--muted); text-transform: uppercase; letter-spacing: .5px;
+}
+.estres-compact-stat-val {
+  font-family: 'IBM Plex Mono', monospace; font-size: 13px;
+  font-weight: 600; color: var(--text);
+}
+.estres-alivio .estres-compact-stat-val { color: var(--verde); }
+
+/* ── Source chips (stress origins) ── */
+.section-label {
+  font-size: 12px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 1.5px; color: var(--muted); margin-bottom: 10px;
+}
+.fuentes-chips {
+  display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px;
+}
+.fuente-chip {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--panel); border: 1px solid var(--line);
+  border-radius: 10px; padding: 10px 14px; cursor: pointer;
+  flex: 1 1 calc(50% - 4px); min-width: 140px;
+  transition: border-color .2s ease;
+}
+.fuente-chip:hover { border-color: var(--line2); }
+.fuente-chip-emoji { font-size: 18px; flex-shrink: 0; }
+.fuente-chip-body { flex: 1; min-width: 0; }
+.fuente-chip-label { font-size: 12px; font-weight: 600; display: block; }
+.fuente-chip-pts {
+  font-family: 'IBM Plex Mono', monospace; font-size: 10px;
+  color: var(--muted); display: block;
+}
+
+/* ── Top items (what weighs most) ── */
+.pesos-lista { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+.peso-row {
+  display: flex; align-items: center; gap: 10px; cursor: pointer;
+  background: var(--panel); border: 1px solid var(--line);
+  border-radius: 8px; padding: 10px 12px;
+  transition: border-color .2s ease;
+}
+.peso-row:hover { border-color: var(--line2); }
+.peso-num {
+  font-family: 'IBM Plex Mono', monospace; font-size: 10px;
+  color: var(--muted); flex-shrink: 0; width: 14px; text-align: center;
+}
+.peso-cuerpo { flex: 1; min-width: 0; }
+.peso-titulo {
+  font-size: 12px; font-weight: 600;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.peso-motivo {
+  font-family: 'IBM Plex Mono', monospace; font-size: 10px;
+  color: var(--muted); margin-top: 1px;
+}
+.peso-pts {
+  font-family: 'IBM Plex Mono', monospace; font-size: 14px;
+  font-weight: bold; color: var(--rojo); flex-shrink: 0;
+}
+
+/* ── 4. Classification (compact) ── */
+.clasif-compact {
+  display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px;
+}
+.clasif-group {
+  background: var(--panel); border: 1px solid var(--line);
+  border-radius: 10px; padding: 12px;
+}
+.clasif-group-head {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 8px;
+}
+.clasif-group-label { font-size: 12px; font-weight: 600; }
+.clasif-group-count {
+  font-family: 'IBM Plex Mono', monospace; font-size: 11px;
+  color: var(--muted); background: var(--panel2);
+  padding: 2px 8px; border-radius: 10px;
+}
+.clasif-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 8px; border-radius: 6px; cursor: pointer;
+  font-size: 12px; transition: background .15s ease;
+}
+.clasif-row:hover { background: var(--panel2); }
+.clasif-dot {
+  width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
+}
+.clasif-row-titulo {
+  flex: 1; min-width: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.clasif-row-pts {
+  font-family: 'IBM Plex Mono', monospace; font-weight: 600;
+  font-size: 11px; flex-shrink: 0; color: var(--muted);
+}
+
+/* ── Responsive ── */
 @media (min-width: 600px) {
-  .fuentes-grid { grid-template-columns: repeat(2, 1fr); }
-  .clasif-grid { grid-template-columns: repeat(3, 1fr); }
+  .fuentes-chips { flex-wrap: nowrap; }
+  .fuente-chip { flex: 1 1 0; min-width: 0; }
 }
 
 /* ---------- Universidad ---------- */

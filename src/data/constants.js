@@ -175,21 +175,25 @@ export const METAS_EQUIPO_SEED = [
   { categoria: 'inv_personal', titulo: 'Lentes de sol', tipo: 'gafas' },
   { categoria: 'inv_personal', titulo: 'Bandana / cubrecuello' },
   { categoria: 'inv_personal', titulo: 'Mochila' },
-  // Bienestar: hábitos diarios. `fecha` guarda el último día cumplido, por eso se reinician solos.
+  // Bienestar: hábitos diarios ordenados cronológicamente (mañana → día → noche).
+  // `fecha` guarda el último día cumplido, por eso se reinician solos.
   // Rutina real del usuario — reemplaza los hábitos genéricos (migración v2, 2026-08-15).
-  { categoria: 'habito', titulo: 'Levantarse a las 6:00 AM' },
-  { categoria: 'habito', titulo: 'Tender la cama' },
-  { categoria: 'habito', titulo: 'Tomar agua al levantarte' },
-  { categoria: 'habito', titulo: 'Skincare' },
-  { categoria: 'habito', titulo: 'Higiene personal' },
-  { categoria: 'habito', titulo: 'Desayuno' },
-  { categoria: 'habito', titulo: '5–10 min movilidad/estiramiento' },
-  { categoria: 'habito', titulo: 'Revisar las 3 prioridades del día' },
-  { categoria: 'habito', titulo: 'No redes sociales primeros 30 min' },
-  { categoria: 'habito', titulo: 'Ir al gym / ejercicio' },
-  { categoria: 'habito', titulo: 'Dormir 7–9 horas' },
-  { categoria: 'habito', titulo: 'Registrar gastos del día' },
-  { categoria: 'habito', titulo: 'Almorzar y cenar ligero' }
+  // ── Mañana ──
+  { categoria: 'habito', titulo: 'Levantarse a las 6:00 AM', bloque: 'manana' },
+  { categoria: 'habito', titulo: 'Tender la cama', bloque: 'manana' },
+  { categoria: 'habito', titulo: 'Tomar agua al levantarte', bloque: 'manana' },
+  { categoria: 'habito', titulo: 'Higiene personal', bloque: 'manana' },
+  { categoria: 'habito', titulo: 'Skincare', bloque: 'manana' },
+  { categoria: 'habito', titulo: 'Desayuno', bloque: 'manana' },
+  { categoria: 'habito', titulo: '5–10 min movilidad/estiramiento', bloque: 'manana' },
+  { categoria: 'habito', titulo: 'Revisar las 3 prioridades del día', bloque: 'manana' },
+  { categoria: 'habito', titulo: 'No redes sociales primeros 30 min', bloque: 'manana' },
+  // ── Día ──
+  { categoria: 'habito', titulo: 'Ir al gym / ejercicio', bloque: 'dia' },
+  { categoria: 'habito', titulo: 'Almorzar y cenar ligero', bloque: 'dia' },
+  // ── Noche ──
+  { categoria: 'habito', titulo: 'Registrar gastos del día', bloque: 'noche' },
+  { categoria: 'habito', titulo: 'Dormir 7–9 horas', bloque: 'noche' }
 ];
 
 export const COLORES_TAREA = { verde: 'var(--verde)', brant: 'var(--brant)', novena: 'var(--novena)', rojo: 'var(--rojo)', muted: 'var(--muted)' };
