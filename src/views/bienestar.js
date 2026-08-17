@@ -1,5 +1,5 @@
 import { escapeHtml } from '../lib/format.js';
-import { calcularEstres, getGreeting, getHabitStreak, getStreakBadge, calcularQuickCheck, ordenarHabitos, getBloqueHabito, calcularAnalisisSemanal } from '../lib/bienestar.js';
+import { calcularEstres, getGreeting, getHabitStreak, getStreakBadge, calcularQuickCheck, ordenarHabitos, getBloqueHabito, calcularAnalisisSemanal, calcularAnalisisMensual } from '../lib/bienestar.js';
 import { hoyStr } from '../lib/idea.js';
 
 const NIVELES = [
@@ -28,18 +28,23 @@ function habitoHtml(h, hoy) {
   return `
     <div class="qc-habito ${hecho ? 'qc-hecho' : ''}" data-id="${escapeHtml(h.id)}">
       <button class="qc-check" data-act="habito-toggle" data-id="${escapeHtml(h.id)}" title="${hecho ? 'Desmarcar' : 'Marcar hecho hoy'}">
-        <span class="qc-check-icon">${hecho ? '✓' : ''}</span>
+        <svg class="qc-check-svg" viewBox="0 0 22 22" width="22" height="22">
+          <circle class="qc-check-circle" cx="11" cy="11" r="9.5" />
+          <path class="qc-check-tick" d="M7 11l3 3 5-5.5" />
+        </svg>
       </button>
       <div class="qc-habito-info">
         <input class="qc-habito-nombre" data-change="meta-personal-titulo" data-id="${escapeHtml(h.id)}" value="${escapeHtml(h.titulo)}" placeholder="Nombre del hábito…">
         ${badge ? `<span class="qc-streak" title="Racha: ${streak.count} día${streak.count === 1 ? '' : 's'}">${badge} ${streakLabel}</span>` : ''}
       </div>
-      <select class="qc-bloque-select" data-change="meta-personal-bloque" data-id="${escapeHtml(h.id)}" title="Bloque del día">
-        <option value="manana" ${bloque === 'manana' ? 'selected' : ''}>☀️</option>
-        <option value="dia" ${bloque === 'dia' ? 'selected' : ''}>🌤️</option>
-        <option value="noche" ${bloque === 'noche' ? 'selected' : ''}>🌙</option>
-      </select>
-      <button class="qc-quitar" data-act="meta-personal-eliminar" data-id="${escapeHtml(h.id)}" title="Quitar">✕</button>
+      <div class="qc-habito-actions">
+        <select class="qc-bloque-select" data-change="meta-personal-bloque" data-id="${escapeHtml(h.id)}" title="Bloque del día">
+          <option value="manana" ${bloque === 'manana' ? 'selected' : ''}>☀️</option>
+          <option value="dia" ${bloque === 'dia' ? 'selected' : ''}>🌤️</option>
+          <option value="noche" ${bloque === 'noche' ? 'selected' : ''}>🌙</option>
+        </select>
+        <button class="qc-quitar" data-act="meta-personal-eliminar" data-id="${escapeHtml(h.id)}" title="Quitar">✕</button>
+      </div>
     </div>
   `;
 }
@@ -74,11 +79,9 @@ export function renderBienestar(state) {
           <div class="qc-bloque-head">
             <span class="qc-bloque-emoji">${meta.emoji}</span>
             <span class="qc-bloque-label">${meta.label}</span>
-            <span class="qc-bloque-count">${hechos}/${total}</span>
+            <span class="qc-bloque-count">${hechos}<span class="qc-bloque-count-sep">/</span>${total}</span>
           </div>
-          <div class="qc-bloque-items">
-            ${items.map(h => habitoHtml(h, hoy)).join('')}
-          </div>
+          ${items.map(h => habitoHtml(h, hoy)).join('')}
         </div>
       `;
     }).join('');
@@ -147,6 +150,88 @@ export function renderBienestar(state) {
 
         <div class="as-insight">
           ${escapeHtml(analisis.insight)}
+        </div>
+      </div>
+    `;
+  }
+
+  // ── Análisis mensual ──
+  const mensual = calcularAnalisisMensual(sortedHabitos, hoy);
+
+  let mensualHtml = '';
+  if (mensual) {
+    const rendMensualHtml = mensual.rendimiento.map(r => {
+      const barColor = r.pct >= 70 ? 'var(--verde)' : (r.pct >= 40 ? '#EFC94C' : 'var(--rojo)');
+      return `
+        <div class="as-rend-row">
+          <span class="as-rend-label">${escapeHtml(r.titulo)}</span>
+          <div class="as-rend-bar-wrap">
+            <div class="as-rend-bar" style="width:${r.pct}%;background:${barColor};"></div>
+          </div>
+          <span class="as-rend-pct">${r.pct}%</span>
+        </div>
+      `;
+    }).join('');
+
+    // Mini chart: barras por semana
+    const semanasBarHtml = mensual.semanasData.map(s => {
+      const barColor = s.pct >= 70 ? 'var(--verde)' : (s.pct >= 40 ? '#EFC94C' : 'var(--rojo)');
+      return `
+        <div class="am-semana-col">
+          <div class="am-semana-bar-wrap">
+            <div class="am-semana-bar" style="height:${s.pct}%;background:${barColor};"></div>
+          </div>
+          <span class="am-semana-label">${s.label}</span>
+          <span class="am-semana-pct">${s.pct}%</span>
+        </div>
+      `;
+    }).join('');
+
+    const deltaMSign = mensual.deltaMes > 0 ? '+' : '';
+    const deltaMColor = mensual.deltaMes > 0 ? 'var(--verde)' : (mensual.deltaMes < 0 ? 'var(--rojo)' : 'var(--muted)');
+
+    mensualHtml = `
+      <div class="am-section">
+        <div class="am-title">📅 RESUMEN DE ${mensual.mesNombre.toUpperCase()} ${mensual.anio}</div>
+        <div class="am-sub">${mensual.progresoDias}</div>
+
+        <div class="as-grid">
+          <div class="as-card">
+            <div class="as-card-icon">📊</div>
+            <div class="as-card-val" style="color:var(--verde);">${mensual.consistencia}%</div>
+            <div class="as-card-label">CONSISTENCIA</div>
+          </div>
+          <div class="as-card">
+            <div class="as-card-icon">⭐</div>
+            <div class="as-card-val">${mensual.diasPerfectos}</div>
+            <div class="as-card-label">DÍAS PERFECTOS</div>
+          </div>
+          <div class="as-card">
+            <div class="as-card-icon">✅</div>
+            <div class="as-card-val">${mensual.completadosMes}/${mensual.totalPosibleMes}</div>
+            <div class="as-card-label">COMPLETADOS</div>
+          </div>
+          <div class="as-card">
+            <div class="as-card-icon">📈</div>
+            <div class="as-card-val" style="color:${deltaMColor};">${deltaMSign}${mensual.deltaMes}%</div>
+            <div class="as-card-label">VS MES ANT.</div>
+          </div>
+        </div>
+
+        ${mensual.semanasData.length > 1 ? `
+          <div class="as-rend-title">CONSISTENCIA POR SEMANA</div>
+          <div class="am-semanas-chart">
+            ${semanasBarHtml}
+          </div>
+        ` : ''}
+
+        <div class="as-rend-title">RENDIMIENTO POR HÁBITO</div>
+        <div class="as-rend-list">
+          ${rendMensualHtml}
+        </div>
+
+        <div class="as-insight">
+          ${escapeHtml(mensual.resumen)}
         </div>
       </div>
     `;
@@ -273,6 +358,9 @@ export function renderBienestar(state) {
       <!-- ═══ SECCIÓN 4: CENTRO DE CLASIFICACIÓN DE IDEAS (optimizado) ═══ -->
       <div class="section-label">Clasificación de ideas</div>
       <div class="clasif-compact">${clasificacionHtml}</div>
+
+      <!-- ═══ SECCIÓN 5: RESUMEN MENSUAL ═══ -->
+      ${mensualHtml}
     </main>
   `;
 }

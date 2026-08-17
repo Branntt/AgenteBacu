@@ -302,8 +302,8 @@ export function calcularStatsGamificacion(habitos, hoy) {
   };
 }
 
-// ---- Registro semanal de hábitos (localStorage) ----
-// Guarda qué hábitos se completaron cada día para calcular estadísticas semanales.
+// ---- Registro de hábitos (localStorage) ----
+// Guarda qué hábitos se completaron cada día para estadísticas semanales y mensuales.
 // Estructura: { "2026-08-11": ["id1","id2"], "2026-08-12": ["id1"], ... }
 const LOG_KEY = 'bacu.habitos.log';
 
@@ -312,10 +312,10 @@ function getHabitLog() {
 }
 
 function saveHabitLog(log) {
-  // Limpieza: solo guardar últimas 3 semanas (21 días) para no crecer infinito
+  // Limpieza: solo guardar últimos 65 días (2 meses+) para cubrir mes actual + anterior
   const keys = Object.keys(log).sort();
-  if (keys.length > 21) {
-    const cutoff = keys[keys.length - 21];
+  if (keys.length > 65) {
+    const cutoff = keys[keys.length - 65];
     for (const k of keys) { if (k < cutoff) delete log[k]; }
   }
   persistValue(LOG_KEY, log);
@@ -440,6 +440,144 @@ export function calcularAnalisisSemanal(habitos, hoy) {
     diasTranscurridos
   };
 }
+
+// ---- Análisis mensual ----
+const MESES_NOMBRE = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
+  'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+export function calcularAnalisisMensual(habitos, hoy) {
+  const log = getHabitLog();
+  const totalHabitos = habitos.length;
+  if (totalHabitos === 0) return null;
+
+  const [anio, mes] = hoy.split('-').map(Number);
+
+  // Días del mes actual que ya pasaron (incluyendo hoy)
+  const diasEnMes = new Date(anio, mes, 0).getDate();
+  const [, , diaHoy] = hoy.split('-').map(Number);
+  const diasTranscurridos = diaHoy;
+
+  // Recorrer cada día del mes
+  let completadosMes = 0;
+  let totalPosibleMes = 0;
+  const porSemana = {}; // { 1: { completados, total }, 2: ... }
+  let mejorDiaFecha = '';
+  let mejorDiaCount = 0;
+
+  for (let d = 1; d <= diasTranscurridos; d++) {
+    const fecha = `${anio}-${String(mes).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const hechos = (log[fecha] || []).length;
+    completadosMes += hechos;
+    totalPosibleMes += totalHabitos;
+
+    if (hechos > mejorDiaCount) {
+      mejorDiaCount = hechos;
+      mejorDiaFecha = fecha;
+    }
+
+    // Agrupar por semana del mes (1–5)
+    const numSemana = Math.ceil(d / 7);
+    if (!porSemana[numSemana]) porSemana[numSemana] = { completados: 0, total: 0, dias: 0 };
+    porSemana[numSemana].completados += hechos;
+    porSemana[numSemana].total += totalHabitos;
+    porSemana[numSemana].dias++;
+  }
+
+  const consistencia = totalPosibleMes > 0
+    ? Math.round((completadosMes / totalPosibleMes) * 100) : 0;
+
+  // Mejor semana
+  let mejorSemana = 0;
+  let mejorSemanaPct = 0;
+  for (const [num, s] of Object.entries(porSemana)) {
+    const pct = s.total > 0 ? Math.round((s.completados / s.total) * 100) : 0;
+    if (pct > mejorSemanaPct) { mejorSemanaPct = pct; mejorSemana = Number(num); }
+  }
+
+  // Semanas con su consistencia para gráfica
+  const semanasData = Object.entries(porSemana).map(([num, s]) => ({
+    num: Number(num),
+    label: `S${num}`,
+    pct: s.total > 0 ? Math.round((s.completados / s.total) * 100) : 0,
+    completados: s.completados,
+    total: s.total
+  }));
+
+  // Rendimiento por hábito en el mes
+  const rendimiento = habitos.map(h => {
+    let hechos = 0;
+    for (let d = 1; d <= diasTranscurridos; d++) {
+      const fecha = `${anio}-${String(mes).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      if ((log[fecha] || []).includes(h.id)) hechos++;
+    }
+    const pct = diasTranscurridos > 0 ? Math.round((hechos / diasTranscurridos) * 100) : 0;
+    return { id: h.id, titulo: h.titulo, pct, hechos, total: diasTranscurridos };
+  }).sort((a, b) => b.pct - a.pct);
+
+  // Días perfectos (todos los hábitos completados)
+  let diasPerfectos = 0;
+  for (let d = 1; d <= diasTranscurridos; d++) {
+    const fecha = `${anio}-${String(mes).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    if ((log[fecha] || []).length >= totalHabitos) diasPerfectos++;
+  }
+
+  // Comparación con mes anterior
+  const mesAnt = mes === 1 ? 12 : mes - 1;
+  const anioAnt = mes === 1 ? anio - 1 : anio;
+  const diasMesAnt = new Date(anioAnt, mesAnt, 0).getDate();
+  let completadosAnt = 0;
+  let totalPosibleAnt = 0;
+  for (let d = 1; d <= diasMesAnt; d++) {
+    const fecha = `${anioAnt}-${String(mesAnt).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    completadosAnt += (log[fecha] || []).length;
+    totalPosibleAnt += totalHabitos;
+  }
+  const consistenciaAnt = totalPosibleAnt > 0
+    ? Math.round((completadosAnt / totalPosibleAnt) * 100) : 0;
+  const deltaMes = consistencia - consistenciaAnt;
+
+  // Mejor hábito y peor
+  const mejorHabito = rendimiento.length ? rendimiento[0] : null;
+  const peorHabito = rendimiento.length ? rendimiento[rendimiento.length - 1] : null;
+
+  // Resumen / insight
+  const mesNombre = MESES_NOMBRE[mes - 1];
+  const progresoDias = `${diasTranscurridos}/${diasEnMes} días`;
+  let resumen = '';
+  if (consistencia >= 90) {
+    resumen = `🔥 Mes extraordinario. ${consistencia}% de consistencia con ${diasPerfectos} día${diasPerfectos === 1 ? '' : 's'} perfecto${diasPerfectos === 1 ? '' : 's'}. ¡Sigue así!`;
+  } else if (consistencia >= 70) {
+    resumen = `💪 Buen mes. ${consistencia}% de consistencia.${peorHabito ? ` Refuerza "${peorHabito.titulo}" (${peorHabito.pct}%) para subir más.` : ''}`;
+  } else if (consistencia >= 40) {
+    resumen = `📈 Mes con oportunidad de mejora. ${consistencia}% de consistencia.${peorHabito ? ` "${peorHabito.titulo}" solo al ${peorHabito.pct}%.` : ''} Cada día cuenta.`;
+  } else if (completadosMes > 0) {
+    resumen = `🌱 Mes en construcción. ${completadosMes} hábitos completados en ${diasTranscurridos} días. Lo importante es no parar.`;
+  } else {
+    resumen = `Este mes aún no tiene datos. ¡Empieza hoy y construye el hábito! 🚀`;
+  }
+
+  return {
+    mesNombre,
+    anio,
+    consistencia,
+    completadosMes,
+    totalPosibleMes,
+    diasTranscurridos,
+    diasEnMes,
+    progresoDias,
+    diasPerfectos,
+    mejorSemana,
+    mejorSemanaPct,
+    semanasData,
+    deltaMes,
+    consistenciaAnt,
+    rendimiento,
+    mejorHabito,
+    peorHabito,
+    resumen
+  };
+}
+
 
 // ---- Orden canónico de hábitos (según el seed) ----
 // Los hábitos se muestran en el orden del día: mañana → día → noche.
