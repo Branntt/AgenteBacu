@@ -484,7 +484,7 @@ root.addEventListener('click', e => {
       if (marking) {
         playTick();
         // Animate the row
-        const row = el.closest('.qc-habito');
+        const row = el.closest('.bh-card') || el.closest('.qc-habito');
         if (row) {
           row.classList.remove('qc-just-checked');
           void row.offsetWidth; // force reflow
