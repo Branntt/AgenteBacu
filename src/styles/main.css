@@ -1629,24 +1629,43 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
    Bienestar — Mobile optimization (≤480px)
    ══════════════════════════════════════════════ */
 @media (max-width: 480px) {
-  /* Tighter habit blocks */
-  .qc-bloque { border-radius: 12px; margin-bottom: 8px; }
+  /* Tighter habit blocks — no individual card borders */
+  .qc-bloque {
+    border-radius: 12px; margin-bottom: 8px;
+    border-color: var(--line);
+  }
   .qc-bloque-head { padding: 8px 12px; }
   .qc-bloque-emoji { font-size: 13px; }
   .qc-bloque-label { font-size: 10px; letter-spacing: 1.2px; }
   .qc-bloque-count { font-size: 10px; }
 
-  /* Compact habit rows */
-  .qc-habito { padding: 10px 12px; gap: 10px; }
-  .qc-habito-nombre { font-size: 12px; }
+  /* Compact habit rows — flat, no individual borders */
+  .qc-habito {
+    padding: 8px 12px; gap: 10px;
+    border: none !important;
+    background: transparent !important;
+    border-top: 1px solid rgba(255,255,255,.04) !important;
+    border-radius: 0 !important;
+  }
+  .qc-habito:first-of-type {
+    border-top: 1px solid var(--line) !important;
+  }
+  .qc-habito.qc-hecho {
+    opacity: .5;
+    background: transparent !important;
+  }
+  .qc-habito-nombre { font-size: 13px; }
   .qc-streak { font-size: 9px; }
 
-  /* Smaller checkbox on mobile */
-  .qc-check { width: 20px; height: 20px; }
-  .qc-check-svg { width: 20px; height: 20px; }
+  /* Checkbox — compact */
+  .qc-check { width: 22px; height: 22px; }
+  .qc-check-svg { width: 22px; height: 22px; }
+
+  /* ☀️ Actions — COMPLETELY HIDDEN on mobile */
+  .qc-habito-actions { display: none !important; }
 
   /* Nuevo btn */
-  .qc-nuevo-btn { padding: 10px; font-size: 11px; }
+  .qc-nuevo-btn { padding: 10px; font-size: 11px; border-radius: 0 0 12px 12px; margin-top: 0; }
 
   /* Analytics cards */
   .as-section, .am-section { padding: 16px 12px; border-radius: 12px; }
