@@ -1441,6 +1441,17 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
   50% { transform: translateY(-5px); }
 }
 
+/* ── Rutina hero — mobile ── */
+@media (max-width: 480px) {
+  .rutina-hero { padding: 16px 14px; border-radius: 14px; }
+  .rutina-hero-top { gap: 14px; }
+  .rutina-ring-wrap { width: 76px; height: 76px; }
+  .qc-ring-pct { font-size: 19px; }
+  .rutina-hero-title { font-size: 18px; }
+  .rutina-hero-sub { font-size: 10px; }
+  .qc-greeting { font-size: 11px; }
+}
+
 /* ── Habit blocks (morning/day/night) ── */
 .qc-section { margin-bottom: 20px; }
 .qc-bloques { display: flex; flex-direction: column; gap: 0; }
@@ -1553,12 +1564,14 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
 .qc-habito:focus-within .qc-habito-actions {
   opacity: 1; pointer-events: auto;
 }
-/* On touch devices, show actions on the focused/active row */
+/* Touch devices: completely hidden until focus-within (tap on input/select) */
 @media (hover: none) {
   .qc-habito-actions {
-    opacity: .5; pointer-events: auto;
+    opacity: 0; pointer-events: none;
   }
-  .qc-habito:active .qc-habito-actions { opacity: 1; }
+  .qc-habito:focus-within .qc-habito-actions {
+    opacity: 1; pointer-events: auto;
+  }
 }
 
 .qc-bloque-select {
@@ -1610,6 +1623,81 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
 @keyframes qcCheckPop {
   0% { transform: scale(1.02); background: rgba(31,175,116,.06); }
   100% { transform: scale(1); background: transparent; }
+}
+
+/* ══════════════════════════════════════════════
+   Bienestar — Mobile optimization (≤480px)
+   ══════════════════════════════════════════════ */
+@media (max-width: 480px) {
+  /* Tighter habit blocks */
+  .qc-bloque { border-radius: 12px; margin-bottom: 8px; }
+  .qc-bloque-head { padding: 8px 12px; }
+  .qc-bloque-emoji { font-size: 13px; }
+  .qc-bloque-label { font-size: 10px; letter-spacing: 1.2px; }
+  .qc-bloque-count { font-size: 10px; }
+
+  /* Compact habit rows */
+  .qc-habito { padding: 10px 12px; gap: 10px; }
+  .qc-habito-nombre { font-size: 12px; }
+  .qc-streak { font-size: 9px; }
+
+  /* Smaller checkbox on mobile */
+  .qc-check { width: 20px; height: 20px; }
+  .qc-check-svg { width: 20px; height: 20px; }
+
+  /* Nuevo btn */
+  .qc-nuevo-btn { padding: 10px; font-size: 11px; }
+
+  /* Analytics cards */
+  .as-section, .am-section { padding: 16px 12px; border-radius: 12px; }
+  .as-title, .am-title { font-size: 13px; letter-spacing: 1.5px; }
+  .am-sub { font-size: 11px; }
+  .as-grid { gap: 8px; }
+  .as-card { padding: 10px 8px; border-radius: 8px; }
+  .as-card-icon { font-size: 16px; margin-bottom: 4px; }
+  .as-card-val { font-size: 18px; }
+  .as-card-label { font-size: 8px; letter-spacing: .8px; }
+  .as-rend-title { font-size: 10px; letter-spacing: 1px; }
+  .as-rend-label { width: 110px; font-size: 11px; }
+  .as-rend-pct { font-size: 11px; width: 32px; }
+  .as-insight { font-size: 11px; padding: 10px 12px; }
+
+  /* Monthly chart */
+  .am-semanas-chart { gap: 8px; padding: 0 4px; }
+  .am-semana-bar-wrap { height: 64px; }
+  .am-semana-label { font-size: 9px; }
+  .am-semana-pct { font-size: 9px; }
+
+  /* Stress card */
+  .estres-compact { padding: 14px; gap: 12px; border-radius: 10px; }
+  .estres-compact-pct { font-size: 28px; }
+  .estres-compact-title { font-size: 9px; }
+  .estres-compact-nivel { font-size: 9px; }
+  .estres-compact-stat-label { font-size: 9px; }
+  .estres-compact-stat-val { font-size: 12px; }
+
+  /* Source chips */
+  .fuente-chip { padding: 8px 10px; min-width: 120px; }
+  .fuente-chip-emoji { font-size: 16px; }
+  .fuente-chip-label { font-size: 11px; }
+  .fuente-chip-pts { font-size: 9px; }
+
+  /* Weight rows */
+  .peso-row { padding: 8px 10px; }
+  .peso-titulo { font-size: 11px; }
+  .peso-motivo { font-size: 9px; }
+  .peso-pts { font-size: 12px; }
+
+  /* Classification */
+  .clasif-group { padding: 10px; }
+  .clasif-group-label { font-size: 11px; }
+  .clasif-row { font-size: 11px; padding: 5px 6px; }
+
+  /* Section labels */
+  .section-label { font-size: 11px; letter-spacing: 1.2px; }
+
+  /* Messages */
+  .qc-celebrate-msg, .qc-progress-msg { font-size: 11px; padding: 8px 12px; }
 }
 
 /* ── 2. Análisis Semanal ── */
