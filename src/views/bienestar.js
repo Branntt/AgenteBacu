@@ -28,18 +28,23 @@ function habitoHtml(h, hoy) {
   return `
     <div class="qc-habito ${hecho ? 'qc-hecho' : ''}" data-id="${escapeHtml(h.id)}">
       <button class="qc-check" data-act="habito-toggle" data-id="${escapeHtml(h.id)}" title="${hecho ? 'Desmarcar' : 'Marcar hecho hoy'}">
-        <span class="qc-check-icon">${hecho ? '✓' : ''}</span>
+        <svg class="qc-check-svg" viewBox="0 0 22 22" width="22" height="22">
+          <circle class="qc-check-circle" cx="11" cy="11" r="9.5" />
+          <path class="qc-check-tick" d="M7 11l3 3 5-5.5" />
+        </svg>
       </button>
       <div class="qc-habito-info">
         <input class="qc-habito-nombre" data-change="meta-personal-titulo" data-id="${escapeHtml(h.id)}" value="${escapeHtml(h.titulo)}" placeholder="Nombre del hábito…">
         ${badge ? `<span class="qc-streak" title="Racha: ${streak.count} día${streak.count === 1 ? '' : 's'}">${badge} ${streakLabel}</span>` : ''}
       </div>
-      <select class="qc-bloque-select" data-change="meta-personal-bloque" data-id="${escapeHtml(h.id)}" title="Bloque del día">
-        <option value="manana" ${bloque === 'manana' ? 'selected' : ''}>☀️</option>
-        <option value="dia" ${bloque === 'dia' ? 'selected' : ''}>🌤️</option>
-        <option value="noche" ${bloque === 'noche' ? 'selected' : ''}>🌙</option>
-      </select>
-      <button class="qc-quitar" data-act="meta-personal-eliminar" data-id="${escapeHtml(h.id)}" title="Quitar">✕</button>
+      <div class="qc-habito-actions">
+        <select class="qc-bloque-select" data-change="meta-personal-bloque" data-id="${escapeHtml(h.id)}" title="Bloque del día">
+          <option value="manana" ${bloque === 'manana' ? 'selected' : ''}>☀️</option>
+          <option value="dia" ${bloque === 'dia' ? 'selected' : ''}>🌤️</option>
+          <option value="noche" ${bloque === 'noche' ? 'selected' : ''}>🌙</option>
+        </select>
+        <button class="qc-quitar" data-act="meta-personal-eliminar" data-id="${escapeHtml(h.id)}" title="Quitar">✕</button>
+      </div>
     </div>
   `;
 }
@@ -74,11 +79,9 @@ export function renderBienestar(state) {
           <div class="qc-bloque-head">
             <span class="qc-bloque-emoji">${meta.emoji}</span>
             <span class="qc-bloque-label">${meta.label}</span>
-            <span class="qc-bloque-count">${hechos}/${total}</span>
+            <span class="qc-bloque-count">${hechos}<span class="qc-bloque-count-sep">/</span>${total}</span>
           </div>
-          <div class="qc-bloque-items">
-            ${items.map(h => habitoHtml(h, hoy)).join('')}
-          </div>
+          ${items.map(h => habitoHtml(h, hoy)).join('')}
         </div>
       `;
     }).join('');
