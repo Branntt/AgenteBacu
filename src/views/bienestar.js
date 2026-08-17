@@ -1,6 +1,6 @@
 import { escapeHtml } from '../lib/format.js';
-import { calcularEstres, getGreeting, getHabitStreak, getStreakBadge, calcularQuickCheck, ordenarHabitos, getBloqueHabito, calcularAnalisisSemanal, calcularAnalisisMensual } from '../lib/bienestar.js';
-import { hoyStr } from '../lib/idea.js';
+import { calcularEstres, getGreeting, getHabitStreak, getStreakBadge, calcularQuickCheck, ordenarHabitos, calcularAnalisisSemanal, calcularAnalisisMensual } from '../lib/bienestar.js';
+import { hoyStr, lunesDe, sumarDias } from '../lib/idea.js';
 
 const NIVELES = [
   ['ligera', 'Carga ligera', 'var(--verde)', 'Se resuelven rápido.'],
@@ -8,42 +8,39 @@ const NIVELES = [
   ['pesada', 'Carga pesada', 'var(--rojo)', 'Vencidas o urgentes.']
 ];
 
-const BLOQUE_META = {
-  manana: { emoji: '☀️', label: 'Mañana' },
-  dia:    { emoji: '🌤️', label: 'Día' },
-  noche:  { emoji: '🌙', label: 'Noche' }
-};
+const DIAS_SEMANA_CORTO = ['DOM', 'LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB'];
+const MESES_NOMBRE = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
+  'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 
-// SVG progress ring constants
-const RING_R = 52;
-const RING_C = 2 * Math.PI * RING_R; // ≈ 326.73
-
-function habitoHtml(h, hoy) {
+function habitoHtml(h, hoy, weekPct) {
   const hecho = h.fecha === hoy;
   const streak = getHabitStreak(h.id);
   const badge = getStreakBadge(streak.count);
   const streakLabel = streak.count > 0 ? `${streak.count}d` : '';
-  const bloque = getBloqueHabito(h);
+  const barColor = weekPct >= 70 ? 'var(--verde)' : (weekPct >= 40 ? '#EFC94C' : 'var(--rojo)');
 
   return `
-    <div class="qc-habito ${hecho ? 'qc-hecho' : ''}" data-id="${escapeHtml(h.id)}">
-      <button class="qc-check" data-act="habito-toggle" data-id="${escapeHtml(h.id)}" title="${hecho ? 'Desmarcar' : 'Marcar hecho hoy'}">
-        <svg class="qc-check-svg" viewBox="0 0 22 22" width="22" height="22">
-          <circle class="qc-check-circle" cx="11" cy="11" r="9.5" />
-          <path class="qc-check-tick" d="M7 11l3 3 5-5.5" />
+    <div class="bh-card ${hecho ? 'bh-done' : ''}" data-id="${escapeHtml(h.id)}">
+      <button class="bh-check" data-act="habito-toggle" data-id="${escapeHtml(h.id)}" title="${hecho ? 'Desmarcar' : 'Marcar hecho hoy'}">
+        <svg class="bh-check-svg" viewBox="0 0 22 22" width="22" height="22">
+          <circle class="bh-check-circle" cx="11" cy="11" r="9.5" />
+          <path class="bh-check-tick" d="M7 11l3 3 5-5.5" />
         </svg>
       </button>
-      <div class="qc-habito-info">
-        <input class="qc-habito-nombre" data-change="meta-personal-titulo" data-id="${escapeHtml(h.id)}" value="${escapeHtml(h.titulo)}" placeholder="Nombre del hábito…">
-        ${badge ? `<span class="qc-streak" title="Racha: ${streak.count} día${streak.count === 1 ? '' : 's'}">${badge} ${streakLabel}</span>` : ''}
-      </div>
-      <div class="qc-habito-actions">
-        <select class="qc-bloque-select" data-change="meta-personal-bloque" data-id="${escapeHtml(h.id)}" title="Bloque del día">
-          <option value="manana" ${bloque === 'manana' ? 'selected' : ''}>☀️</option>
-          <option value="dia" ${bloque === 'dia' ? 'selected' : ''}>🌤️</option>
-          <option value="noche" ${bloque === 'noche' ? 'selected' : ''}>🌙</option>
-        </select>
-        <button class="qc-quitar" data-act="meta-personal-eliminar" data-id="${escapeHtml(h.id)}" title="Quitar">✕</button>
+      <div class="bh-info">
+        <div class="bh-top-row">
+          <input class="bh-name" data-change="meta-personal-titulo" data-id="${escapeHtml(h.id)}" value="${escapeHtml(h.titulo)}" placeholder="Nombre del hábito…">
+          <div class="bh-right">
+            ${badge ? `<span class="bh-streak" title="Racha: ${streak.count} día${streak.count === 1 ? '' : 's'}">${badge} ${streakLabel}</span>` : ''}
+            <button class="bh-delete" data-act="meta-personal-eliminar" data-id="${escapeHtml(h.id)}" title="Quitar">✕</button>
+          </div>
+        </div>
+        <div class="bh-bar-row">
+          <div class="bh-bar-track">
+            <div class="bh-bar-fill" style="width:${weekPct}%;background:${barColor};"></div>
+          </div>
+          <span class="bh-bar-pct">${weekPct}%</span>
+        </div>
       </div>
     </div>
   `;
@@ -56,48 +53,58 @@ export function renderBienestar(state) {
   const qc = calcularQuickCheck(sortedHabitos, hoy);
   const greeting = getGreeting();
 
-  // SVG ring offset (0 = full, RING_C = empty)
-  const ringOffset = RING_C - (RING_C * qc.pct / 100);
+  // ── Date header info ──
+  const [anio, mes, dia] = hoy.split('-').map(Number);
+  const hoyDate = new Date(anio, mes - 1, dia);
+  const dowIdx = hoyDate.getDay();
+  const diaLabel = DIAS_SEMANA_CORTO[dowIdx];
+  const mesLabel = MESES_NOMBRE[mes - 1];
 
-  // Agrupar hábitos por bloque del día
-  const bloques = { manana: [], dia: [], noche: [] };
-  sortedHabitos.forEach(h => {
-    const b = getBloqueHabito(h);
-    (bloques[b] || bloques.dia).push(h);
-  });
+  // ── Week days row ──
+  const lunes = lunesDe(hoy);
+  const weekDays = [];
+  for (let i = 0; i < 7; i++) {
+    const fecha = sumarDias(lunes, i);
+    const [fy, fm, fd] = fecha.split('-').map(Number);
+    const dObj = new Date(fy, fm - 1, fd);
+    const dow = dObj.getDay();
+    weekDays.push({
+      label: DIAS_SEMANA_CORTO[dow].charAt(0),
+      date: fd,
+      isToday: fecha === hoy,
+      isPast: fecha < hoy,
+    });
+  }
 
-  // Render hábitos agrupados por bloque
-  const bloquesHtml = Object.entries(bloques)
-    .filter(([, items]) => items.length > 0)
-    .map(([key, items]) => {
-      const meta = BLOQUE_META[key] || BLOQUE_META.dia;
-      const hechos = items.filter(h => h.fecha === hoy).length;
-      const total = items.length;
-      const todoListo = hechos === total;
-      return `
-        <div class="qc-bloque ${todoListo ? 'qc-bloque-listo' : ''}">
-          <div class="qc-bloque-head">
-            <span class="qc-bloque-emoji">${meta.emoji}</span>
-            <span class="qc-bloque-label">${meta.label}</span>
-            <span class="qc-bloque-count">${hechos}<span class="qc-bloque-count-sep">/</span>${total}</span>
-          </div>
-          ${items.map(h => habitoHtml(h, hoy)).join('')}
-        </div>
-      `;
-    }).join('');
+  const weekDaysHtml = weekDays.map(d => `
+    <div class="bh-day ${d.isToday ? 'bh-day-today' : ''} ${d.isPast && !d.isToday ? 'bh-day-past' : ''}">
+      <span class="bh-day-label">${d.label}</span>
+      <span class="bh-day-num">${d.date}</span>
+    </div>
+  `).join('');
+
+  // ── Weekly per-habit performance (for individual progress bars) ──
+  const analisis = calcularAnalisisSemanal(sortedHabitos, hoy);
+  const weekPctMap = {};
+  if (analisis) {
+    analisis.rendimiento.forEach(r => { weekPctMap[r.id] = r.pct; });
+  }
+
+  // ── Flat habit list ──
+  const habitListHtml = sortedHabitos
+    .map(h => habitoHtml(h, hoy, weekPctMap[h.id] || 0))
+    .join('');
 
   // Motivational text
   let motivText = '';
   if (qc.pct === 100 && qc.total > 0) {
-    motivText = `<div class="qc-celebrate-msg"><span>🎉 ¡Todos los hábitos completados! Cada día así construye tu mejor versión.</span></div>`;
+    motivText = `<div class="bh-celebrate"><span>🎉 ¡Todos los hábitos completados! Cada día así construye tu mejor versión.</span></div>`;
   } else if (qc.hechos > 0) {
     const faltan = qc.total - qc.hechos;
-    motivText = `<div class="qc-progress-msg"><span>💪 ¡Vas bien! Te falta${faltan === 1 ? '' : 'n'} ${faltan} hábito${faltan === 1 ? '' : 's'}.</span></div>`;
+    motivText = `<div class="bh-progress-msg"><span>💪 ¡Vas bien! Te falta${faltan === 1 ? '' : 'n'} ${faltan} hábito${faltan === 1 ? '' : 's'}.</span></div>`;
   }
 
   // ── Análisis semanal ──
-  const analisis = calcularAnalisisSemanal(sortedHabitos, hoy);
-
   let analisisHtml = '';
   if (analisis) {
     const rendBarsHtml = analisis.rendimiento.map(r => {
@@ -237,7 +244,7 @@ export function renderBienestar(state) {
     `;
   }
 
-  // ── Clasificación de ideas (optimizada: inline compact) ──
+  // ── Clasificación de ideas ──
   const clasificacionHtml = NIVELES.map(([clave, label, color]) => {
     const items = e.ideasClasificadas.filter(x => x.nivel === clave);
     if (!items.length) return '';
@@ -282,45 +289,49 @@ export function renderBienestar(state) {
     </div>
   `).join('') || '<div class="empty-note">Sin pendientes.</div>';
 
+  // ── Progress bar color ──
+  const pctColor = qc.pct >= 70 ? 'var(--verde)' : (qc.pct >= 40 ? '#EFC94C' : 'var(--rojo)');
+
   return `
     <main class="bienestar">
       <canvas id="qc-confetti-canvas" aria-hidden="true"></canvas>
 
-      <!-- ═══ SECCIÓN 1: RUTINA DEL DÍA (lo más importante) ═══ -->
-      <div class="rutina-hero">
-        <div class="rutina-hero-top">
-          <div class="rutina-ring-wrap">
-            <svg class="qc-ring-svg" viewBox="0 0 120 120" width="100" height="100">
-              <circle class="qc-ring-bg" cx="60" cy="60" r="${RING_R}" />
-              <circle class="qc-ring-fill" cx="60" cy="60" r="${RING_R}"
-                style="stroke-dasharray:${RING_C.toFixed(2)};stroke-dashoffset:${ringOffset.toFixed(2)};"
-                data-ring-c="${RING_C.toFixed(2)}" />
-            </svg>
-            <div class="qc-ring-label">
-              <span class="qc-ring-pct">${qc.pct}%</span>
-            </div>
+      <!-- ═══ HEADER: Date + Progress ═══ -->
+      <div class="bh-header">
+        <div class="bh-header-top">
+          <div class="bh-header-left">
+            <div class="bh-greeting">${greeting}</div>
+            <div class="bh-date-title">BIENESTAR</div>
+            <div class="bh-date-range">${diaLabel} ${dia} de ${mesLabel}, ${anio}</div>
           </div>
-          <div class="rutina-hero-info">
-            <div class="qc-greeting">${greeting}</div>
-            <div class="rutina-hero-title">Mi rutina</div>
-            <div class="rutina-hero-sub">${qc.hechos} de ${qc.total} hábitos hoy</div>
-            ${qc.pct === 100 && qc.total > 0 ? '<div class="qc-complete-badge">🏆 ¡DÍA PERFECTO!</div>' : ''}
+          <div class="bh-header-pct">
+            <span class="bh-pct-num" style="color:${pctColor};">${qc.pct}%</span>
+            <span class="bh-pct-label">hoy</span>
           </div>
         </div>
-      </div>
-
-      <div class="qc-section">
-        <div class="qc-bloques" id="qc-lista">
-          ${bloquesHtml}
-          <button class="qc-nuevo-btn" data-act="habito-nuevo">+ Nuevo hábito</button>
+        <div class="bh-week-progress">
+          <div class="bh-week-bar-track">
+            <div class="bh-week-bar-fill" style="width:${qc.pct}%;background:${pctColor};"></div>
+          </div>
+          <span class="bh-week-stat">${qc.hechos}/${qc.total} hábitos</span>
         </div>
-        ${motivText}
+        <div class="bh-week-days">
+          ${weekDaysHtml}
+        </div>
+        ${qc.pct === 100 && qc.total > 0 ? '<div class="bh-perfect">🏆 ¡DÍA PERFECTO!</div>' : ''}
       </div>
 
-      <!-- ═══ SECCIÓN 2: ANÁLISIS SEMANAL ═══ -->
+      <!-- ═══ HABITS LIST ═══ -->
+      <div class="bh-list">
+        ${habitListHtml}
+        <button class="bh-add-btn" data-act="habito-nuevo">+ Nuevo hábito</button>
+      </div>
+      ${motivText}
+
+      <!-- ═══ ANÁLISIS SEMANAL ═══ -->
       ${analisisHtml}
 
-      <!-- ═══ SECCIÓN 3: NIVEL DE ESTRÉS ═══ -->
+      <!-- ═══ NIVEL DE ESTRÉS ═══ -->
       <div class="estres-compact" style="border-color:${e.color};">
         <div class="estres-compact-left">
           <div class="estres-compact-title">Estrés</div>
@@ -355,11 +366,11 @@ export function renderBienestar(state) {
         <div class="pesos-lista">${topHtml}</div>
       ` : ''}
 
-      <!-- ═══ SECCIÓN 4: CENTRO DE CLASIFICACIÓN DE IDEAS (optimizado) ═══ -->
+      <!-- ═══ CLASIFICACIÓN DE IDEAS ═══ -->
       <div class="section-label">Clasificación de ideas</div>
       <div class="clasif-compact">${clasificacionHtml}</div>
 
-      <!-- ═══ SECCIÓN 5: RESUMEN MENSUAL ═══ -->
+      <!-- ═══ RESUMEN MENSUAL ═══ -->
       ${mensualHtml}
     </main>
   `;
