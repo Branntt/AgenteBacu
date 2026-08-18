@@ -255,17 +255,21 @@ function migrarHabitosV2() {
     ids.forEach(id => {
       supabase.from('metas_personales').delete().eq('id', id).then(({ error }) => marcarGuardado(!error));
     });
-  }
 
-  // Limpiar rachas viejas de localStorage
-  try {
-    const keys = [];
-    for (let i = 0; i < localStorage.length; i++) {
-      const k = localStorage.key(i);
-      if (k && k.startsWith('habito.racha.')) keys.push(k);
-    }
-    keys.forEach(k => localStorage.removeItem(k));
-  } catch (e) {}
+    // Solo borrar rachas de hábitos que ya no existen
+    const idsViejos = new Set(ids);
+    try {
+      const keys = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith('habito.racha.')) {
+          const habitId = k.replace('habito.racha.', '');
+          if (idsViejos.has(habitId)) keys.push(k);
+        }
+      }
+      keys.forEach(k => localStorage.removeItem(k));
+    } catch (e) {}
+  }
 
   persistValue(HABITOS_V2_KEY, true);
 }
