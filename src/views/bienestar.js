@@ -1,5 +1,5 @@
 import { escapeHtml } from '../lib/format.js';
-import { calcularEstres, getGreeting, getHabitStreak, getStreakBadge, calcularQuickCheck, ordenarHabitos, calcularAnalisisSemanal, calcularAnalisisMensual } from '../lib/bienestar.js';
+import { calcularEstres, getGreeting, getHabitStreak, getStreakBadge, calcularQuickCheck, ordenarHabitos, calcularAnalisisSemanal, calcularAnalisisMensual, isHabitMarkedOnDate } from '../lib/bienestar.js';
 import { hoyStr, lunesDe, sumarDias } from '../lib/idea.js';
 
 const NIVELES = [
@@ -13,7 +13,10 @@ const MESES_NOMBRE = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
   'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 
 function habitoHtml(h, diaSeleccionado, weekPct, esDiaRetroactivo = false) {
-  const hecho = h.fecha === diaSeleccionado;
+  // Para días retroactivos, verificar en el log; para hoy, usar el campo fecha
+  const hecho = esDiaRetroactivo
+    ? isHabitMarkedOnDate(h.id, diaSeleccionado)
+    : (h.fecha === diaSeleccionado);
   const streak = getHabitStreak(h.id);
   const badge = getStreakBadge(streak.count);
   const streakLabel = streak.count > 0 ? `${streak.count}d` : '';

@@ -332,6 +332,12 @@ export function logHabitToggle(habitId, marking, hoy) {
   saveHabitLog(log);
 }
 
+// Verifica si un hábito está marcado en una fecha específica (consultando el log)
+export function isHabitMarkedOnDate(habitId, fecha) {
+  const log = getHabitLog();
+  return log[fecha]?.includes(habitId) ?? false;
+}
+
 // Inicializa el log del día actual con los hábitos ya completados hoy
 // (para que los datos que ya estaban antes de este feature se capturen)
 export function syncHabitLogToday(habitos, hoy) {

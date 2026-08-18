@@ -2,7 +2,7 @@ import { state, actions, subscribe, initAuth } from './state/store.js';
 import { persistValue, loadValue } from './lib/storage.js';
 import { TEMA_MAP } from './data/constants.js';
 import { parseN } from './lib/format.js';
-import { updateHabitStreak, calcularQuickCheck, logHabitToggle, syncHabitLogToday } from './lib/bienestar.js';
+import { updateHabitStreak, calcularQuickCheck, logHabitToggle, syncHabitLogToday, isHabitMarkedOnDate } from './lib/bienestar.js';
 import { hoyStr } from './lib/idea.js';
 import { renderHeader } from './components/header.js';
 import { renderDetalle } from './components/detalle.js';
@@ -470,7 +470,8 @@ root.addEventListener('click', e => {
       const h = state.metasPersonales.find(m => m.id === id);
       const hoy = hoyStr();
       const fecha = el.dataset.fecha || hoy; // Use date from attribute or default to today
-      const wasDone = h && h.fecha === fecha;
+      // Check if marked in log (for any date) or in fecha field (for today)
+      const wasDone = h && (isHabitMarkedOnDate(h.id, fecha) || h.fecha === fecha);
       const marking = !wasDone;
 
       // Update streak BEFORE toggling (so we know the transition)
