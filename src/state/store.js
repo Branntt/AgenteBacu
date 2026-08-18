@@ -9,7 +9,10 @@ import { MESES, COLORES_TAREA, familiaDeFormato, METAS_EQUIPO_SEED } from '../da
 import { detectarCategoria } from '../lib/transacciones.js';
 
 export const state = {
-  view: loadValue('app.view', 'calendario'),
+  // 'finanzas' fue una pestaña aparte para el día a día; se fusionó dentro de
+  // 'financiamiento' (una sola Finanzas). Quien la tenga guardada de antes aterriza ahí en
+  // vez de caer al fallback de Panorama sin entender por qué.
+  view: (v => v === 'finanzas' ? 'financiamiento' : v)(loadValue('app.view', 'calendario')),
   month: loadValue('ui.month', mesActual()),
   ideas: [],
   snaps: [],
@@ -338,8 +341,7 @@ const canalesActivos = new Set();
 const CHANNEL_MAP = {
   calendario: ['sync-ideas', 'sync-metas-personales'],
   clientes: ['sync-clientes', 'sync-snaps'],
-  financiamiento: ['sync-cuentas-cobro', 'sync-movimientos-financiamiento', 'sync-deudas', 'sync-pagos-mensuales'],
-  finanzas: ['sync-transacciones'],
+  financiamiento: ['sync-cuentas-cobro', 'sync-movimientos-financiamiento', 'sync-deudas', 'sync-pagos-mensuales', 'sync-transacciones'],
   inventario: ['sync-metas-personales', 'sync-equipo-produccion'],
   bienestar: ['sync-metas-mensuales', 'sync-tareas'],
   metas: ['sync-metas-mensuales', 'sync-tareas'],
@@ -1240,11 +1242,11 @@ export const actions = {
   },
 
   // Transacciones (Daily income/expense tracking)
-  transaccionAgregar: (descripcion, monto, tipo, fuente) => {
+  transaccionAgregar: (descripcion, monto, tipo, fuente, fecha) => {
     if (!descripcion || !monto || !tipo || !fuente) return;
     const nuevaTransaccion = {
       id: 't' + Date.now(),
-      fecha: hoyStr(),
+      fecha: fecha || hoyStr(),
       descripcion,
       monto: parseN(monto),
       tipo,
