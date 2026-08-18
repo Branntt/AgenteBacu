@@ -351,18 +351,22 @@ export function syncHabitLogToday(habitos, hoy) {
 
 const DIAS_SEMANA = ['DOM', 'LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB'];
 
-export function calcularAnalisisSemanal(habitos, hoy) {
+export function calcularAnalisisSemanal(habitos, hoy, lunesOpcional = null) {
   const log = getHabitLog();
   const totalHabitos = habitos.length;
   if (totalHabitos === 0) return null;
 
-  const lunes = lunesDe(hoy);
-  // Cuántos días han pasado esta semana (incluyendo hoy)
-  const [ay, am, ad] = hoy.split('-').map(Number);
-  const hoyDate = new Date(ay, am - 1, ad);
-  const [ly, lm, ld] = lunes.split('-').map(Number);
-  const lunesDate = new Date(ly, lm - 1, ld);
-  const diasTranscurridos = Math.floor((hoyDate - lunesDate) / 86400000) + 1;
+  const lunes = lunesOpcional || lunesDe(hoy);
+  // Si estamos viendo una semana pasada, contar todos los 7 días; si es la semana actual, contar hasta hoy
+  let diasTranscurridos = 7;
+  const esSemanaPasada = lunes < lunesDe(hoy);
+  if (!esSemanaPasada) {
+    const [ay, am, ad] = hoy.split('-').map(Number);
+    const hoyDate = new Date(ay, am - 1, ad);
+    const [ly, lm, ld] = lunes.split('-').map(Number);
+    const lunesDate = new Date(ly, lm - 1, ld);
+    diasTranscurridos = Math.floor((hoyDate - lunesDate) / 86400000) + 1;
+  }
 
   // Completados esta semana
   let completadosSemana = 0;

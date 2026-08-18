@@ -100,7 +100,7 @@ export function renderBienestar(state) {
   `).join('');
 
   // ── Weekly per-habit performance (for individual progress bars) ──
-  const analisis = calcularAnalisisSemanal(sortedHabitos, hoy);
+  const analisis = calcularAnalisisSemanal(sortedHabitos, hoy, semanaSeleccionada);
   const weekPctMap = {};
   if (analisis) {
     analisis.rendimiento.forEach(r => { weekPctMap[r.id] = r.pct; });
