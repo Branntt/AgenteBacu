@@ -210,48 +210,31 @@ export function getGreeting() {
 }
 
 // ---- Racha por hábito (calculada con localStorage) ----
-// Guarda { count, lastDate } por hábito para saber cuántos días seguidos se cumplió.
+// Contador acumulativo: total de veces que se completó el hábito (no se reinicia).
+// Ejemplo: 200, 3000 veces marcado.
 export function getHabitStreak(habitId) {
-  return loadValue('habito.racha.' + habitId, { count: 0, lastDate: null });
+  return loadValue('habito.racha.' + habitId, { count: 0 });
 }
 
 export function updateHabitStreak(habitId, marking, hoy) {
   const streak = getHabitStreak(habitId);
   if (marking) {
-    // Calcular ayer
-    const [y, m, d] = hoy.split('-').map(Number);
-    const ayer = fstr(new Date(y, m - 1, d - 1));
-    if (streak.lastDate === ayer) {
-      streak.count += 1;
-    } else if (streak.lastDate === hoy) {
-      // Ya se marcó hoy, no incrementar
-    } else {
-      streak.count = 1;
-    }
-    streak.lastDate = hoy;
+    // Incrementar contador acumulativo
+    streak.count += 1;
   } else {
     // Desmarcar: decrementar
-    if (streak.lastDate === hoy) {
-      streak.count = Math.max(0, streak.count - 1);
-      // Restaurar lastDate a ayer si la racha sigue
-      if (streak.count > 0) {
-        const [y, m, d] = hoy.split('-').map(Number);
-        streak.lastDate = fstr(new Date(y, m - 1, d - 1));
-      } else {
-        streak.lastDate = null;
-      }
-    }
+    streak.count = Math.max(0, streak.count - 1);
   }
   persistValue('habito.racha.' + habitId, streak);
   return streak;
 }
 
-// Badge de racha: más días, mejor badge
+// Badge de racha: acumulativo, más veces mejor badge
 export function getStreakBadge(count) {
-  if (count >= 30) return '👑';
-  if (count >= 14) return '💎';
-  if (count >= 7) return '⚡';
-  if (count >= 1) return '🔥';
+  if (count >= 1000) return '👑';  // 1000+ veces
+  if (count >= 500) return '💎';   // 500+ veces
+  if (count >= 100) return '⚡';   // 100+ veces
+  if (count >= 1) return '🔥';      // 1+ veces
   return '';
 }
 
