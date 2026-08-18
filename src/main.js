@@ -159,6 +159,11 @@ const VIEWS = {
   configuraciones: renderConfiguraciones
 };
 
+// Subir esto en cada publicación: es la única forma de saber si el navegador está corriendo
+// el código nuevo o uno viejo cacheado. Sale en consola al arrancar y en los avisos de error.
+const APP_VERSION = 'v3 (2026-08-18)';
+console.log('[BACU] versión', APP_VERSION);
+
 const root = document.getElementById('app');
 const FOCUSABLE = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
 
@@ -348,9 +353,42 @@ render();
 initAuth();
 subscribe(restaurarScrollAlCargar);
 
+// Cualquier error que se escape (un manejador de eventos, una promesa suelta, algo que solo
+// pasa en el navegador) se muestra en pantalla. Sin esto solo queda en la consola, que en
+// celular no se puede abrir: el usuario ve la app rota y no hay forma de saber por qué.
+let avisoErrorPuesto = false;
+function mostrarErrorGlobal(origen, err) {
+  console.error('[BACU]', origen, err);
+  if (avisoErrorPuesto) return;
+  avisoErrorPuesto = true;
+  const detalle = String(err && err.stack ? err.stack : err);
+  const aviso = document.createElement('div');
+  aviso.setAttribute('role', 'alert');
+  aviso.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:9999;background:#2a0f0f;color:#ffd7d7;border-top:2px solid #d9362e;padding:12px 14px;font-family:monospace;font-size:11px;max-height:45vh;overflow:auto;white-space:pre-wrap;overflow-wrap:break-word;';
+  aviso.innerHTML = `<b>😵 Algo falló (${escapeHtml(origen)}) — versión ${escapeHtml(APP_VERSION)}</b><br>${escapeHtml(detalle)}<br><button style="margin-top:8px;padding:6px 12px;">Cerrar</button>`;
+  aviso.querySelector('button').addEventListener('click', () => { aviso.remove(); avisoErrorPuesto = false; });
+  document.body.appendChild(aviso);
+}
+window.addEventListener('error', e => mostrarErrorGlobal('error', e.error || e.message));
+window.addEventListener('unhandledrejection', e => mostrarErrorGlobal('promesa', e.reason));
+
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js').catch(() => {});
+  });
+  // Cuando entra una versión NUEVA del service worker, recargar una sola vez para soltar el
+  // código viejo que quedó cacheado.
+  //
+  // La condición de que ya hubiera un controlador es imprescindible: en la primera visita el
+  // service worker se instala y hace clients.claim(), lo que dispara controllerchange sin que
+  // haya ninguna versión vieja que soltar. Recargar ahí deja la página en un bucle infinito de
+  // recargas —arranca, carga los datos, se recarga antes de dibujar— y la app no abre nunca.
+  const habiaControlador = !!navigator.serviceWorker.controller;
+  let yaRecargado = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!habiaControlador || yaRecargado) return;
+    yaRecargado = true;
+    window.location.reload();
   });
 }
 
