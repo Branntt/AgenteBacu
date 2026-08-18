@@ -6,6 +6,7 @@ import { generarCuentaCobroPDF, OBSERVACIONES_DEFAULT } from '../lib/pdfInvoice.
 import { generarListadoClientesPDF } from '../lib/pdfListadoClientes.js';
 import * as googleCalendar from '../lib/googleCalendar.js';
 import { MESES, COLORES_TAREA, familiaDeFormato, METAS_EQUIPO_SEED } from '../data/constants.js';
+import { detectarCategoria } from '../lib/transacciones.js';
 
 export const state = {
   view: loadValue('app.view', 'calendario'),
@@ -52,6 +53,7 @@ export const state = {
   revisionIdeasModal: false,
   revisionIdeasPendientes: [],
   notificacionBacu: null,
+  transacciones: [],
   cuentasCobro: [],
   movimientosFinanciamiento: [],
   deudas: [],
@@ -192,7 +194,7 @@ export async function initAuth() {
 }
 
 async function cargarDatos() {
-  const [ideasRes, snapsRes, clientesRes, cuentasRes, movimientosRes, deudasRes, pagosMensualesRes, equipoProduccionRes, metasPersonalesRes, metasMensualesRes, tareasRes] = await Promise.all([
+  const [ideasRes, snapsRes, clientesRes, cuentasRes, movimientosRes, deudasRes, pagosMensualesRes, transaccionesRes, equipoProduccionRes, metasPersonalesRes, metasMensualesRes, tareasRes] = await Promise.all([
     supabase.from('ideas').select('*').order('id'),
     supabase.from('snaps').select('*').order('fecha'),
     supabase.from('clientes').select('*').order('id'),
@@ -200,6 +202,7 @@ async function cargarDatos() {
     supabase.from('movimientos_financiamiento').select('*').order('fecha'),
     supabase.from('deudas').select('*').order('created_at'),
     supabase.from('pagos_mensuales').select('*').order('dia_pago'),
+    supabase.from('transacciones').select('*').order('fecha', { ascending: false }),
     supabase.from('equipo_produccion').select('*').order('created_at'),
     supabase.from('metas_personales').select('*').order('created_at'),
     supabase.from('metas_mensuales').select('*'),
@@ -252,17 +255,21 @@ function migrarHabitosV2() {
     ids.forEach(id => {
       supabase.from('metas_personales').delete().eq('id', id).then(({ error }) => marcarGuardado(!error));
     });
-  }
 
-  // Limpiar rachas viejas de localStorage
-  try {
-    const keys = [];
-    for (let i = 0; i < localStorage.length; i++) {
-      const k = localStorage.key(i);
-      if (k && k.startsWith('habito.racha.')) keys.push(k);
-    }
-    keys.forEach(k => localStorage.removeItem(k));
-  } catch (e) {}
+    // Solo borrar rachas de hábitos que ya no existen
+    const idsViejos = new Set(ids);
+    try {
+      const keys = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith('habito.racha.')) {
+          const habitId = k.replace('habito.racha.', '');
+          if (idsViejos.has(habitId)) keys.push(k);
+        }
+      }
+      keys.forEach(k => localStorage.removeItem(k));
+    } catch (e) {}
+  }
 
   persistValue(HABITOS_V2_KEY, true);
 }
@@ -332,6 +339,7 @@ const CHANNEL_MAP = {
   calendario: ['sync-ideas', 'sync-metas-personales'],
   clientes: ['sync-clientes', 'sync-snaps'],
   financiamiento: ['sync-cuentas-cobro', 'sync-movimientos-financiamiento', 'sync-deudas', 'sync-pagos-mensuales'],
+  finanzas: ['sync-transacciones'],
   inventario: ['sync-metas-personales', 'sync-equipo-produccion'],
   bienestar: ['sync-metas-mensuales', 'sync-tareas'],
   metas: ['sync-metas-mensuales', 'sync-tareas'],
@@ -439,6 +447,15 @@ const PAYLOAD_HANDLERS = {
     } else {
       const existe = state.tareas.some(t => t.id === payload.new.id);
       state.tareas = existe ? state.tareas.map(t => t.id === payload.new.id ? payload.new : t) : state.tareas.concat([payload.new]);
+    }
+    notify();
+  },
+  'sync-transacciones': payload => {
+    if (payload.eventType === 'DELETE') {
+      state.transacciones = state.transacciones.filter(t => t.id !== payload.old.id);
+    } else {
+      const existe = state.transacciones.some(t => t.id === payload.new.id);
+      state.transacciones = existe ? state.transacciones.map(t => t.id === payload.new.id ? payload.new : t) : [payload.new].concat(state.transacciones);
     }
     notify();
   }
@@ -1220,5 +1237,38 @@ export const actions = {
       gasto[campo] = campo === 'monto' || campo === 'dia_vencimiento' ? parseN(valor) : valor;
       notify();
     }
+  },
+
+  // Transacciones (Daily income/expense tracking)
+  transaccionAgregar: (descripcion, monto, tipo, fuente) => {
+    if (!descripcion || !monto || !tipo || !fuente) return;
+    const nuevaTransaccion = {
+      id: 't' + Date.now(),
+      fecha: hoyStr(),
+      descripcion,
+      monto: parseN(monto),
+      tipo,
+      fuente,
+      categoria: detectarCategoria(descripcion),
+      created_at: new Date().toISOString()
+    };
+    state.transacciones = [nuevaTransaccion].concat(state.transacciones);
+    notify();
+    supabase.from('transacciones').insert(nuevaTransaccion).then(({ error }) => marcarGuardado(!error));
+  },
+
+  transaccionEliminar: (id) => {
+    state.transacciones = state.transacciones.filter(t => t.id !== id);
+    notify();
+    supabase.from('transacciones').delete().eq('id', id).then(({ error }) => marcarGuardado(!error));
+  },
+
+  transaccionEditar: (id, campo, valor) => {
+    const transaccion = state.transacciones.find(t => t.id === id);
+    if (!transaccion) return;
+    const actualizada = { ...transaccion, [campo]: valor };
+    state.transacciones = state.transacciones.map(t => t.id === id ? actualizada : t);
+    notify();
+    supabase.from('transacciones').update({ [campo]: valor }).eq('id', id).then(({ error }) => marcarGuardado(!error));
   }
 };

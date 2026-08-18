@@ -2,7 +2,7 @@ import { state, actions, subscribe, initAuth } from './state/store.js';
 import { persistValue, loadValue } from './lib/storage.js';
 import { TEMA_MAP } from './data/constants.js';
 import { parseN } from './lib/format.js';
-import { updateHabitStreak, calcularQuickCheck, logHabitToggle, syncHabitLogToday, isHabitMarkedOnDate } from './lib/bienestar.js';
+import { calcularQuickCheck, logHabitToggle, syncHabitLogToday, isHabitMarkedOnDate } from './lib/bienestar.js';
 import { hoyStr } from './lib/idea.js';
 import { renderHeader } from './components/header.js';
 import { renderDetalle } from './components/detalle.js';
@@ -16,6 +16,7 @@ import { renderPanorama } from './views/panorama.js';
 import { renderCalendario } from './views/calendario.js';
 import { renderClientes } from './views/clientes.js';
 import { renderFinanciamiento } from './views/financiamiento.js';
+import { renderFinanzas } from './views/finanzas.js';
 import { renderInventario } from './views/inventario.js';
 import { renderBienestar } from './views/bienestar.js';
 import { renderMetas } from './views/metas.js';
@@ -151,6 +152,7 @@ const VIEWS = {
   calendario: renderCalendario,
   clientes: renderClientes,
   financiamiento: renderFinanciamiento,
+  finanzas: renderFinanzas,
   inventario: renderInventario,
   bienestar: renderBienestar,
   metas: renderMetas,
@@ -459,6 +461,21 @@ root.addEventListener('click', e => {
     case 'cc-eliminar': actions.eliminarCuentaCobro(id); break;
     case 'gasto-nuevo': actions.gastoNuevo(); break;
     case 'gasto-eliminar': actions.eliminarGasto(id); break;
+    case 'transaccion-agregar': {
+      const descripcion = document.querySelector('[id="desc-trans"]')?.value;
+      const monto = document.querySelector('[id="monto-trans"]')?.value;
+      const tipo = document.querySelector('[id="tipo-trans"]')?.value;
+      const fuente = document.querySelector('[id="fuente-trans"]')?.value;
+      if (descripcion && monto && tipo && fuente) {
+        actions.transaccionAgregar(descripcion, monto, tipo, fuente);
+        document.querySelector('[id="desc-trans"]').value = '';
+        document.querySelector('[id="monto-trans"]').value = '';
+        document.querySelector('[id="tipo-trans"]').value = 'gasto';
+        document.querySelector('[id="fuente-trans"]').value = 'nequi';
+      }
+      break;
+    }
+    case 'transaccion-eliminar': actions.transaccionEliminar(id); break;
     case 'pago-mensual-nuevo': actions.pagoMensualNuevo(); break;
     case 'pago-mensual-eliminar': actions.eliminarPagoMensual(id); break;
     case 'pago-mensual-marcar-pagado': actions.marcarPagoMensualPagado(id); break;
@@ -474,9 +491,8 @@ root.addEventListener('click', e => {
       const wasDone = h && (isHabitMarkedOnDate(h.id, fecha) || h.fecha === fecha);
       const marking = !wasDone;
 
-      // Update streak BEFORE toggling (so we know the transition)
-      updateHabitStreak(id, marking, fecha);
-      // Log for weekly analytics
+      // El registro por día es lo único que se guarda: la racha se calcula a partir de
+      // él (ver getHabitStreak), así que no hay contador aparte que pueda desfasarse.
       logHabitToggle(id, marking, fecha);
 
       // Toggle the habit (updates fecha to most recent)
