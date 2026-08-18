@@ -194,6 +194,54 @@ if (fallosC.length) rotas++;
 const nuevosC = errores.slice(antesC);
 if (nuevosC.length) { console.log('❌ errores:', nuevosC.join(' | ')); rotas++; }
 
+
+// ---- Los trabajos de la U son amarillos ----
+console.log('\n=== color de los trabajos de la U ===');
+const antesA = errores.length;
+// La prueba anterior deja abierto el cajón de Rodaje rápido y tapa los clicks.
+await page.keyboard.press('Escape');
+await page.waitForTimeout(300);
+await page.evaluate(() => { window.location.hash = '#universidad'; });
+await page.waitForTimeout(400);
+await page.fill('#uni-pend-materia', 'Guion — Prof. Díaz');
+await page.fill('#uni-pend-texto', 'Entregar escaleta');
+await page.fill('#uni-pend-fecha', new Date().toISOString().slice(0,10));
+await page.click('[data-act="pendiente-uni-nuevo"]');
+await page.waitForTimeout(500);
+
+const amarillo = await page.evaluate(() => {
+  const norm = c => c.replace(/\s/g,'');
+  const esAmarillo = c => { const m = norm(c).match(/rgba?\((\d+),(\d+),(\d+)/); if(!m) return false;
+    const [r,g,b] = [ +m[1], +m[2], +m[3] ]; return r > 180 && g > 150 && b < 130; };
+  // en Universidad: el borde izquierdo de la tarjeta de la materia
+  const tarjeta = [...document.querySelectorAll('main div')].find(d => d.style.borderLeft && d.textContent.includes('Entregar escaleta'));
+  return { uni: tarjeta ? esAmarillo(getComputedStyle(tarjeta).borderLeftColor) : null };
+});
+console.log(amarillo.uni ? '✅ en Universidad la tarjeta va en amarillo' : `❌ en Universidad no quedó amarilla (${amarillo.uni})`);
+if (!amarillo.uni) rotas++;
+
+// en el Calendario: la barrita de la entrada
+await page.evaluate(() => { window.location.hash = '#calendario'; });
+await page.waitForTimeout(600);
+const cal = await page.evaluate(() => {
+  const esAmarillo = c => { const m = c.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/); if(!m) return false;
+    const [r,g,b] = [ +m[1], +m[2], +m[3] ]; return r > 180 && g > 150 && b < 130; };
+  const entrada = [...document.querySelectorAll('.cal-entry.is-tarea')].find(e => e.textContent.includes('Entregar escaleta'));
+  if (!entrada) return { encontrada: false };
+  const barra = entrada.querySelector('.cal-entry-bar');
+  return { encontrada: true, amarilla: esAmarillo(getComputedStyle(barra).backgroundColor),
+           muestraMateria: entrada.textContent.includes('Guion — Prof. Díaz'),
+           color: getComputedStyle(barra).backgroundColor };
+});
+if (!cal.encontrada) { console.log('❌ el trabajo no aparece en el Calendario'); rotas++; }
+else {
+  console.log(cal.amarilla ? `✅ en el Calendario la barra va en amarillo (${cal.color})` : `❌ en el Calendario no es amarilla (${cal.color})`);
+  console.log(cal.muestraMateria ? '✅ el Calendario muestra la materia' : '❌ el Calendario no muestra la materia');
+  if (!cal.amarilla || !cal.muestraMateria) rotas++;
+}
+const nuevosA = errores.slice(antesA);
+if (nuevosA.length) { console.log('❌ errores:', nuevosA.join(' | ')); rotas++; }
+
 console.log('\n' + (rotas || errores.length ? `❌ ${rotas} pantallas con problemas, ${errores.length} errores` : '✅ TODA LA APP FUNCIONA EN NAVEGADOR'));
 await browser.close();
 process.exit(rotas ? 1 : 0);

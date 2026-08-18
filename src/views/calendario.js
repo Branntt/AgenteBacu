@@ -55,11 +55,19 @@ function clientesDeDia(clientes, fs) {
 
 // Tarea con fecha de entrega (Panorama) — pendiente por hacer, se ve acá para no tener que entrar a Panorama.
 function entryTareaHtml(t) {
+  // Los trabajos de la U van en amarillo y llevan a Universidad; el resto de tareas se
+  // quedan como estaban, en rojo y hacia Panorama. Se distinguen por su columna, que es
+  // lo mismo que las separa de la Pared (ver pendienteUniNuevo en el store).
+  const esUni = t.columna === 'Universidad';
+  const color = esUni ? 'var(--amarillo)' : 'var(--rojo)';
+  const destino = esUni ? 'universidad' : 'panorama';
+  const etiqueta = esUni ? 'U' : 'Entrega';
+  const titulo = esUni ? [t.materia, t.texto].filter(Boolean).join(' · ') : (t.texto || 'Tarea');
   return `
-    <div class="cal-entry is-tarea" data-act="nav-go" data-view="panorama" title="Editar en Panorama">
-      <span class="cal-entry-bar" style="background:var(--rojo)"></span>
+    <div class="cal-entry is-tarea" data-act="nav-go" data-view="${destino}" title="${esUni ? 'Ver en Universidad' : 'Editar en Panorama'}">
+      <span class="cal-entry-bar" style="background:${color}"></span>
       <span class="cal-entry-icon" aria-hidden="true">📌</span>
-      <div class="cal-entry-title"><span class="cal-entry-title-icon" aria-hidden="true">📌</span><span class="cal-entry-tag entrega">Entrega</span>${escapeHtml(t.texto || 'Tarea')}</div>
+      <div class="cal-entry-title"><span class="cal-entry-title-icon" aria-hidden="true">📌</span><span class="cal-entry-tag entrega">${etiqueta}</span>${escapeHtml(titulo || 'Tarea')}</div>
     </div>
   `;
 }
