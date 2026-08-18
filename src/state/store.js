@@ -28,6 +28,7 @@ export const state = {
   calVista: loadValue('ui.calVista', 'mes'),
   claseInfo: null,
   invVista: loadValue('ui.invVista', 'personal'),
+  uniPendMateria: loadValue('ui.uniPendMateria', ''),
   finanzasVista: loadValue('ui.finanzasVista', 'ingresos'),
   // Sync S.A.O BACU → Google Calendar (ver lib/googleCalendar.js). googleConectado es de
   // sesión (el token de Google no sobrevive un refresh de página, hay que re-obtenerlo) — el
@@ -139,7 +140,7 @@ function notify() {
 }
 
 // Claves de interfaz que se recuerdan entre sesiones (cada pestaña vuelve donde quedó)
-const UI_PERSIST = ['month', 'filtroGuiones', 'guionesVista', 'clientesVista', 'filtroCalendario', 'calVista', 'semanaInicio', 'invVista', 'finanzasVista', 'uniBloquesAbiertos', 'diaSeleccionadoBienestar', 'semanaSeleccionadaBienestar'];
+const UI_PERSIST = ['month', 'filtroGuiones', 'guionesVista', 'clientesVista', 'filtroCalendario', 'calVista', 'semanaInicio', 'invVista', 'finanzasVista', 'uniBloquesAbiertos', 'uniPendMateria', 'diaSeleccionadoBienestar', 'semanaSeleccionadaBienestar'];
 
 function setState(patch) {
   Object.assign(state, patch);
@@ -1090,6 +1091,31 @@ export const actions = {
     state.metasMensuales = existe ? state.metasMensuales.map(m => m.id === id ? registro : m) : state.metasMensuales.concat([registro]);
     notify();
     supabase.from('metas_mensuales').upsert(registro).then(({ error }) => marcarGuardado(!error));
+  },
+
+  // Pendiente de Universidad: es una tarea normal con columna 'Universidad', para no
+  // necesitar una tabla nueva (ya se carga y se sincroniza con el resto de tareas). Pared
+  // solo pinta sus columnas fijas, así que estos no se le cuelan allá.
+  //
+  // `materia` solo se manda si viene con algo — mismo criterio que basado_en_id y
+  // tareas.fecha: así quien todavía no corrió la migración puede seguir guardando
+  // pendientes sin materia en vez de que le falle el guardado.
+  pendienteUniNuevo: (materia, texto, fecha) => {
+    if (!texto || !texto.trim()) return;
+    const t = {
+      id: 'tu' + Date.now(),
+      texto: texto.trim(),
+      color: 'brant',
+      hecha: false,
+      columna: 'Universidad',
+      fecha: fecha || null
+    };
+    if (materia && materia.trim()) t.materia = materia.trim();
+    state.tareas = state.tareas.concat([t]);
+    // Se recuerda la materia porque al agregar se redibuja la pantalla y el campo volvería
+    // vacío: normalmente se cargan varios pendientes seguidos de la misma clase.
+    setState({ uniPendMateria: (materia || '').trim() });
+    supabase.from('tareas').insert(t).then(({ error }) => marcarGuardado(!error));
   },
 
   tareaNueva: () => {

@@ -621,6 +621,20 @@ root.addEventListener('click', e => {
     case 'meta-paso-agregar': actions.metaPasoAgregar(id); break;
     case 'meta-paso-toggle': actions.metaPasoToggle(id, Number(idx)); break;
     case 'meta-paso-eliminar': actions.metaPasoEliminar(id, Number(idx)); break;
+    case 'pendiente-uni-nuevo': {
+      const materia = document.querySelector('#uni-pend-materia')?.value;
+      const texto = document.querySelector('#uni-pend-texto')?.value;
+      const fechaPend = document.querySelector('#uni-pend-fecha')?.value;
+      if (texto && texto.trim()) {
+        actions.pendienteUniNuevo(materia, texto, fechaPend);
+        // La materia se deja puesta: normalmente se cargan varios pendientes de la misma clase.
+        const campoTexto = document.querySelector('#uni-pend-texto');
+        const campoFecha = document.querySelector('#uni-pend-fecha');
+        if (campoTexto) campoTexto.value = '';
+        if (campoFecha) campoFecha.value = '';
+      }
+      break;
+    }
     case 'tarea-nueva': actions.tareaNueva(); break;
     case 'tarea-aceptar-sugerencia': actions.tareaCrearDesdeSugerencia(el.dataset.texto, el.dataset.fecha); break;
     case 'tarea-toggle': actions.toggleTarea(id); break;
