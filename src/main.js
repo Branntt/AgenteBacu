@@ -491,8 +491,8 @@ root.addEventListener('click', e => {
       const wasDone = h && (isHabitMarkedOnDate(h.id, fecha) || h.fecha === fecha);
       const marking = !wasDone;
 
-      // Update streak BEFORE toggling (so we know the transition)
-      updateHabitStreak(id, marking, fecha);
+      // Update streak with TODAY's date (streaks are consecutive days from today)
+      updateHabitStreak(id, marking, hoy);
       // Log for weekly analytics
       logHabitToggle(id, marking, fecha);
 
