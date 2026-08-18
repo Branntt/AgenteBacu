@@ -239,6 +239,7 @@ async function cargarDatos() {
   state.metasMensuales = metasMensualesRes.data || [];
   state.tareas = tareasRes.data || [];
   state.dataReady = true;
+  recuperarPendientesUni();
   notify();
   suscribirRealtime();
   verificarIdeasPorFecha();
@@ -521,6 +522,74 @@ function gestionarCanalesActivos(vista) {
 function suscribirRealtime() {
   // Suscribir a todos inicialmente (panorama, el dashboard inicial)
   Object.keys(PAYLOAD_HANDLERS).forEach(suscribirCanal);
+}
+
+// ---- Pendientes de Universidad: guardado que no puede perder nada ----
+//
+// Un pendiente de clase es la lista de lo que el usuario tiene que entregar: si se pierde
+// uno, la app deja de servir para lo único que se le pide. Ya pasó una vez —la columna
+// `materia` no existe en cuentas que no corrieron la migración, el insert falla ENTERO, y
+// el pendiente quedaba solo en memoria hasta la siguiente recarga— así que acá hay tres
+// redes, de la más deseable a la última:
+//
+//   1. Se intenta guardar completo, con materia.
+//   2. Si falla, se reintenta sin materia (la fila se salva) y la materia se guarda acá al
+//      lado, en el navegador, para no perder de qué clase era.
+//   3. Si aun así falla (sin internet, por ejemplo), la fila entera queda guardada acá y se
+//      reintenta en cada arranque, hasta que entre.
+const MATERIAS_LOCALES_KEY = 'bacu.tareas.materia';
+const PENDIENTES_SIN_GUARDAR_KEY = 'bacu.tareas.sin_guardar';
+
+function recordarMateriaLocal(id, materia) {
+  if (!materia) return;
+  const mapa = loadValue(MATERIAS_LOCALES_KEY, {});
+  mapa[id] = materia;
+  persistValue(MATERIAS_LOCALES_KEY, mapa);
+}
+
+function guardarSinGuardar(fila) {
+  const lista = loadValue(PENDIENTES_SIN_GUARDAR_KEY, []);
+  if (!lista.some(f => f.id === fila.id)) {
+    lista.push(fila);
+    persistValue(PENDIENTES_SIN_GUARDAR_KEY, lista);
+  }
+}
+
+function olvidarSinGuardar(id) {
+  const lista = loadValue(PENDIENTES_SIN_GUARDAR_KEY, []).filter(f => f.id !== id);
+  persistValue(PENDIENTES_SIN_GUARDAR_KEY, lista);
+}
+
+function guardarPendienteUni(t) {
+  supabase.from('tareas').insert(t).then(({ error }) => {
+    if (!error) { olvidarSinGuardar(t.id); marcarGuardado(true); return; }
+    const { materia, ...sinMateria } = t;
+    supabase.from('tareas').insert(sinMateria).then(({ error: error2 }) => {
+      if (!error2) {
+        recordarMateriaLocal(t.id, materia);
+        olvidarSinGuardar(t.id);
+        marcarGuardado(true);
+        return;
+      }
+      // Ni así entró: se conserva acá y se reintenta al arrancar.
+      guardarSinGuardar(t);
+      marcarGuardado(false, error2);
+    });
+  });
+}
+
+// Al cargar: devolver a la lista lo que quedó sin guardar, reintentarlo, y volver a pegarle
+// su materia a las filas que se guardaron sin ella.
+function recuperarPendientesUni() {
+  const mapa = loadValue(MATERIAS_LOCALES_KEY, {});
+  state.tareas = state.tareas.map(t => (!t.materia && mapa[t.id]) ? { ...t, materia: mapa[t.id] } : t);
+
+  const sinGuardar = loadValue(PENDIENTES_SIN_GUARDAR_KEY, []);
+  if (!Array.isArray(sinGuardar) || !sinGuardar.length) return;
+  const conocidas = new Set(state.tareas.map(t => t.id));
+  const faltantes = sinGuardar.filter(f => f && f.id && !conocidas.has(f.id));
+  if (faltantes.length) state.tareas = state.tareas.concat(faltantes);
+  faltantes.forEach(guardarPendienteUni);
 }
 
 export const actions = {
@@ -1156,7 +1225,7 @@ export const actions = {
     // Se recuerda la materia porque al agregar se redibuja la pantalla y el campo volvería
     // vacío: normalmente se cargan varios pendientes seguidos de la misma clase.
     setState({ uniPendMateria: (materia || '').trim() });
-    supabase.from('tareas').insert(t).then(({ error }) => marcarGuardado(!error, error));
+    guardarPendienteUni(t);
   },
 
   tareaNueva: () => {
