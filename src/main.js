@@ -16,7 +16,6 @@ import { renderPanorama } from './views/panorama.js';
 import { renderCalendario } from './views/calendario.js';
 import { renderClientes } from './views/clientes.js';
 import { renderFinanciamiento } from './views/financiamiento.js';
-import { renderFinanzas } from './views/finanzas.js';
 import { renderInventario } from './views/inventario.js';
 import { renderBienestar } from './views/bienestar.js';
 import { renderMetas } from './views/metas.js';
@@ -152,7 +151,6 @@ const VIEWS = {
   calendario: renderCalendario,
   clientes: renderClientes,
   financiamiento: renderFinanciamiento,
-  finanzas: renderFinanzas,
   inventario: renderInventario,
   bienestar: renderBienestar,
   metas: renderMetas,
@@ -466,8 +464,9 @@ root.addEventListener('click', e => {
       const monto = document.querySelector('[id="monto-trans"]')?.value;
       const tipo = document.querySelector('[id="tipo-trans"]')?.value;
       const fuente = document.querySelector('[id="fuente-trans"]')?.value;
+      const fechaTrans = document.querySelector('[id="fecha-trans"]')?.value;
       if (descripcion && monto && tipo && fuente) {
-        actions.transaccionAgregar(descripcion, monto, tipo, fuente);
+        actions.transaccionAgregar(descripcion, monto, tipo, fuente, fechaTrans);
         document.querySelector('[id="desc-trans"]').value = '';
         document.querySelector('[id="monto-trans"]').value = '';
         document.querySelector('[id="tipo-trans"]').value = 'gasto';

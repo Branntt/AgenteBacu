@@ -1,6 +1,7 @@
 import { escapeHtml } from '../lib/format.js';
 import { calcularFinanciamiento, cuentasCobroPendientes, esVencida } from '../lib/financiamiento.js';
 import { renderTablaFinanzas } from '../components/tablaFinanzas.js';
+import { obtenerEmoji, agruparPorCategoria, calcularResumen } from '../lib/transacciones.js';
 import { hoyStr } from '../lib/idea.js';
 
 function fmtMoney(n) {
@@ -120,6 +121,7 @@ function pagoCardHtml(p) {
 
 export function renderFinanciamiento(state) {
   const movimientos = state.movimientosFinanciamiento || [];
+  const transacciones = state.transacciones || [];
   const deudas = state.deudas || [];
   const cuentasCobro = state.cuentasCobro || [];
   const pagosMensuales = state.pagosMensuales || [];
@@ -129,7 +131,7 @@ export function renderFinanciamiento(state) {
   // teDeben/patrimonio YA excluyen lo vencido (ver esVencida en lib/financiamiento.js) — una
   // factura o deuda a tu favor que se pasó de fecha deja de sumarse sola al número de confianza
   // hasta que decidas qué pasó con ella (renegociar la fecha o eliminarla).
-  const { efectivo, porFuente, debes, teDeben, teDebenVencido, futuroPago, patrimonio } = calcularFinanciamiento(movimientos, deudas, cuentasCobro, hoy);
+  const { efectivo, porFuente, debes, teDeben, teDebenVencido, futuroPago, patrimonio } = calcularFinanciamiento(movimientos, deudas, cuentasCobro, hoy, transacciones);
 
   // Quién te debe: cuentas de cobro sin pagar (por cliente) + deudas personales a tu favor.
   // El estado de pago vive en cada factura, no en el cliente — ver calcularFinanciamiento.
@@ -170,8 +172,24 @@ export function renderFinanciamiento(state) {
     </div>
   ` : '';
 
-  const vista = state.finanzasVista || 'ingresos';
-  const TABS = [['ingresos', '💵 Ingresos'], ['gastos', '💸 Gastos'], ['deudas', '⚠️ Deudas']];
+  // --- Día a día: el registro de gastos e ingresos, mismo bolsillo que el patrimonio de arriba ---
+  const mesActualStr = hoy.slice(0, 7);
+  const transHoy = transacciones.filter(t => t.fecha === hoy);
+  const transMes = transacciones.filter(t => (t.fecha || '').startsWith(mesActualStr));
+  const resumenHoy = calcularResumen(transHoy);
+  const resumenMes = calcularResumen(transMes);
+  const categoriasMes = agruparPorCategoria(transMes.filter(t => t.tipo === 'gasto'));
+  const gastosMesTotal = resumenMes.gastos;
+  const categoriasOrdenadas = Object.entries(categoriasMes)
+    .map(([nombre, d]) => ({ nombre, total: d.total, count: d.count }))
+    .sort((a, b) => b.total - a.total);
+  const ultimasTrans = transacciones.slice()
+    .sort((a, b) => (a.fecha === b.fecha ? String(b.created_at || '').localeCompare(String(a.created_at || '')) : (a.fecha < b.fecha ? 1 : -1)))
+    .slice(0, 12);
+  const sinMovimientos = movimientos.length === 0 && transacciones.length === 0;
+
+  const vista = state.finanzasVista || 'dia';
+  const TABS = [['dia', '📆 Día a día'], ['ingresos', '💵 Te deben'], ['gastos', '💸 Fijos'], ['deudas', '⚠️ Deudas']];
   const tabsHtml = TABS.map(([v, label]) => `
     <button class="inv-tab ${vista === v ? 'active' : ''}" data-act="finanzas-vista" data-value="${v}">${label}</button>
   `).join('');
@@ -223,14 +241,110 @@ export function renderFinanciamiento(state) {
     </div>
   `;
 
-  const vistaHtml = vista === 'gastos' ? vistaGastosHtml : vista === 'deudas' ? vistaDeudasHtml : vistaIngresosHtml;
+
+  // Registrar un gasto/ingreso del día. Cae en la MISMA cuenta que el patrimonio de arriba
+  // (ver calcularFinanciamiento): no hay saldo inicial inventado en ninguna parte, el saldo
+  // es la suma de lo que se registró. Si arrancás de cero, el primer movimiento es tu saldo
+  // de hoy registrado como ingreso.
+  const formularioHtml = card('var(--verde)', `
+    <div class="mono-label" style="margin-bottom:10px;">➕ Registrar movimiento</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;">
+      <input type="date" id="fecha-trans" value="${hoy}" title="Fecha" style="background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:9px 10px;color:inherit;font-size:13px;min-width:0;width:100%;color-scheme:dark;">
+      <input type="text" id="desc-trans" placeholder="En qué fue (ej: almuerzo)" style="background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:9px 10px;color:inherit;font-size:13px;min-width:0;width:100%;color-scheme:dark;">
+      <input type="number" inputmode="numeric" id="monto-trans" placeholder="Monto" style="background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:9px 10px;color:inherit;font-size:13px;min-width:0;width:100%;color-scheme:dark;">
+      <select id="tipo-trans" style="background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:9px 10px;color:inherit;font-size:13px;min-width:0;width:100%;color-scheme:dark;">
+        <option value="gasto">📤 Gasto</option>
+        <option value="ingreso">📥 Ingreso</option>
+      </select>
+      <select id="fuente-trans" style="background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:9px 10px;color:inherit;font-size:13px;min-width:0;width:100%;color-scheme:dark;">
+        <option value="nequi">📱 Nequi</option>
+        <option value="bancolombia">🏦 Bancolombia</option>
+        <option value="efectivo">💵 Efectivo</option>
+      </select>
+    </div>
+    <button class="btn-primary" data-act="transaccion-agregar" style="width:100%;margin-top:10px;">Registrar</button>
+    <div style="font-size:11px;opacity:0.55;margin-top:8px;">La categoría se detecta sola por lo que escribas.</div>
+  `, 'margin-bottom:16px;');
+
+  const resumenCard = (label, valor, color) => card(color, `
+    <div style="opacity:0.7;font-size:11px;margin-bottom:4px;">${label}</div>
+    <div style="font-size:19px;font-weight:bold;color:${color};overflow-wrap:break-word;">${fmtMoney(valor)}</div>
+  `, 'padding:12px 14px;');
+
+  const vistaDiaHtml = `
+    ${sinMovimientos ? card('var(--azul)', `
+      <div style="font-size:13px;line-height:1.5;">
+        <b>Todavía no hay nada registrado.</b><br>
+        Tu saldo arranca en <b>${fmtMoney(0)}</b> porque se calcula sumando lo que registres, no hay un número puesto a mano.
+        Registrá tu saldo de hoy como un <b>ingreso</b> por cada cuenta (ej. Nequi 125.000, Bancolombia 2.000) y de ahí en adelante solo sumás y restás lo del día.
+      </div>
+    `, 'margin-bottom:16px;') : ''}
+
+    ${formularioHtml}
+
+    <div class="finanzas-seccion" style="margin-bottom:24px;">
+      <div class="seccion-titulo">📆 Hoy</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
+        ${resumenCard('Entró', resumenHoy.ingresos, 'var(--verde)')}
+        ${resumenCard('Salió', resumenHoy.gastos, 'var(--rojo)')}
+        ${resumenCard('Neto', resumenHoy.neto, resumenHoy.neto >= 0 ? 'var(--verde)' : 'var(--rojo)')}
+      </div>
+    </div>
+
+    <div class="finanzas-seccion" style="margin-bottom:24px;">
+      <div class="seccion-titulo">📈 Este mes</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;">
+        ${resumenCard('Entró', resumenMes.ingresos, 'var(--verde)')}
+        ${resumenCard('Salió', resumenMes.gastos, 'var(--rojo)')}
+        ${resumenCard('Neto', resumenMes.neto, resumenMes.neto >= 0 ? 'var(--verde)' : 'var(--rojo)')}
+      </div>
+      ${categoriasOrdenadas.length ? `
+        <div class="mono-label" style="margin-bottom:8px;">En qué se fue la plata</div>
+        ${card('var(--rojo)', categoriasOrdenadas.map(c => {
+          const pct = gastosMesTotal > 0 ? Math.round((c.total / gastosMesTotal) * 100) : 0;
+          return `
+            <div style="margin-bottom:12px;">
+              <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:13px;margin-bottom:5px;">
+                <span style="min-width:0;overflow-wrap:break-word;">${obtenerEmoji(c.nombre)} ${escapeHtml(c.nombre)} <span style="opacity:0.5;font-size:11px;">· ${c.count}</span></span>
+                <b style="white-space:nowrap;">${fmtMoney(c.total)} <span style="opacity:0.6;font-weight:normal;font-size:11px;">${pct}%</span></b>
+              </div>
+              <div style="height:7px;background:var(--panel);border-radius:4px;overflow:hidden;">
+                <div style="height:100%;width:${pct}%;background:var(--rojo);border-radius:4px;"></div>
+              </div>
+            </div>
+          `;
+        }).join(''))}
+      ` : '<div style="opacity:0.5;font-size:12px;">Sin gastos registrados este mes.</div>'}
+    </div>
+
+    <div class="finanzas-seccion" style="margin-bottom:24px;">
+      <div class="seccion-titulo">📝 Últimos movimientos</div>
+      ${ultimasTrans.length ? card('var(--azul)', ultimasTrans.map(t => `
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);">
+          <div style="min-width:0;">
+            <div style="font-size:13px;overflow-wrap:break-word;">${obtenerEmoji(t.categoria)} ${escapeHtml(t.descripcion || 'Sin descripción')}</div>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;opacity:0.55;margin-top:2px;">${fmtFecha(t.fecha)} · ${escapeHtml(t.fuente || '')}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <b style="white-space:nowrap;color:${t.tipo === 'ingreso' ? 'var(--verde)' : 'var(--rojo)'};">${t.tipo === 'ingreso' ? '+' : '−'}${fmtMoney(t.monto)}</b>
+            ${botonEliminar('transaccion-eliminar', t.id)}
+          </div>
+        </div>
+      `).join('')) : '<div style="opacity:0.5;font-size:12px;">Nada registrado todavía.</div>'}
+    </div>
+  `;
+
+  const vistaHtml = vista === 'gastos' ? vistaGastosHtml
+    : vista === 'deudas' ? vistaDeudasHtml
+    : vista === 'ingresos' ? vistaIngresosHtml
+    : vistaDiaHtml;
 
   return `
     <main class="financiamiento">
       <!-- HEADER -->
       <div class="financ-head" style="margin-bottom:32px;">
         <h2 class="serif" style="margin:0;font-size:32px;">Finanzas</h2>
-        <p style="margin:8px 0 0 0;font-size:14px;opacity:0.7;">Tu situación financiera actual</p>
+        <p style="margin:8px 0 0 0;font-size:14px;opacity:0.7;">Gastos, ingresos y deudas en un solo lugar</p>
       </div>
 
       <!-- SITUACIÓN HOY — siempre visible, sin importar la pestaña -->

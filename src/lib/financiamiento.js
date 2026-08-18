@@ -8,16 +8,23 @@ export function esVencida(item, hoy) {
   return !!(hoy && fecha && fecha < hoy);
 }
 
-// El total de "bolsillo" sale SOLO de movimientos reales (Bancolombia/Nequi/efectivo que el
-// usuario registra a mano), deudas personales, y cuentas de cobro sin pagar.
-// Lo facturado se muestra aparte, como referencia, no como dinero disponible.
-export function calcularFinanciamiento(movimientos, deudas, cuentasCobro, hoy) {
+// El total de "bolsillo" sale SOLO de plata real que ya se movió (Bancolombia/Nequi/efectivo),
+// deudas personales, y cuentas de cobro sin pagar. Lo facturado se muestra aparte, como
+// referencia, no como dinero disponible.
+//
+// Hay DOS tablas que registran movimientos de plata: `movimientos_financiamiento` (la vieja,
+// entrada/salida) y `transacciones` (la del día a día, ingreso/gasto, que además trae
+// categoría). Las dos mueven el mismo bolsillo, así que las dos entran acá y se normalizan a
+// un solo signo por fuente. Antes cada pantalla sumaba solo su tabla y mostraba un saldo
+// distinto para la misma plata — de ahí que los números no cuadraran entre pestañas.
+export function calcularFinanciamiento(movimientos, deudas, cuentasCobro, hoy, transacciones) {
   const porFuente = { bancolombia: 0, nequi: 0, efectivo: 0 };
-  (movimientos || []).forEach(m => {
-    const valor = (m.tipo === 'salida' ? -1 : 1) * (Number(m.monto) || 0);
-    const f = FUENTES.includes(m.fuente) ? m.fuente : 'bancolombia';
-    porFuente[f] += valor;
-  });
+  const aplicar = (monto, fuente, esSalida) => {
+    const f = FUENTES.includes(fuente) ? fuente : 'bancolombia';
+    porFuente[f] += (esSalida ? -1 : 1) * (Number(monto) || 0);
+  };
+  (movimientos || []).forEach(m => aplicar(m.monto, m.fuente, m.tipo === 'salida'));
+  (transacciones || []).forEach(t => aplicar(t.monto, t.fuente, t.tipo === 'gasto'));
   const efectivo = porFuente.bancolombia + porFuente.nequi + porFuente.efectivo;
 
   // Lo que debes (direccion:'debo') SÍ sigue contando aunque se venza — que se pase la

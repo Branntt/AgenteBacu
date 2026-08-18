@@ -194,7 +194,7 @@ function renderMetasProgreso(metasPersonales) {
 
 export function renderPanorama(state) {
   const hoy = hoyStr();
-  const finTotal = calcularFinanciamiento(state.movimientosFinanciamiento, state.deudas, state.cuentasCobro, hoy);
+  const finTotal = calcularFinanciamiento(state.movimientosFinanciamiento, state.deudas, state.cuentasCobro, hoy, state.transacciones);
 
   return `
     <main class="panorama-nuevo">
