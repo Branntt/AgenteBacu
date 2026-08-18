@@ -73,5 +73,19 @@ noLanza('pantalla vacia no revienta', () => renderBienestar({
   diaSeleccionadoBienestar: hoy, semanaSeleccionadaBienestar: lunesDe(hoy)
 }));
 
+// El registro guardado puede estar ilegible (storage a medio escribir, otra versión de la
+// app, alguien tocándolo a mano). Nada de eso puede tumbar la pantalla: un registro que no
+// sea un objeto se trata como vacío. `null` en particular tumbaba Bienestar entero.
+for (const [nombre, valor] of Object.entries({
+  'registro null': 'null', 'registro lista': '[1,2]', 'registro texto': '"hola"',
+  'registro roto': '{no es json', 'registro con dia null': `{"${hoy}":null}`,
+  'registro con dia que no es lista': `{"${hoy}":42}`
+})) {
+  mem.set('bacu.habitos.log', valor);
+  noLanza(`${nombre} no tumba la pantalla`, () => renderBienestar(state));
+}
+mem.delete('bacu.habitos.log');
+
 console.log(fallos === 0 ? '\n✅ BIENESTAR ABRE Y TODO CUADRA' : `\n❌ ${fallos} FALLAN`);
 process.exit(fallos ? 1 : 0);
+
