@@ -196,7 +196,7 @@ export function calcularEstres(state) {
     fuentes: fuentes.sort((a, b) => b.puntos - a.puntos),
     items: items.sort((a, b) => b.puntos - a.puntos),
     ideasClasificadas,
-    habitos, habitosHoy: habitosHoy.length,
+    habitos, habitosHoy: marcadosHoy.length,
     maxFuente: Math.max(1, ...fuentes.map(f => f.puntos)),
     ...stats
   };
@@ -281,7 +281,7 @@ export function calcularStatsGamificacion(habitos, hoy) {
   // Racha: días consecutivos completando todos los hábitos
   // Por ahora calculamos una racha simulada
   // En un sistema real, verificaríamos el histórico día a día
-  const rachaActual = habitosHoy.length === totalHabitos && totalHabitos > 0 ? 1 : 0;
+  const rachaActual = marcadosHoy.length === totalHabitos && totalHabitos > 0 ? 1 : 0;
   const maxRacha = Math.floor(totalHabitos / 2) + 1;
 
   return {
@@ -294,7 +294,7 @@ export function calcularStatsGamificacion(habitos, hoy) {
     rachaActual,
     maxRacha,
     totalHabitos,
-    objetivosLogrados: habitosHoy.length
+    objetivosLogrados: marcadosHoy.length
   };
 }
 
