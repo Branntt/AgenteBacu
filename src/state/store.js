@@ -43,6 +43,7 @@ export const state = {
   personaje3dAbierto: false,
   uniBloquesAbiertos: loadValue('ui.uniBloquesAbiertos', {}),
   semanaInicio: loadValue('ui.semanaInicio', lunesDe(hoyStr())),
+  diaSeleccionadoBienestar: loadValue('ui.diaSeleccionadoBienestar', hoyStr()),
   snapDraft: null,
   rodajeDraft: null,
   cuentaCobroDraft: null,
@@ -125,7 +126,7 @@ export function subscribe(fn) { listeners.push(fn); }
 function notify() { listeners.forEach(fn => fn()); }
 
 // Claves de interfaz que se recuerdan entre sesiones (cada pestaña vuelve donde quedó)
-const UI_PERSIST = ['month', 'filtroGuiones', 'guionesVista', 'clientesVista', 'filtroCalendario', 'calVista', 'semanaInicio', 'invVista', 'finanzasVista', 'uniBloquesAbiertos'];
+const UI_PERSIST = ['month', 'filtroGuiones', 'guionesVista', 'clientesVista', 'filtroCalendario', 'calVista', 'semanaInicio', 'invVista', 'finanzasVista', 'uniBloquesAbiertos', 'diaSeleccionadoBienestar'];
 
 function setState(patch) {
   Object.assign(state, patch);
@@ -748,8 +749,17 @@ export const actions = {
     const hoy = hoyStr();
     actions.updMetaPersonal(id, { fecha: h.fecha === hoy ? null : hoy });
   },
+  habitoToggleFecha: (id, fecha) => {
+    const h = state.metasPersonales.find(m => m.id === id);
+    if (!h) return;
+    // Si es la fecha más reciente registrada, actualizar el campo fecha del hábito
+    if (!h.fecha || fecha > h.fecha) {
+      actions.updMetaPersonal(id, { fecha });
+    }
+  },
   setFiltroCalendario: v => setState({ filtroCalendario: v }),
   cambiaSemana: delta => setState({ semanaInicio: sumarDias(state.semanaInicio, delta * 7) }),
+  seleccionarDiaBienestar: fecha => setState({ diaSeleccionadoBienestar: fecha }),
 
   nuevoCliente: () => {
     const c = { id: 'c' + Date.now(), nombre: '', estado: 'prospecto', proyecto: '', nota: '' };
