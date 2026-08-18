@@ -182,7 +182,6 @@ export const METAS_EQUIPO_SEED = [
   { categoria: 'habito', titulo: 'Levantarse a las 6:00 AM', bloque: 'manana' },
   { categoria: 'habito', titulo: 'Tender la cama', bloque: 'manana' },
   { categoria: 'habito', titulo: 'Tomar agua al levantarte', bloque: 'manana' },
-  { categoria: 'habito', titulo: 'Higiene personal', bloque: 'manana' },
   { categoria: 'habito', titulo: 'Skincare', bloque: 'manana' },
   { categoria: 'habito', titulo: 'Desayuno', bloque: 'manana' },
   { categoria: 'habito', titulo: '5–10 min movilidad/estiramiento', bloque: 'manana' },
