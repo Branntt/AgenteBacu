@@ -173,7 +173,7 @@ function renderMetasProgreso(metasPersonales) {
 
     return `
       <div class="meta-item">
-        <div class="meta-nombre">${escapeHtml(m.nombre.substring(0, 45))}</div>
+        <div class="meta-nombre">${escapeHtml(String(m.titulo || 'Meta sin nombre').substring(0, 45))}</div>
         ${pasos.length > 0 ? `
           <div class="meta-bar">
             <div class="meta-fill" style="width:${pct}%"></div>

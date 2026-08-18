@@ -129,7 +129,14 @@ export const state = {
 
 const listeners = [];
 export function subscribe(fn) { listeners.push(fn); }
-function notify() { listeners.forEach(fn => fn()); }
+// Cada suscriptor va aislado: notify los recorre en orden y, sin esto, el primero que
+// lance corta la cadena y los siguientes no corren nunca — la app queda congelada a medias
+// (render es el primero, así que un fallo tardío dejaba la pantalla sin volver a dibujarse).
+function notify() {
+  for (const fn of listeners) {
+    try { fn(); } catch (e) { console.error('[BACU] falló un suscriptor de estado', e); }
+  }
+}
 
 // Claves de interfaz que se recuerdan entre sesiones (cada pestaña vuelve donde quedó)
 const UI_PERSIST = ['month', 'filtroGuiones', 'guionesVista', 'clientesVista', 'filtroCalendario', 'calVista', 'semanaInicio', 'invVista', 'finanzasVista', 'uniBloquesAbiertos', 'diaSeleccionadoBienestar', 'semanaSeleccionadaBienestar'];
@@ -218,6 +225,7 @@ async function cargarDatos() {
   state.movimientosFinanciamiento = movimientosRes.data || [];
   state.deudas = deudasRes.data || [];
   state.pagosMensuales = pagosMensualesRes.data || [];
+  state.transacciones = transaccionesRes.data || [];
   state.equipoProduccion = equipoProduccionRes.data || [];
   state.metasPersonales = metasPersonalesRes.data || [];
   state.metasMensuales = metasMensualesRes.data || [];
