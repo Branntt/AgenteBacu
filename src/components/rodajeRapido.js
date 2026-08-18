@@ -1,5 +1,6 @@
 import { MARCAS } from '../data/constants.js';
 import { escapeHtml } from '../lib/format.js';
+import { ATTRS_AUTOCOMPLETAR } from './datalistClientes.js';
 
 export function renderRodajeRapido(state) {
   const D = state.rodajeDraft;
@@ -34,7 +35,7 @@ export function renderRodajeRapido(state) {
 
         <div class="field">
           <label class="field-label">Cliente (opcional)</label>
-          <input data-change="rodaje-rapido-campo" data-campo="empresa" value="${escapeHtml(D.empresa || '')}" placeholder="Nombre de la empresa o persona">
+          <input data-change="rodaje-rapido-campo" data-campo="empresa" value="${escapeHtml(D.empresa || '')}" placeholder="Nombre de la empresa o persona" ${ATTRS_AUTOCOMPLETAR}>
         </div>
 
         <div class="field-row-2">

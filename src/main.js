@@ -27,6 +27,7 @@ import { renderPersonaje3DCreador, sincronizarPersonaje3D } from './components/p
 import { renderRevisionIdeasModal } from './components/revisionIdeasModal.js';
 import { renderNotificacionBacu } from './components/notificacionBacu.js';
 import { renderClaseInfo } from './components/claseInfo.js';
+import { renderDatalistClientes } from './components/datalistClientes.js';
 
 /* ---------- Audio: sonidos sintetizados para hábitos ---------- */
 
@@ -292,6 +293,7 @@ ${escapeHtml(String(e && e.stack ? e.stack : e))}</div>
       ${renderRevisionIdeasModal(state)}
       ${renderNotificacionBacu(state)}
       ${renderClaseInfo(state)}
+      ${renderDatalistClientes(state)}
     </div>
   `;
   restaurarFoco(foco);
