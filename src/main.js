@@ -520,6 +520,15 @@ root.addEventListener('click', e => {
       }
       break;
     }
+    case 'cambiar-semana-bienestar': {
+      const delta = parseInt(el.dataset.delta, 10) || 0;
+      actions.cambiarSemanaBienestar(delta);
+      break;
+    }
+    case 'volver-al-hoy': {
+      actions.volverAlHoy();
+      break;
+    }
     case 'uni-toggle': actions.uniToggleBloque(Number(idx)); break;
     case 'inv-agregar': actions.metaPersonalNueva('inv_' + value, tipo, el.dataset.parent); break;
     case 'inv-equipar': {

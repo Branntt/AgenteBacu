@@ -55,6 +55,7 @@ function habitoHtml(h, diaSeleccionado, weekPct, esDiaRetroactivo = false) {
 export function renderBienestar(state) {
   const hoy = hoyStr();
   const diaSeleccionado = state.diaSeleccionadoBienestar || hoy;
+  const semanaSeleccionada = state.semanaSeleccionadaBienestar || lunesDe(hoy);
   const e = calcularEstres(state);
   const sortedHabitos = ordenarHabitos(e.habitos);
   const qc = calcularQuickCheck(sortedHabitos, diaSeleccionado);
@@ -67,11 +68,17 @@ export function renderBienestar(state) {
   const diaLabel = DIAS_SEMANA_CORTO[dowIdx];
   const mesLabel = MESES_NOMBRE[mes - 1];
 
+  // ── Week info for navigation ──
+  const [yearSem, mesSem, diaSem] = semanaSeleccionada.split('-').map(Number);
+  const domingoDeSem = sumarDias(semanaSeleccionada, 6);
+  const [yearDom, mesDom, diaDom] = domingoDeSem.split('-').map(Number);
+  const esSemanaPasada = semanaSeleccionada < lunesDe(hoy);
+  const esSemanActual = semanaSeleccionada === lunesDe(hoy);
+
   // ── Week days row ──
-  const lunes = lunesDe(hoy);
   const weekDays = [];
   for (let i = 0; i < 7; i++) {
-    const fecha = sumarDias(lunes, i);
+    const fecha = sumarDias(semanaSeleccionada, i);
     const [fy, fm, fd] = fecha.split('-').map(Number);
     const dObj = new Date(fy, fm - 1, fd);
     const dow = dObj.getDay();
@@ -323,6 +330,11 @@ export function renderBienestar(state) {
             <div class="bh-week-bar-fill" style="width:${qc.pct}%;background:${pctColor};"></div>
           </div>
           <span class="bh-week-stat">${qc.hechos}/${qc.total} hábitos</span>
+        </div>
+        <div class="bh-week-nav">
+          ${!esSemanActual ? `<button class="bh-week-nav-btn" data-act="cambiar-semana-bienestar" data-delta="1">↑ Semana siguiente</button>` : ''}
+          ${esSemanaPasada ? `<button class="bh-week-nav-btn" data-act="volver-al-hoy">Hoy</button>` : ''}
+          <button class="bh-week-nav-btn" data-act="cambiar-semana-bienestar" data-delta="-1">↓ Semana anterior</button>
         </div>
         <div class="bh-week-days">
           ${weekDaysHtml}

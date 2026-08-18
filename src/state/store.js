@@ -44,6 +44,7 @@ export const state = {
   uniBloquesAbiertos: loadValue('ui.uniBloquesAbiertos', {}),
   semanaInicio: loadValue('ui.semanaInicio', lunesDe(hoyStr())),
   diaSeleccionadoBienestar: loadValue('ui.diaSeleccionadoBienestar', hoyStr()),
+  semanaSeleccionadaBienestar: loadValue('ui.semanaSeleccionadaBienestar', lunesDe(hoyStr())),
   snapDraft: null,
   rodajeDraft: null,
   cuentaCobroDraft: null,
@@ -126,7 +127,7 @@ export function subscribe(fn) { listeners.push(fn); }
 function notify() { listeners.forEach(fn => fn()); }
 
 // Claves de interfaz que se recuerdan entre sesiones (cada pestaña vuelve donde quedó)
-const UI_PERSIST = ['month', 'filtroGuiones', 'guionesVista', 'clientesVista', 'filtroCalendario', 'calVista', 'semanaInicio', 'invVista', 'finanzasVista', 'uniBloquesAbiertos', 'diaSeleccionadoBienestar'];
+const UI_PERSIST = ['month', 'filtroGuiones', 'guionesVista', 'clientesVista', 'filtroCalendario', 'calVista', 'semanaInicio', 'invVista', 'finanzasVista', 'uniBloquesAbiertos', 'diaSeleccionadoBienestar', 'semanaSeleccionadaBienestar'];
 
 function setState(patch) {
   Object.assign(state, patch);
@@ -760,6 +761,11 @@ export const actions = {
   setFiltroCalendario: v => setState({ filtroCalendario: v }),
   cambiaSemana: delta => setState({ semanaInicio: sumarDias(state.semanaInicio, delta * 7) }),
   seleccionarDiaBienestar: fecha => setState({ diaSeleccionadoBienestar: fecha }),
+  cambiarSemanaBienestar: delta => setState({ semanaSeleccionadaBienestar: sumarDias(state.semanaSeleccionadaBienestar, delta * 7) }),
+  volverAlHoy: () => {
+    const hoy = hoyStr();
+    setState({ diaSeleccionadoBienestar: hoy, semanaSeleccionadaBienestar: lunesDe(hoy) });
+  },
 
   nuevoCliente: () => {
     const c = { id: 'c' + Date.now(), nombre: '', estado: 'prospecto', proyecto: '', nota: '' };
