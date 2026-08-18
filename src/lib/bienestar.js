@@ -174,8 +174,9 @@ export function calcularEstres(state) {
 
   // ---- Hábitos: alivian ----
   const habitos = (state.metasPersonales || []).filter(m => m.categoria === 'habito');
-  const logHabitos = loadValue('bacu.habitos.log', {});
-  const marcadosHoy = logHabitos[hoy] || [];
+  // Vía getHabitLog, no loadValue directo: es la que garantiza que el registro sea un
+  // objeto aunque en storage haya quedado null o una lista (si no, esto revienta acá).
+  const marcadosHoy = getHabitLog()[hoy] || [];
   const alivio = marcadosHoy.length * ALIVIO_HABITO;
 
   const bruto = fuentes.reduce((s, f) => s + f.puntos, 0);
@@ -303,8 +304,20 @@ export function calcularStatsGamificacion(habitos, hoy) {
 // Estructura: { "2026-08-11": ["id1","id2"], "2026-08-12": ["id1"], ... }
 const LOG_KEY = 'bacu.habitos.log';
 
+// Siempre un objeto plano. loadValue devuelve tal cual lo guardado, y si en la clave
+// quedó `null` o una lista (storage a medio escribir, otra versión de la app, alguien
+// tocando localStorage a mano) todo lo que hace `log[fecha]` revienta con TypeError y se
+// cae la pantalla entera de Bienestar. Un registro ilegible se trata como vacío.
 function getHabitLog() {
-  return loadValue(LOG_KEY, {});
+  const log = loadValue(LOG_KEY, {});
+  if (!log || typeof log !== 'object' || Array.isArray(log)) return {};
+  // Cada día tiene que ser una lista de ids: si alguno no lo es, todo lo que hace
+  // `log[fecha].includes(...)` revienta igual, aunque el registro entero sí sea un objeto.
+  const limpio = {};
+  for (const [fecha, ids] of Object.entries(log)) {
+    if (Array.isArray(ids)) limpio[fecha] = ids;
+  }
+  return limpio;
 }
 
 // Se guardan ~2 años de días. Las estadísticas solo miran el mes actual y el anterior,

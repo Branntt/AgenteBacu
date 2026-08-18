@@ -1,4 +1,8 @@
-const CACHE_NAME = 'agentebacu-shell-v2';
+// Subir este número purga la caché anterior (ver el handler de activate). Hay que hacerlo
+// cada vez que se borra o renombra un archivo que la app importa: si queda cacheado un
+// main.js viejo que importa un módulo que ya no existe, la app no arranca. Pasó al fusionar
+// las dos pestañas de finanzas, que eliminó views/finanzas.js.
+const CACHE_NAME = 'agentebacu-shell-v3';
 const APP_SHELL = [
   './',
   './index.html',

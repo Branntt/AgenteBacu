@@ -1,7 +1,7 @@
 import { state, actions, subscribe, initAuth } from './state/store.js';
 import { persistValue, loadValue } from './lib/storage.js';
 import { TEMA_MAP } from './data/constants.js';
-import { parseN } from './lib/format.js';
+import { parseN, escapeHtml } from './lib/format.js';
 import { calcularQuickCheck, logHabitToggle, syncHabitLogToday, isHabitMarkedOnDate } from './lib/bienestar.js';
 import { hoyStr } from './lib/idea.js';
 import { renderHeader } from './components/header.js';
@@ -244,7 +244,28 @@ function render() {
     return;
   }
 
-  const view = VIEWS[state.view] || renderPanorama;
+  // Si una pantalla revienta al armarse, la excepción sale de render(), root.innerHTML
+  // nunca se asigna y la app queda congelada o en blanco — sin ninguna pista de qué pasó,
+  // que es exactamente lo que pasó con Bienestar. Acá se atrapa por pantalla: el resto de
+  // la app sigue usable y el error se muestra para poder reportarlo.
+  const viewFn = VIEWS[state.view] || renderPanorama;
+  const view = (st) => {
+    try {
+      return viewFn(st);
+    } catch (e) {
+      console.error('[BACU] error armando la vista', state.view, e);
+      return `
+        <main style="padding:24px;">
+          <div style="background:var(--panel2);border:1px solid var(--rojo);border-left:3px solid var(--rojo);border-radius:8px;padding:20px;">
+            <div style="font-size:16px;font-weight:bold;margin-bottom:10px;">😵 Esta pantalla falló al abrir</div>
+            <div style="font-size:13px;opacity:0.8;margin-bottom:14px;">El resto de la app sigue funcionando. Mandale esta pantalla a quien la programó:</div>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:12px;overflow-x:auto;white-space:pre-wrap;overflow-wrap:break-word;">vista: ${escapeHtml(String(state.view))}
+${escapeHtml(String(e && e.stack ? e.stack : e))}</div>
+          </div>
+        </main>
+      `;
+    }
+  };
   root.innerHTML = `
     <div class="app-root" data-tema="${temaAttr}">
       ${state.saveError ? `
