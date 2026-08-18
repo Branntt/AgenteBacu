@@ -12,16 +12,19 @@ const DIAS_SEMANA_CORTO = ['DOM', 'LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB'];
 const MESES_NOMBRE = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
   'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 
-function habitoHtml(h, hoy, weekPct) {
-  const hecho = h.fecha === hoy;
+function habitoHtml(h, diaSeleccionado, weekPct, esDiaRetroactivo = false) {
+  const hecho = h.fecha === diaSeleccionado;
   const streak = getHabitStreak(h.id);
   const badge = getStreakBadge(streak.count);
   const streakLabel = streak.count > 0 ? `${streak.count}d` : '';
   const barColor = weekPct >= 70 ? 'var(--verde)' : (weekPct >= 40 ? '#EFC94C' : 'var(--rojo)');
+  const titleText = esDiaRetroactivo
+    ? `${hecho ? 'Desmarcar' : 'Marcar'} para este día`
+    : `${hecho ? 'Desmarcar' : 'Marcar hecho hoy'}`;
 
   return `
     <div class="bh-card ${hecho ? 'bh-done' : ''}" data-id="${escapeHtml(h.id)}">
-      <button class="bh-check" data-act="habito-toggle" data-id="${escapeHtml(h.id)}" title="${hecho ? 'Desmarcar' : 'Marcar hecho hoy'}">
+      <button class="bh-check" data-act="habito-toggle" data-id="${escapeHtml(h.id)}" data-fecha="${diaSeleccionado}" title="${titleText}">
         <svg class="bh-check-svg" viewBox="0 0 22 22" width="22" height="22">
           <circle class="bh-check-circle" cx="11" cy="11" r="9.5" />
           <path class="bh-check-tick" d="M7 11l3 3 5-5.5" />
@@ -48,15 +51,16 @@ function habitoHtml(h, hoy, weekPct) {
 
 export function renderBienestar(state) {
   const hoy = hoyStr();
+  const diaSeleccionado = state.diaSeleccionadoBienestar || hoy;
   const e = calcularEstres(state);
   const sortedHabitos = ordenarHabitos(e.habitos);
-  const qc = calcularQuickCheck(sortedHabitos, hoy);
-  const greeting = getGreeting();
+  const qc = calcularQuickCheck(sortedHabitos, diaSeleccionado);
+  const greeting = diaSeleccionado === hoy ? getGreeting() : 'Retroactivo';
 
   // ── Date header info ──
-  const [anio, mes, dia] = hoy.split('-').map(Number);
-  const hoyDate = new Date(anio, mes - 1, dia);
-  const dowIdx = hoyDate.getDay();
+  const [anio, mes, dia] = diaSeleccionado.split('-').map(Number);
+  const selDate = new Date(anio, mes - 1, dia);
+  const dowIdx = selDate.getDay();
   const diaLabel = DIAS_SEMANA_CORTO[dowIdx];
   const mesLabel = MESES_NOMBRE[mes - 1];
 
@@ -72,12 +76,14 @@ export function renderBienestar(state) {
       label: DIAS_SEMANA_CORTO[dow].charAt(0),
       date: fd,
       isToday: fecha === hoy,
+      isSelected: fecha === diaSeleccionado,
       isPast: fecha < hoy,
+      fecha: fecha,
     });
   }
 
   const weekDaysHtml = weekDays.map(d => `
-    <div class="bh-day ${d.isToday ? 'bh-day-today' : ''} ${d.isPast && !d.isToday ? 'bh-day-past' : ''}">
+    <div class="bh-day ${d.isToday ? 'bh-day-today' : ''} ${d.isSelected ? 'bh-day-selected' : ''} ${d.isPast && !d.isToday ? 'bh-day-past' : ''}" data-act="seleccionar-dia-bienestar" data-fecha="${d.fecha}">
       <span class="bh-day-label">${d.label}</span>
       <span class="bh-day-num">${d.date}</span>
     </div>
@@ -92,7 +98,7 @@ export function renderBienestar(state) {
 
   // ── Flat habit list ──
   const habitListHtml = sortedHabitos
-    .map(h => habitoHtml(h, hoy, weekPctMap[h.id] || 0))
+    .map(h => habitoHtml(h, diaSeleccionado, weekPctMap[h.id] || 0, diaSeleccionado !== hoy))
     .join('');
 
   // Motivational text

@@ -469,16 +469,21 @@ root.addEventListener('click', e => {
     case 'habito-toggle': {
       const h = state.metasPersonales.find(m => m.id === id);
       const hoy = hoyStr();
-      const wasDone = h && h.fecha === hoy;
+      const fecha = el.dataset.fecha || hoy; // Use date from attribute or default to today
+      const wasDone = h && h.fecha === fecha;
       const marking = !wasDone;
 
       // Update streak BEFORE toggling (so we know the transition)
-      updateHabitStreak(id, marking, hoy);
+      updateHabitStreak(id, marking, fecha);
       // Log for weekly analytics
-      logHabitToggle(id, marking, hoy);
+      logHabitToggle(id, marking, fecha);
 
-      // Toggle the habit
-      actions.habitoToggle(id);
+      // Toggle the habit (updates fecha to most recent)
+      if (fecha === hoy) {
+        actions.habitoToggle(id);
+      } else {
+        actions.habitoToggleFecha(id, fecha);
+      }
 
       // Sound feedback
       if (marking) {
@@ -494,8 +499,8 @@ root.addEventListener('click', e => {
         playMiss();
       }
 
-      // Check for 100% completion → confetti + celebration sound
-      if (marking) {
+      // Check for 100% completion → confetti + celebration sound (only for today)
+      if (marking && fecha === hoy) {
         const habitos = state.metasPersonales.filter(m => m.categoria === 'habito');
         const qc = calcularQuickCheck(habitos, hoy);
         if (qc.pct === 100 && qc.total > 0) {
@@ -504,6 +509,13 @@ root.addEventListener('click', e => {
             fireConfetti();
           }, 200);
         }
+      }
+      break;
+    }
+    case 'seleccionar-dia-bienestar': {
+      const fecha = el.dataset.fecha;
+      if (fecha) {
+        actions.seleccionarDiaBienestar(fecha);
       }
       break;
     }
