@@ -1143,7 +1143,10 @@ export const actions = {
     const t = {
       id: 'tu' + Date.now(),
       texto: texto.trim(),
-      color: 'brant',
+      // Amarillo: es el color de los trabajos de la U en toda la app (su lista en
+      // Universidad y su entrada en el Calendario), para distinguirlos de un vistazo
+      // del resto de tareas.
+      color: 'amarillo',
       hecha: false,
       columna: 'Universidad',
       fecha: fecha || null

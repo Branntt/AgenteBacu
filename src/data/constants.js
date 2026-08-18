@@ -195,7 +195,7 @@ export const METAS_EQUIPO_SEED = [
   { categoria: 'habito', titulo: 'Dormir 7–9 horas', bloque: 'noche' }
 ];
 
-export const COLORES_TAREA = { verde: 'var(--verde)', brant: 'var(--brant)', novena: 'var(--novena)', rojo: 'var(--rojo)', muted: 'var(--muted)' };
+export const COLORES_TAREA = { verde: 'var(--verde)', brant: 'var(--brant)', novena: 'var(--novena)', rojo: 'var(--rojo)', amarillo: 'var(--amarillo)', muted: 'var(--muted)' };
 
 export const TEMA_MAP = { 'Cine crudo': 'cine', 'Galería clara': 'galeria' };
 export const TEMA_OPTIONS = ['Cine crudo', 'Galería clara'];

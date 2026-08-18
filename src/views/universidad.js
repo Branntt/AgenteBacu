@@ -84,7 +84,7 @@ function pendientesUniHtml(state) {
   const gruposHtml = Object.keys(grupos).sort().map(materia => `
     <div style="margin-bottom:18px;">
       <div class="mono-label" style="margin-bottom:4px;">${escapeHtml(materia)} · ${grupos[materia].length}</div>
-      <div style="background:var(--panel2);border:1px solid var(--line);border-left:3px solid var(--brant);border-radius:8px;padding:2px 14px;">
+      <div style="background:var(--panel2);border:1px solid var(--line);border-left:3px solid var(--amarillo);border-radius:8px;padding:2px 14px;">
         ${grupos[materia].map(t => filaHtml(t, false)).join('')}
       </div>
     </div>
