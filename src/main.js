@@ -2,7 +2,7 @@ import { state, actions, subscribe, initAuth } from './state/store.js';
 import { persistValue, loadValue } from './lib/storage.js';
 import { TEMA_MAP } from './data/constants.js';
 import { parseN } from './lib/format.js';
-import { updateHabitStreak, calcularQuickCheck, logHabitToggle, syncHabitLogToday, isHabitMarkedOnDate } from './lib/bienestar.js';
+import { calcularQuickCheck, logHabitToggle, syncHabitLogToday, isHabitMarkedOnDate } from './lib/bienestar.js';
 import { hoyStr } from './lib/idea.js';
 import { renderHeader } from './components/header.js';
 import { renderDetalle } from './components/detalle.js';
@@ -491,9 +491,8 @@ root.addEventListener('click', e => {
       const wasDone = h && (isHabitMarkedOnDate(h.id, fecha) || h.fecha === fecha);
       const marking = !wasDone;
 
-      // Update streak with TODAY's date (streaks are consecutive days from today)
-      updateHabitStreak(id, marking, hoy);
-      // Log for weekly analytics
+      // El registro por día es lo único que se guarda: la racha se calcula a partir de
+      // él (ver getHabitStreak), así que no hay contador aparte que pueda desfasarse.
       logHabitToggle(id, marking, fecha);
 
       // Toggle the habit (updates fecha to most recent)

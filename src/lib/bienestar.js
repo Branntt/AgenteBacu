@@ -1,6 +1,6 @@
 // Sistema de estrés: convierte la carga real de la app (ideas, clientes, plata, universidad)
 // en puntos. Los hábitos cumplidos hoy restan. Todo se calcula al vuelo, nada se guarda.
-import { hoyStr, lunesDe, sumarDias, fstr } from './idea.js';
+import { hoyStr, lunesDe, sumarDias } from './idea.js';
 import { HORARIO_CLASES, METAS_EQUIPO_SEED } from '../data/constants.js';
 import { loadValue, persistValue } from './storage.js';
 
@@ -210,32 +210,40 @@ export function getGreeting() {
   return 'Buenas noches 🌙';
 }
 
-// ---- Racha por hábito (calculada con localStorage) ----
-// Contador acumulativo: total de veces que se completó el hábito (no se reinicia).
-// Ejemplo: 200, 3000 veces marcado.
-export function getHabitStreak(habitId) {
-  return loadValue('habito.racha.' + habitId, { count: 0 });
-}
+// ---- Racha por hábito ----
+// La racha se CALCULA a partir del registro de días (bacu.habitos.log), que es la única
+// fuente de verdad. Antes se guardaba un contador aparte en localStorage que se
+// desincronizaba (se quedaba pegado en 1) y se borraba solo; al derivarla del registro
+// eso no puede volver a pasar: si el día está marcado suma, si falta el día se rompe.
+//
+// Regla: se cuentan días consecutivos hacia atrás. Se arranca en hoy si hoy está
+// marcado; si todavía no marcaste hoy, se arranca en ayer (para que la racha viva no se
+// muestre en 0 hasta que cumplas el hábito del día). Si tampoco está ayer, la racha se
+// rompió y vale 0. No hay tope: puede llegar a 200, 3000, lo que aguantes.
+export function getHabitStreak(habitId, hoy = hoyStr()) {
+  const log = getHabitLog();
+  const marcado = fecha => (log[fecha] || []).includes(habitId);
 
-export function updateHabitStreak(habitId, marking, hoy) {
-  const streak = getHabitStreak(habitId);
-  if (marking) {
-    // Incrementar contador acumulativo
-    streak.count += 1;
-  } else {
-    // Desmarcar: decrementar
-    streak.count = Math.max(0, streak.count - 1);
+  let cursor;
+  if (marcado(hoy)) cursor = hoy;
+  else if (marcado(sumarDias(hoy, -1))) cursor = sumarDias(hoy, -1);
+  else return { count: 0, lastDate: null };
+
+  const lastDate = cursor;
+  let count = 0;
+  while (marcado(cursor)) {
+    count++;
+    cursor = sumarDias(cursor, -1);
   }
-  persistValue('habito.racha.' + habitId, streak);
-  return streak;
+  return { count, lastDate };
 }
 
-// Badge de racha: acumulativo, más veces mejor badge
+// Badge de racha: días seguidos
 export function getStreakBadge(count) {
-  if (count >= 1000) return '👑';  // 1000+ veces
-  if (count >= 500) return '💎';   // 500+ veces
-  if (count >= 100) return '⚡';   // 100+ veces
-  if (count >= 1) return '🔥';      // 1+ veces
+  if (count >= 100) return '👑';  // 100+ días seguidos
+  if (count >= 30) return '💎';   // 30+ días seguidos
+  if (count >= 7) return '⚡';    // 7+ días seguidos
+  if (count >= 1) return '🔥';    // 1+ día
   return '';
 }
 
@@ -299,11 +307,16 @@ function getHabitLog() {
   return loadValue(LOG_KEY, {});
 }
 
+// Se guardan ~2 años de días. Las estadísticas solo miran el mes actual y el anterior,
+// pero la racha se cuenta sobre este mismo registro: con el tope viejo de 65 días una
+// racha larga se cortaba sola al podarse los días viejos. Cada día es una lista corta
+// de ids, así que 730 entradas siguen siendo unos pocos cientos de KB.
+const LOG_DIAS_MAX = 730;
+
 function saveHabitLog(log) {
-  // Limpieza: solo guardar últimos 65 días (2 meses+) para cubrir mes actual + anterior
   const keys = Object.keys(log).sort();
-  if (keys.length > 65) {
-    const cutoff = keys[keys.length - 65];
+  if (keys.length > LOG_DIAS_MAX) {
+    const cutoff = keys[keys.length - LOG_DIAS_MAX];
     for (const k of keys) { if (k < cutoff) delete log[k]; }
   }
   persistValue(LOG_KEY, log);
@@ -326,13 +339,21 @@ export function isHabitMarkedOnDate(habitId, fecha) {
   return log[fecha]?.includes(habitId) ?? false;
 }
 
-// Inicializa el log del día actual con los hábitos ya completados hoy
-// (para que los datos que ya estaban antes de este feature se capturen)
+// Suma al registro de hoy los hábitos que Supabase ya trae marcados con fecha de hoy
+// (para no perder lo que se marcó antes de que existiera el registro local).
+//
+// SOLO AGREGA, nunca borra. Antes hacía `log[hoy] = hechosHoy`, y como esto corre en
+// cada cambio de estado, cualquier hábito cuya fecha en Supabase dejara de ser hoy
+// —por ejemplo al marcarlo después para un día pasado, que reescribe `fecha`— se
+// borraba del registro de hoy y desaparecía de las estadísticas y de la racha. Quitar
+// una marca es responsabilidad exclusiva de logHabitToggle.
 export function syncHabitLogToday(habitos, hoy) {
   const log = getHabitLog();
   const hechosHoy = habitos.filter(h => h.fecha === hoy).map(h => h.id);
-  if (hechosHoy.length > 0 || log[hoy]) {
-    log[hoy] = hechosHoy;
+  const actual = log[hoy] || [];
+  const faltantes = hechosHoy.filter(id => !actual.includes(id));
+  if (faltantes.length) {
+    log[hoy] = actual.concat(faltantes);
     saveHabitLog(log);
   }
 }
