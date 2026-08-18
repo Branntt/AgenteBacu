@@ -1438,6 +1438,26 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
   font-family: 'IBM Plex Mono', monospace;
   font-size: 10px; color: var(--muted);
 }
+.bh-week-nav {
+  display: flex; justify-content: center; gap: 8px;
+  margin: 12px 0 8px;
+  flex-wrap: wrap;
+}
+.bh-week-nav-btn {
+  padding: 8px 16px;
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--verde);
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .2s ease;
+}
+.bh-week-nav-btn:hover {
+  background: var(--verde);
+  color: #000;
+}
 .bh-week-days {
   display: flex; justify-content: space-between; gap: 4px;
 }
