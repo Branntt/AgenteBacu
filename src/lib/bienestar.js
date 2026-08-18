@@ -174,8 +174,9 @@ export function calcularEstres(state) {
 
   // ---- Hábitos: alivian ----
   const habitos = (state.metasPersonales || []).filter(m => m.categoria === 'habito');
-  const habitosHoy = habitos.filter(h => h.fecha === hoy);
-  const alivio = habitosHoy.length * ALIVIO_HABITO;
+  const logHabitos = loadValue('bacu.habitos.log', {});
+  const marcadosHoy = logHabitos[hoy] || [];
+  const alivio = marcadosHoy.length * ALIVIO_HABITO;
 
   const bruto = fuentes.reduce((s, f) => s + f.puntos, 0);
   const neto = Math.max(0, bruto - alivio);
@@ -240,18 +241,22 @@ export function getStreakBadge(count) {
 
 // Porcentaje y datos del Quick Check
 export function calcularQuickCheck(habitos, hoy) {
+  const log = getHabitLog();
   const total = habitos.length;
-  const hechos = habitos.filter(h => h.fecha === hoy).length;
+  // Contar hábitos marcados hoy usando el log (fuente única de verdad)
+  const marcadosHoy = log[hoy] || [];
+  const hechos = marcadosHoy.length;
   const pct = total > 0 ? Math.round((hechos / total) * 100) : 0;
   return { total, hechos, pct };
 }
 
 export function calcularStatsGamificacion(habitos, hoy) {
   // Puntos por cada hábito completado hoy
+  const log = getHabitLog();
   const puntoPorHabito = 10;
   const totalHabitos = habitos.length;
-  const habitosHoy = habitos.filter(h => h.fecha === hoy);
-  const xpHoy = habitosHoy.length * puntoPorHabito;
+  const marcadosHoy = log[hoy] || [];
+  const xpHoy = marcadosHoy.length * puntoPorHabito;
 
   // XP acumulado (simulado basado en histórico)
   // En un sistema real, esto vendría de una tabla de histórico
