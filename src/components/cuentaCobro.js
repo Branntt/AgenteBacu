@@ -1,5 +1,6 @@
 import { escapeHtml } from '../lib/format.js';
 import { CONCEPTOS_COBRO } from '../data/constants.js';
+import { ATTRS_AUTOCOMPLETAR } from './datalistClientes.js';
 
 function fmtMoney(n) {
   const v = Number(n) || 0;
@@ -36,7 +37,7 @@ export function renderCuentaCobro(state) {
         <div class="field-row-2">
           <div class="field">
             <label class="field-label">Cliente</label>
-            <input data-change="cc-campo" data-campo="clienteNombre" value="${escapeHtml(D.clienteNombre)}" placeholder="Nombre del cliente">
+            <input data-change="cc-campo" data-campo="clienteNombre" value="${escapeHtml(D.clienteNombre)}" placeholder="Nombre del cliente" ${ATTRS_AUTOCOMPLETAR}>
           </div>
           <div class="field">
             <label class="field-label">C.C. / NIT</label>

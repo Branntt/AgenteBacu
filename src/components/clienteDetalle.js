@@ -1,4 +1,5 @@
 import { escapeHtml } from '../lib/format.js';
+import { ATTRS_AUTOCOMPLETAR } from './datalistClientes.js';
 
 const ESTADO_LABELS = { prospecto: 'Prospecto', conversacion: 'En conversación para contratación', proyecto_edicion: 'Proyecto por editar', entregado: 'Entregado', por_pagar: 'Por pagar', ya_pagos: 'Ya pagos' };
 
@@ -21,7 +22,7 @@ export function renderClienteDetalle(state) {
 
         <div class="field">
           <label class="field-label">Nombre</label>
-          <input class="title-field" data-change="cliente-nombre" data-id="${id}" value="${escapeHtml(c.nombre)}" placeholder="Nombre del cliente">
+          <input class="title-field" data-change="cliente-nombre" data-id="${id}" value="${escapeHtml(c.nombre)}" placeholder="Nombre del cliente" ${ATTRS_AUTOCOMPLETAR}>
         </div>
 
         ${cuentasCliente.length ? `<div class="panel-footnote" style="margin:-8px 0 16px;">Facturado en total: $${totalCliente.toLocaleString('es-CO')} · ${cuentasCliente.length} cuenta${cuentasCliente.length === 1 ? '' : 's'} de cobro</div>` : ''}

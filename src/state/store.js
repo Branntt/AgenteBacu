@@ -6,6 +6,7 @@ import { generarCuentaCobroPDF, OBSERVACIONES_DEFAULT } from '../lib/pdfInvoice.
 import { generarListadoClientesPDF } from '../lib/pdfListadoClientes.js';
 import * as googleCalendar from '../lib/googleCalendar.js';
 import { MESES, COLORES_TAREA, familiaDeFormato, METAS_EQUIPO_SEED } from '../data/constants.js';
+import { clientePorNombre } from '../components/datalistClientes.js';
 import { detectarCategoria } from '../lib/transacciones.js';
 
 export const state = {
@@ -609,7 +610,17 @@ export const actions = {
   },
   rodajeRapidoAbrir: fecha => setState({ rodajeDraft: { titulo: '', marca: 'brant', fecha: fecha || hoyStr(), empresa: '', documento: '', precio: 0 } }),
   rodajeRapidoCerrar: () => setState({ rodajeDraft: null }),
-  rodajeRapidoSetCampo: (campo, val) => setState({ rodajeDraft: { ...state.rodajeDraft, [campo]: val } }),
+  // Al escribir (o elegir de la lista) un cliente que ya existe, su C.C./NIT se pone solo.
+  // Solo si la casilla del documento está vacía: si ya se escribió algo ahí, se respeta —
+  // rellenar encima borraría lo que la persona acaba de teclear.
+  rodajeRapidoSetCampo: (campo, val) => {
+    const draft = { ...state.rodajeDraft, [campo]: val };
+    if (campo === 'empresa' && !(draft.documento || '').trim()) {
+      const cliente = clientePorNombre(state.clientes, val);
+      if (cliente && cliente.documento) draft.documento = cliente.documento;
+    }
+    setState({ rodajeDraft: draft });
+  },
   rodajeRapidoGuardar: () => {
     const D = state.rodajeDraft;
     if (!D || !D.titulo.trim()) return;
@@ -858,7 +869,20 @@ export const actions = {
     }
   }),
   cuentaCobroCerrar: () => setState({ cuentaCobroDraft: null }),
-  cuentaCobroSetCampo: (campo, val) => setState({ cuentaCobroDraft: { ...state.cuentaCobroDraft, [campo]: val } }),
+  // Mismo criterio que en Rodaje rápido: el documento del cliente conocido se rellena solo,
+  // sin pisar nada que ya esté escrito. Se guarda también el id para que la cuenta de cobro
+  // quede colgada del cliente correcto y no de uno nuevo con el mismo nombre.
+  cuentaCobroSetCampo: (campo, val) => {
+    const draft = { ...state.cuentaCobroDraft, [campo]: val };
+    if (campo === 'clienteNombre') {
+      const cliente = clientePorNombre(state.clientes, val);
+      if (cliente) {
+        if (!(draft.documento || '').trim() && cliente.documento) draft.documento = cliente.documento;
+        draft.clienteId = cliente.id;
+      }
+    }
+    setState({ cuentaCobroDraft: draft });
+  },
   cuentaCobroAddItem: () => {
     const items = state.cuentaCobroDraft.items.concat([{ descripcion: '', cantidad: '1', valor: '' }]);
     setState({ cuentaCobroDraft: { ...state.cuentaCobroDraft, items } });

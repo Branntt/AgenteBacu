@@ -19,7 +19,11 @@ const DATOS = {
     {id:'h3',categoria:'habito',titulo:'Dormir 7–9 horas',bloque:'noche',fecha:null,cumplida:false}
   ],
   ideas: [{id:'i1',titulo:'Reel',marca:'brant',estado:'edicion',prioridad:'Alta',fecha:null,fecha_rodaje:null,objetivos:[],preguntas:[null,null,null,null],formato:'Reel',etapa:0}],
-  clientes: [{id:'c1',nombre:'Cliente',estado:'por_pagar',precio:500000}],
+  clientes: [
+    {id:'c1',nombre:'Panadería La Espiga',documento:'900123456-7',estado:'por_pagar',precio:500000},
+    {id:'c2',nombre:'Papelería Norte',documento:'1020304050',estado:'activo'},
+    {id:'c3',nombre:'Zapatería Sur',documento:'800999888-1',estado:'activo'}
+  ],
   deudas: [{id:'d1',direccion:'debo',monto:20000,pagada:false,persona:'Andre'}],
   transacciones: [{id:'tr1',fecha:hoy,descripcion:'almuerzo',monto:15000,tipo:'gasto',fuente:'nequi',categoria:'comida'}],
   tareas: [{id:'t1',hecha:false,fecha:hoy,texto:'algo',columna:'Hoy'}]
@@ -143,6 +147,52 @@ console.log(despues === antesBorrar - 1 ? '✅ se puede borrar' : `❌ borrar no
 const nuevosU = errores.slice(antesU);
 if (nuevosU.length) console.log('❌ errores:', nuevosU.join(' | '));
 if (okU.length || !hecho || nuevosU.length) rotas++;
+
+
+// ---- Memoria de clientes ----
+console.log('\n=== memoria de clientes ===');
+const antesC = errores.length;
+await page.evaluate(() => { window.location.hash = '#calendario'; });
+await page.waitForTimeout(300);
+await page.click('[data-act="rodaje-rapido-abrir"]');
+await page.waitForTimeout(400);
+const lista = await page.evaluate(() => {
+  const dl = document.getElementById('lista-clientes');
+  const inp = document.querySelector('[data-campo="empresa"]');
+  return {
+    existe: !!dl,
+    opciones: dl ? [...dl.options].map(o => o.value) : [],
+    conP: dl ? [...dl.options].map(o => o.value).filter(v => v.toLowerCase().startsWith('p')) : [],
+    enganchada: inp?.getAttribute('list') === 'lista-clientes',
+    muestraDocumento: dl ? [...dl.options].some(o => o.textContent.includes('900123456-7')) : false
+  };
+});
+const fallosC = [];
+if (!lista.existe) fallosC.push('no existe la lista');
+if (!lista.enganchada) fallosC.push('la casilla no está enganchada a la lista');
+if (lista.conP.length !== 2) fallosC.push(`con P deberían salir 2, salen ${lista.conP.length}`);
+if (!lista.muestraDocumento) fallosC.push('no muestra el NIT en la sugerencia');
+console.log(fallosC.length ? '❌ ' + fallosC.join(' | ') : `✅ la lista recuerda ${lista.opciones.length} clientes — con "P" salen: ${lista.conP.join(', ')}`);
+
+// elegir un cliente conocido debe traer su NIT solo
+await page.fill('[data-campo="empresa"]', 'Panadería La Espiga');
+await page.dispatchEvent('[data-campo="empresa"]', 'change');
+await page.waitForTimeout(400);
+const doc = await page.evaluate(() => document.querySelector('[data-campo="documento"]')?.value);
+console.log(doc === '900123456-7' ? '✅ al elegir el cliente se pone su NIT solo' : `❌ el NIT no se puso (quedó "${doc}")`);
+if (doc !== '900123456-7') rotas++;
+
+// y no debe pisar un documento ya escrito
+await page.fill('[data-campo="documento"]', '111');
+await page.fill('[data-campo="empresa"]', 'Papelería Norte');
+await page.dispatchEvent('[data-campo="empresa"]', 'change');
+await page.waitForTimeout(400);
+const doc2 = await page.evaluate(() => document.querySelector('[data-campo="documento"]')?.value);
+console.log(doc2 === '111' ? '✅ respeta el documento que ya estaba escrito' : `❌ pisó lo escrito (quedó "${doc2}")`);
+if (doc2 !== '111') rotas++;
+if (fallosC.length) rotas++;
+const nuevosC = errores.slice(antesC);
+if (nuevosC.length) { console.log('❌ errores:', nuevosC.join(' | ')); rotas++; }
 
 console.log('\n' + (rotas || errores.length ? `❌ ${rotas} pantallas con problemas, ${errores.length} errores` : '✅ TODA LA APP FUNCIONA EN NAVEGADOR'));
 await browser.close();
