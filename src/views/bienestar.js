@@ -13,10 +13,8 @@ const MESES_NOMBRE = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
   'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 
 function habitoHtml(h, diaSeleccionado, weekPct, esDiaRetroactivo = false) {
-  // Para días retroactivos, verificar en el log; para hoy, usar el campo fecha
-  const hecho = esDiaRetroactivo
-    ? isHabitMarkedOnDate(h.id, diaSeleccionado)
-    : (h.fecha === diaSeleccionado);
+  // Siempre verificar en el log para días pasados; para hoy, usar log O el campo fecha (ambos)
+  const hecho = isHabitMarkedOnDate(h.id, diaSeleccionado) || h.fecha === diaSeleccionado;
   const streak = getHabitStreak(h.id);
   const badge = getStreakBadge(streak.count);
   const streakLabel = streak.count > 0 ? `${streak.count}d` : '';
