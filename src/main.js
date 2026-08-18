@@ -275,7 +275,7 @@ ${escapeHtml(String(e && e.stack ? e.stack : e))}</div>
     <div class="app-root" data-tema="${temaAttr}">
       ${state.saveError ? `
         <div class="save-error-banner" role="alert">
-          <span>No se pudo guardar el último cambio. Puede que el almacenamiento del navegador esté lleno o en modo privado.</span>
+          <span>No se pudo guardar el último cambio.${state.saveErrorMotivo ? ` <b>${escapeHtml(String(state.saveErrorMotivo))}</b>` : ' Puede que el almacenamiento del navegador esté lleno o en modo privado.'}</span>
           <button data-act="descartar-aviso-guardado">✕</button>
         </div>
       ` : ''}

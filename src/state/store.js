@@ -119,6 +119,7 @@ export const state = {
   tema: loadValue('sistemaEditorial.tema', 'Cine crudo'),
   modoCalma: loadValue('sistemaEditorial.modoCalma', false),
   saveError: false,
+  saveErrorMotivo: null,
 
   session: null,
   authReady: false,
@@ -150,9 +151,14 @@ function setState(patch) {
   notify();
 }
 
-function marcarGuardado(ok) {
-  if (state.saveError !== !ok) setState({ saveError: !ok });
-  else notify();
+// `motivo` es el error real (de Supabase o de localStorage). Antes el aviso siempre decía
+// que el almacenamiento del navegador estaba lleno, aunque el fallo viniera de la base de
+// datos — mandaba a buscar el problema al lado equivocado.
+function marcarGuardado(ok, motivo) {
+  const detalle = ok ? null : (motivo && motivo.message ? motivo.message : (motivo || null));
+  if (state.saveError !== !ok || state.saveErrorMotivo !== detalle) {
+    setState({ saveError: !ok, saveErrorMotivo: detalle });
+  } else notify();
 }
 
 // ---- conversión de columnas (snake_case en la base -> camelCase en la app) ----
@@ -265,7 +271,7 @@ function migrarHabitosV2() {
     notify();
     // Borrar de Supabase
     ids.forEach(id => {
-      supabase.from('metas_personales').delete().eq('id', id).then(({ error }) => marcarGuardado(!error));
+      supabase.from('metas_personales').delete().eq('id', id).then(({ error }) => marcarGuardado(!error, error));
     });
 
     // Solo borrar rachas de hábitos que ya no existen
@@ -299,7 +305,15 @@ function sembrarMetasEquipo() {
   });
   state.metasPersonales = state.metasPersonales.concat(rows);
   notify();
-  supabase.from('metas_personales').insert(rows).then(({ error }) => marcarGuardado(!error));
+  // `tipo` y `bloque` son columnas que se agregaron después, con su migración. Si la cuenta
+  // no la corrió, el insert falla ENTERO y las semillas no quedan guardadas nunca: en cada
+  // carga se vuelven a sembrar, vuelven a fallar y vuelve a saltar el aviso rojo. Por eso,
+  // si falla, se reintenta con lo mínimo — mejor un hábito sin bloque que ninguno.
+  supabase.from('metas_personales').insert(rows).then(({ error }) => {
+    if (!error) { marcarGuardado(true); return; }
+    const minimos = rows.map(({ tipo, bloque, ...resto }) => resto);
+    supabase.from('metas_personales').insert(minimos).then(({ error: error2 }) => marcarGuardado(!error2, error2));
+  });
 }
 
 function verificarIdeasPorFecha() {
@@ -578,7 +592,7 @@ export const actions = {
     const nueva = { id: 'u' + Date.now(), marca: 'brant', colab: '', titulo: '', nota: '', gancho: '', objetivos: [], formato: 'Reel', estado: 'desarrollo', fecha: null, fechaRodaje: null, preguntas: [null, null, null, null], tiempo: '', grabacion: false, edicion: false, prioridad: 'Media', etapa: 0 };
     state.ideas = [nueva].concat(state.ideas);
     setState({ selId: nueva.id, view: 'clientes', clientesVista: 'marcas' });
-    supabase.from('ideas').insert(toDbIdea(nueva)).then(({ error }) => marcarGuardado(!error));
+    supabase.from('ideas').insert(toDbIdea(nueva)).then(({ error }) => marcarGuardado(!error, error));
   },
 
   // Acceso rápido de creación en Contenido (dentro de Clientes › Tus marcas): elegís
@@ -591,7 +605,7 @@ export const actions = {
     const nueva = { id: 'u' + Date.now(), marca, colab: '', titulo: '', nota: '', gancho: '', objetivos: [], formato, estado: 'desarrollo', fecha: null, fechaRodaje: null, preguntas: [null, null, null, null], tiempo: '', grabacion: false, edicion: false, prioridad: 'Media', etapa: 0 };
     state.ideas = [nueva].concat(state.ideas);
     setState({ selId: nueva.id, nuevoContenidoAbierto: false, view: 'clientes', clientesVista: 'marcas' });
-    supabase.from('ideas').insert(toDbIdea(nueva)).then(({ error }) => marcarGuardado(!error));
+    supabase.from('ideas').insert(toDbIdea(nueva)).then(({ error }) => marcarGuardado(!error, error));
   },
   rodajeRapidoAbrir: fecha => setState({ rodajeDraft: { titulo: '', marca: 'brant', fecha: fecha || hoyStr(), empresa: '', documento: '', precio: 0 } }),
   rodajeRapidoCerrar: () => setState({ rodajeDraft: null }),
@@ -605,7 +619,7 @@ export const actions = {
       preguntas: [null, null, null, null], tiempo: '', grabacion: true, edicion: false, prioridad: 'Media', etapa: 0
     };
     state.ideas = [nueva].concat(state.ideas);
-    supabase.from('ideas').insert(toDbIdea(nueva)).then(({ error }) => marcarGuardado(!error));
+    supabase.from('ideas').insert(toDbIdea(nueva)).then(({ error }) => marcarGuardado(!error, error));
 
     const nombreEmpresa = (D.empresa || '').trim();
     if (nombreEmpresa) {
@@ -617,12 +631,12 @@ export const actions = {
           const clienteId = cliente.id;
           state.clientes = state.clientes.map(c => c.id === clienteId ? { ...c, documento } : c);
           cliente = { ...cliente, documento };
-          supabase.from('clientes').update({ documento }).eq('id', clienteId).then(({ error }) => marcarGuardado(!error));
+          supabase.from('clientes').update({ documento }).eq('id', clienteId).then(({ error }) => marcarGuardado(!error, error));
         }
       } else {
         cliente = { id: 'c' + Date.now(), nombre: nombreEmpresa, documento, estado: 'activo', proyecto: D.titulo, nota: '' };
         state.clientes = [cliente].concat(state.clientes);
-        supabase.from('clientes').insert(cliente).then(({ error }) => marcarGuardado(!error));
+        supabase.from('clientes').insert(cliente).then(({ error }) => marcarGuardado(!error, error));
       }
 
       const precio = Number(D.precio) || 0;
@@ -644,7 +658,7 @@ export const actions = {
           total: precio
         };
         state.cuentasCobro = state.cuentasCobro.concat([registro]);
-        supabase.from('cuentas_cobro').insert(registro).then(({ error }) => marcarGuardado(!error));
+        supabase.from('cuentas_cobro').insert(registro).then(({ error }) => marcarGuardado(!error, error));
 
         generarCuentaCobroPDF({
           numero,
@@ -667,13 +681,13 @@ export const actions = {
   updIdea: (id, patch) => {
     state.ideas = state.ideas.map(i => i.id === id ? { ...i, ...patch } : i);
     notify();
-    supabase.from('ideas').update(toDbPatch(patch)).eq('id', id).then(({ error }) => marcarGuardado(!error));
+    supabase.from('ideas').update(toDbPatch(patch)).eq('id', id).then(({ error }) => marcarGuardado(!error, error));
   },
   eliminarIdea: id => {
     if (!window.confirm('¿Eliminar esta idea definitivamente?')) return;
     state.ideas = state.ideas.filter(x => x.id !== id);
     setState({ selId: null });
-    supabase.from('ideas').delete().eq('id', id).then(({ error }) => marcarGuardado(!error));
+    supabase.from('ideas').delete().eq('id', id).then(({ error }) => marcarGuardado(!error, error));
   },
   toggleObjetivo: (id, idx) => {
     const idea = state.ideas.find(i => i.id === id);
@@ -752,17 +766,17 @@ export const actions = {
     const e = { id: 'eq' + Date.now(), nombre: '', categoria: 'camara', prestado_a: '' };
     state.equipoProduccion = state.equipoProduccion.concat([e]);
     notify();
-    supabase.from('equipo_produccion').insert(e).then(({ error }) => marcarGuardado(!error));
+    supabase.from('equipo_produccion').insert(e).then(({ error }) => marcarGuardado(!error, error));
   },
   updEquipo: (id, patch) => {
     state.equipoProduccion = state.equipoProduccion.map(e => e.id === id ? { ...e, ...patch } : e);
     notify();
-    supabase.from('equipo_produccion').update(patch).eq('id', id).then(({ error }) => marcarGuardado(!error));
+    supabase.from('equipo_produccion').update(patch).eq('id', id).then(({ error }) => marcarGuardado(!error, error));
   },
   eliminarEquipo: id => {
     state.equipoProduccion = state.equipoProduccion.filter(e => e.id !== id);
     notify();
-    supabase.from('equipo_produccion').delete().eq('id', id).then(({ error }) => marcarGuardado(!error));
+    supabase.from('equipo_produccion').delete().eq('id', id).then(({ error }) => marcarGuardado(!error, error));
   },
 
   uniToggleBloque: idx => {
@@ -799,12 +813,12 @@ export const actions = {
     const c = { id: 'c' + Date.now(), nombre: '', estado: 'prospecto', proyecto: '', nota: '' };
     state.clientes = [c].concat(state.clientes);
     setState({ view: 'clientes', clienteSelId: c.id });
-    supabase.from('clientes').insert(c).then(({ error }) => marcarGuardado(!error));
+    supabase.from('clientes').insert(c).then(({ error }) => marcarGuardado(!error, error));
   },
   updCliente: (id, patch) => {
     const cliente = state.clientes.find(c => c.id === id);
     state.clientes = state.clientes.map(c => c.id === id ? { ...c, ...patch } : c);
-    supabase.from('clientes').update(patch).eq('id', id).then(({ error }) => marcarGuardado(!error));
+    supabase.from('clientes').update(patch).eq('id', id).then(({ error }) => marcarGuardado(!error, error));
 
     // Si cambias estado a "ya_pagos" (Ya pagó), marca como pagadas todas las cuentas de cobro
     // de este cliente que sigan pendientes (cada una registra su propio ingreso — ver
@@ -821,7 +835,7 @@ export const actions = {
     if (!window.confirm('¿Eliminar este cliente?')) return;
     state.clientes = state.clientes.filter(x => x.id !== id);
     setState({ clienteSelId: state.clienteSelId === id ? null : state.clienteSelId });
-    supabase.from('clientes').delete().eq('id', id).then(({ error }) => marcarGuardado(!error));
+    supabase.from('clientes').delete().eq('id', id).then(({ error }) => marcarGuardado(!error, error));
   },
   abrirCliente: id => setState({ clienteSelId: id }),
   // Desde una entrada de "Grabación" en el Calendario (views/calendario.js): fuerza la
@@ -884,7 +898,7 @@ export const actions = {
     };
     state.cuentasCobro = state.cuentasCobro.concat([registro]);
     setState({ cuentaCobroDraft: null });
-    supabase.from('cuentas_cobro').insert(registro).then(({ error }) => marcarGuardado(!error));
+    supabase.from('cuentas_cobro').insert(registro).then(({ error }) => marcarGuardado(!error, error));
 
     generarCuentaCobroPDF({
       numero,
@@ -919,13 +933,13 @@ export const actions = {
   updCuentaCobro: (id, patch) => {
     state.cuentasCobro = state.cuentasCobro.map(c => c.id === id ? { ...c, ...patch } : c);
     notify();
-    supabase.from('cuentas_cobro').update(patch).eq('id', id).then(({ error }) => marcarGuardado(!error));
+    supabase.from('cuentas_cobro').update(patch).eq('id', id).then(({ error }) => marcarGuardado(!error, error));
   },
   // Deshacer una cuenta de cobro creada por error (ej. desde Rodaje rápido con el monto mal puesto).
   eliminarCuentaCobro: id => {
     state.cuentasCobro = state.cuentasCobro.filter(c => c.id !== id);
     notify();
-    supabase.from('cuentas_cobro').delete().eq('id', id).then(({ error }) => marcarGuardado(!error));
+    supabase.from('cuentas_cobro').delete().eq('id', id).then(({ error }) => marcarGuardado(!error, error));
   },
 
   // El estado de pago vive en la factura, no en el cliente (un cliente recurrente puede tener
@@ -937,7 +951,7 @@ export const actions = {
     const pagada = !cc.pagada;
     state.cuentasCobro = state.cuentasCobro.map(c => c.id === id ? { ...c, pagada } : c);
     notify();
-    supabase.from('cuentas_cobro').update({ pagada }).eq('id', id).then(({ error }) => marcarGuardado(!error));
+    supabase.from('cuentas_cobro').update({ pagada }).eq('id', id).then(({ error }) => marcarGuardado(!error, error));
 
     if (pagada) {
       // fuente_pago (elegible en la factura antes de marcarla) — antes esto era siempre
@@ -954,7 +968,7 @@ export const actions = {
       };
       state.movimientosFinanciamiento = [movimiento].concat(state.movimientosFinanciamiento);
       notify();
-      supabase.from('movimientos_financiamiento').insert(movimiento).then(({ error }) => marcarGuardado(!error));
+      supabase.from('movimientos_financiamiento').insert(movimiento).then(({ error }) => marcarGuardado(!error, error));
     }
   },
 
@@ -962,36 +976,36 @@ export const actions = {
     const m = { id: 'mv' + Date.now(), fecha: hoyStr(), fuente: 'bancolombia', tipo: 'entrada', monto: 0, nota: '' };
     state.movimientosFinanciamiento = [m].concat(state.movimientosFinanciamiento);
     setState({ view: 'financiamiento' });
-    supabase.from('movimientos_financiamiento').insert(m).then(({ error }) => marcarGuardado(!error));
+    supabase.from('movimientos_financiamiento').insert(m).then(({ error }) => marcarGuardado(!error, error));
   },
   movimientoAgregar: (mov) => {
     const m = { id: 'mv' + Date.now(), fecha: mov.fecha, fuente: mov.fuente || 'bancolombia', tipo: mov.tipo, monto: mov.monto, nota: mov.nota };
     state.movimientosFinanciamiento = [m].concat(state.movimientosFinanciamiento);
     notify();
-    supabase.from('movimientos_financiamiento').insert(m).then(({ error }) => marcarGuardado(!error));
+    supabase.from('movimientos_financiamiento').insert(m).then(({ error }) => marcarGuardado(!error, error));
   },
   updMovimiento: (id, patch) => {
     state.movimientosFinanciamiento = state.movimientosFinanciamiento.map(m => m.id === id ? { ...m, ...patch } : m);
     notify();
-    supabase.from('movimientos_financiamiento').update(patch).eq('id', id).then(({ error }) => marcarGuardado(!error));
+    supabase.from('movimientos_financiamiento').update(patch).eq('id', id).then(({ error }) => marcarGuardado(!error, error));
   },
   eliminarMovimiento: id => {
     if (!window.confirm('¿Eliminar este movimiento?')) return;
     state.movimientosFinanciamiento = state.movimientosFinanciamiento.filter(m => m.id !== id);
     notify();
-    supabase.from('movimientos_financiamiento').delete().eq('id', id).then(({ error }) => marcarGuardado(!error));
+    supabase.from('movimientos_financiamiento').delete().eq('id', id).then(({ error }) => marcarGuardado(!error, error));
   },
 
   deudaNueva: direccion => {
     const d = { id: 'dd' + Date.now(), persona: '', monto: 0, direccion, nota: '', pagada: false };
     state.deudas = [d].concat(state.deudas);
     setState({ view: 'financiamiento' });
-    supabase.from('deudas').insert(d).then(({ error }) => marcarGuardado(!error));
+    supabase.from('deudas').insert(d).then(({ error }) => marcarGuardado(!error, error));
   },
   updDeuda: (id, patch) => {
     state.deudas = state.deudas.map(d => d.id === id ? { ...d, ...patch } : d);
     notify();
-    supabase.from('deudas').update(patch).eq('id', id).then(({ error }) => marcarGuardado(!error));
+    supabase.from('deudas').update(patch).eq('id', id).then(({ error }) => marcarGuardado(!error, error));
   },
   toggleDeudaPagada: id => {
     const d = state.deudas.find(x => x.id === id);
@@ -1007,24 +1021,24 @@ export const actions = {
   eliminarDeuda: id => {
     state.deudas = state.deudas.filter(d => d.id !== id);
     notify();
-    supabase.from('deudas').delete().eq('id', id).then(({ error }) => marcarGuardado(!error));
+    supabase.from('deudas').delete().eq('id', id).then(({ error }) => marcarGuardado(!error, error));
   },
 
   pagoMensualNuevo: () => {
     const p = { id: 'pm' + Date.now(), nombre: '', monto: 0, dia_pago: null };
     state.pagosMensuales = state.pagosMensuales.concat([p]);
     notify();
-    supabase.from('pagos_mensuales').insert(p).then(({ error }) => marcarGuardado(!error));
+    supabase.from('pagos_mensuales').insert(p).then(({ error }) => marcarGuardado(!error, error));
   },
   updPagoMensual: (id, patch) => {
     state.pagosMensuales = state.pagosMensuales.map(p => p.id === id ? { ...p, ...patch } : p);
     notify();
-    supabase.from('pagos_mensuales').update(patch).eq('id', id).then(({ error }) => marcarGuardado(!error));
+    supabase.from('pagos_mensuales').update(patch).eq('id', id).then(({ error }) => marcarGuardado(!error, error));
   },
   eliminarPagoMensual: id => {
     state.pagosMensuales = state.pagosMensuales.filter(p => p.id !== id);
     notify();
-    supabase.from('pagos_mensuales').delete().eq('id', id).then(({ error }) => marcarGuardado(!error));
+    supabase.from('pagos_mensuales').delete().eq('id', id).then(({ error }) => marcarGuardado(!error, error));
   },
   // ultimo_pago guarda solo la ÚLTIMA fecha en que se marcó pagado — no una fila por mes.
   // financiamiento.js compara el prefijo YYYY-MM contra hoy para saber si ya salió este mes.
@@ -1032,7 +1046,7 @@ export const actions = {
     const patch = { ultimo_pago: hoyStr() };
     state.pagosMensuales = state.pagosMensuales.map(p => p.id === id ? { ...p, ...patch } : p);
     notify();
-    supabase.from('pagos_mensuales').update(patch).eq('id', id).then(({ error }) => marcarGuardado(!error));
+    supabase.from('pagos_mensuales').update(patch).eq('id', id).then(({ error }) => marcarGuardado(!error, error));
   },
 
   // tipo: solo para items de Inventario > Personal (ver TIPOS_PERSONAL en constants.js) — se
@@ -1047,17 +1061,17 @@ export const actions = {
     if (parentId) m.parent_id = parentId;
     state.metasPersonales = state.metasPersonales.concat([m]);
     notify();
-    supabase.from('metas_personales').insert(m).then(({ error }) => marcarGuardado(!error));
+    supabase.from('metas_personales').insert(m).then(({ error }) => marcarGuardado(!error, error));
   },
   updMetaPersonal: (id, patch) => {
     state.metasPersonales = state.metasPersonales.map(m => m.id === id ? { ...m, ...patch } : m);
     notify();
-    supabase.from('metas_personales').update(patch).eq('id', id).then(({ error }) => marcarGuardado(!error));
+    supabase.from('metas_personales').update(patch).eq('id', id).then(({ error }) => marcarGuardado(!error, error));
   },
   eliminarMetaPersonal: id => {
     state.metasPersonales = state.metasPersonales.filter(m => m.id !== id);
     notify();
-    supabase.from('metas_personales').delete().eq('id', id).then(({ error }) => marcarGuardado(!error));
+    supabase.from('metas_personales').delete().eq('id', id).then(({ error }) => marcarGuardado(!error, error));
   },
 
   // Pasos de una meta — desglose simple para "alcanzarla con un plan", no solo un check
@@ -1090,7 +1104,7 @@ export const actions = {
     const existe = state.metasMensuales.some(m => m.id === id);
     state.metasMensuales = existe ? state.metasMensuales.map(m => m.id === id ? registro : m) : state.metasMensuales.concat([registro]);
     notify();
-    supabase.from('metas_mensuales').upsert(registro).then(({ error }) => marcarGuardado(!error));
+    supabase.from('metas_mensuales').upsert(registro).then(({ error }) => marcarGuardado(!error, error));
   },
 
   // Pendiente de Universidad: es una tarea normal con columna 'Universidad', para no
@@ -1115,7 +1129,7 @@ export const actions = {
     // Se recuerda la materia porque al agregar se redibuja la pantalla y el campo volvería
     // vacío: normalmente se cargan varios pendientes seguidos de la misma clase.
     setState({ uniPendMateria: (materia || '').trim() });
-    supabase.from('tareas').insert(t).then(({ error }) => marcarGuardado(!error));
+    supabase.from('tareas').insert(t).then(({ error }) => marcarGuardado(!error, error));
   },
 
   tareaNueva: () => {
@@ -1124,7 +1138,7 @@ export const actions = {
     const t = { id: 'tk' + Date.now(), texto: '', color, hecha: false };
     state.tareas = state.tareas.concat([t]);
     notify();
-    supabase.from('tareas').insert(t).then(({ error }) => marcarGuardado(!error));
+    supabase.from('tareas').insert(t).then(({ error }) => marcarGuardado(!error, error));
   },
   // Convierte una cinta sugerida (calculada en Pared a partir de una grabación
   // agendada) en una tarea real. No hay vínculo guardado con la idea/cliente de
@@ -1136,12 +1150,12 @@ export const actions = {
     const t = { id: 'tk' + Date.now(), texto, color, hecha: false, fecha: fecha || null };
     state.tareas = state.tareas.concat([t]);
     notify();
-    supabase.from('tareas').insert(t).then(({ error }) => marcarGuardado(!error));
+    supabase.from('tareas').insert(t).then(({ error }) => marcarGuardado(!error, error));
   },
   updTarea: (id, patch) => {
     state.tareas = state.tareas.map(t => t.id === id ? { ...t, ...patch } : t);
     notify();
-    supabase.from('tareas').update(patch).eq('id', id).then(({ error }) => marcarGuardado(!error));
+    supabase.from('tareas').update(patch).eq('id', id).then(({ error }) => marcarGuardado(!error, error));
   },
   toggleTarea: id => {
     const t = state.tareas.find(x => x.id === id);
@@ -1150,7 +1164,7 @@ export const actions = {
   eliminarTarea: id => {
     state.tareas = state.tareas.filter(t => t.id !== id);
     notify();
-    supabase.from('tareas').delete().eq('id', id).then(({ error }) => marcarGuardado(!error));
+    supabase.from('tareas').delete().eq('id', id).then(({ error }) => marcarGuardado(!error, error));
   },
 
   snapAbre: () => {
@@ -1176,12 +1190,12 @@ export const actions = {
       const actualizado = { ...existente, ...datos };
       state.snaps = state.snaps.map(s => s.id === existente.id ? actualizado : s);
       setState({ snapDraft: null });
-      supabase.from('snaps').update(datos).eq('id', existente.id).then(({ error }) => marcarGuardado(!error));
+      supabase.from('snaps').update(datos).eq('id', existente.id).then(({ error }) => marcarGuardado(!error, error));
     } else {
       const nuevo = { id: 's' + Date.now(), ...datos };
       state.snaps = state.snaps.concat([nuevo]);
       setState({ snapDraft: null });
-      supabase.from('snaps').insert(nuevo).then(({ error }) => marcarGuardado(!error));
+      supabase.from('snaps').insert(nuevo).then(({ error }) => marcarGuardado(!error, error));
     }
   },
 
@@ -1290,13 +1304,13 @@ export const actions = {
     };
     state.transacciones = [nuevaTransaccion].concat(state.transacciones);
     notify();
-    supabase.from('transacciones').insert(nuevaTransaccion).then(({ error }) => marcarGuardado(!error));
+    supabase.from('transacciones').insert(nuevaTransaccion).then(({ error }) => marcarGuardado(!error, error));
   },
 
   transaccionEliminar: (id) => {
     state.transacciones = state.transacciones.filter(t => t.id !== id);
     notify();
-    supabase.from('transacciones').delete().eq('id', id).then(({ error }) => marcarGuardado(!error));
+    supabase.from('transacciones').delete().eq('id', id).then(({ error }) => marcarGuardado(!error, error));
   },
 
   transaccionEditar: (id, campo, valor) => {
@@ -1305,6 +1319,6 @@ export const actions = {
     const actualizada = { ...transaccion, [campo]: valor };
     state.transacciones = state.transacciones.map(t => t.id === id ? actualizada : t);
     notify();
-    supabase.from('transacciones').update({ [campo]: valor }).eq('id', id).then(({ error }) => marcarGuardado(!error));
+    supabase.from('transacciones').update({ [campo]: valor }).eq('id', id).then(({ error }) => marcarGuardado(!error, error));
   }
 };
