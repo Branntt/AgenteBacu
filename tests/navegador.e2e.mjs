@@ -53,7 +53,7 @@ const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromi
 const page = await browser.newPage();
 const errores = [];
 page.on('pageerror', e => errores.push('💥 ' + e.message));
-page.on('console', m => { const t = m.text();
+page.on('console', m => { const t = m.text(); if(!t.includes('frame-ancestors')) console.log('  [nav]', m.type()+':', t.slice(0,150));
   if (m.type()==='error' && !t.includes('frame-ancestors') && !t.includes('net::')) errores.push('console: ' + t); });
 
 await page.route(/esm\.sh/, r => r.fulfill({ status:200, contentType:'application/javascript', body: STUB }));
@@ -101,6 +101,48 @@ if (check) {
   console.log(nuevos.length ? `❌ el click lanzó: ${nuevos.join(' | ')}` : `✅ el click funciona — racha: ${racha}`);
   if (nuevos.length) rotas++;
 } else { console.log('❌ no encontré el botón de marcar hábito'); rotas++; }
+
+
+// ---- Pendientes de Universidad ----
+console.log('\n=== pendientes de universidad ===');
+await page.evaluate(() => { window.location.hash = '#universidad'; });
+await page.waitForTimeout(400);
+const antesU = errores.length;
+await page.fill('#uni-pend-materia', 'Cálculo — Prof. Ramírez');
+await page.fill('#uni-pend-texto', 'Entregar taller 3');
+await page.fill('#uni-pend-fecha', new Date(Date.now()+86400000).toISOString().slice(0,10));
+await page.click('[data-act="pendiente-uni-nuevo"]');
+await page.waitForTimeout(400);
+await page.fill('#uni-pend-texto', 'Leer capítulo 5');
+await page.click('[data-act="pendiente-uni-nuevo"]');
+await page.waitForTimeout(400);
+const u = await page.evaluate(() => {
+  const t = document.querySelector('main').textContent;
+  return {
+    materia: t.includes('Cálculo — Prof. Ramírez'),
+    act1: t.includes('Entregar taller 3'),
+    act2: t.includes('Leer capítulo 5'),
+    contador: t.includes('Pendientes de clase — 2'),
+    materiaSigue: document.querySelector('#uni-pend-materia')?.value === 'Cálculo — Prof. Ramírez',
+    textoLimpio: document.querySelector('#uni-pend-texto')?.value === ''
+  };
+});
+const okU = Object.entries(u).filter(([k,v]) => !v).map(([k]) => k);
+console.log(okU.length ? `❌ falla: ${okU.join(', ')}` : '✅ agrega pendientes, los agrupa por materia y limpia el campo');
+// marcar uno como hecho
+await page.click('[data-act="tarea-toggle"]');
+await page.waitForTimeout(400);
+const hecho = await page.evaluate(() => document.querySelector('main').textContent.includes('Ya hechas'));
+console.log(hecho ? '✅ se puede marcar como hecha' : '❌ marcar como hecha no movió nada');
+// borrar uno
+const antesBorrar = await page.$$eval('[data-act="tarea-eliminar"]', e => e.length);
+await page.click('[data-act="tarea-eliminar"]');
+await page.waitForTimeout(400);
+const despues = await page.$$eval('[data-act="tarea-eliminar"]', e => e.length);
+console.log(despues === antesBorrar - 1 ? '✅ se puede borrar' : `❌ borrar no funcionó (${antesBorrar} -> ${despues})`);
+const nuevosU = errores.slice(antesU);
+if (nuevosU.length) console.log('❌ errores:', nuevosU.join(' | '));
+if (okU.length || !hecho || nuevosU.length) rotas++;
 
 console.log('\n' + (rotas || errores.length ? `❌ ${rotas} pantallas con problemas, ${errores.length} errores` : '✅ TODA LA APP FUNCIONA EN NAVEGADOR'));
 await browser.close();
