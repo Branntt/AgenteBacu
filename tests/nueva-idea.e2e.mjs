@@ -1,9 +1,9 @@
 // Prueba de navegador: anotar una idea con su brief.
 //
 // Cubre las cuatro preguntas que el usuario pidió al anotar —para quién es, en qué consiste,
-// cómo se graba, qué espera— y que el botón para anotarla esté en TODAS las pestañas: antes
-// la condición del header listaba nueve de las diez vistas, así que solo aparecía dentro de
-// Configuraciones y en la práctica no existía.
+// cómo se graba, qué espera— y que el botón para anotarla viva ÚNICAMENTE en la pestaña
+// Clientes: es ahí donde se trabaja el contenido de cada cliente, y el resto de vistas
+// (calendario, finanzas, etc.) se mantienen enfocadas en lo suyo sin ese botón.
 //
 // La base falsa rechaza las columnas del brief, como una cuenta que no corrió la migración:
 // la idea tiene que guardarse igual y el brief quedar a salvo en el navegador.
@@ -48,17 +48,19 @@ await page.waitForTimeout(1500);
 let fallos = 0;
 const ok = (n,c,x='') => { if(!c) fallos++; console.log((c?'✅ ':'❌ ')+n+(c?'':' '+x)); };
 
-// El botón tiene que estar en TODAS las pestañas
+// El botón tiene que estar ÚNICAMENTE en la pestaña Clientes
 const vistas = ['panorama','calendario','clientes','financiamiento','inventario','bienestar','metas','universidad','pared'];
-const sinBoton = [];
+const conBoton = [];
 for (const v of vistas) {
   await page.evaluate(vv => { window.location.hash = '#'+vv; }, v);
   await page.waitForTimeout(200);
-  if (!(await page.$('[data-act="nueva-idea"]'))) sinBoton.push(v);
+  if (await page.$('[data-act="nueva-idea"]')) conBoton.push(v);
 }
-ok('el botón de idea está en las 9 pestañas', sinBoton.length === 0, `(falta en: ${sinBoton.join(', ')})`);
+ok('el botón de idea vive solo en Clientes', conBoton.length === 1 && conBoton[0] === 'clientes', `(aparece en: ${conBoton.join(', ')})`);
 
-// Anotar una idea con su brief
+// Anotar una idea con su brief — desde Clientes, que es donde vive el botón
+await page.evaluate(() => { window.location.hash = '#clientes'; });
+await page.waitForTimeout(300);
 await page.click('[data-act="nueva-idea"]');
 await page.waitForTimeout(400);
 const lista = await page.evaluate(() => {

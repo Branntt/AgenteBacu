@@ -68,9 +68,17 @@ await page.keyboard.press('Escape');
 await page.waitForTimeout(400);
 
 // --- Desde Rodaje rápido ---
-await page.evaluate(() => { window.location.hash = '#calendario'; });
-await page.waitForTimeout(500);
-await page.click('[data-act="rodaje-rapido-abrir"]');
+// El calendario es solo lectura y ya no abre el rodaje rápido; se dispara la acción
+// directamente para seguir cubriendo el reconocimiento de cliente del drawer.
+await page.evaluate(() => {
+  const app = document.getElementById('app');
+  const t = document.createElement('button');
+  t.setAttribute('data-act', 'rodaje-rapido-abrir');
+  t.style.display = 'none';
+  app.appendChild(t);
+  t.click();
+  t.remove();
+});
 await page.waitForTimeout(500);
 ok('sin cliente escrito no muestra cuentas', !(await page.$('.rodaje-rapido .cuentas-cliente')));
 

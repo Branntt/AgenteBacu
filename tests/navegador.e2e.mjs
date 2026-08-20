@@ -152,9 +152,17 @@ if (okU.length || !hecho || nuevosU.length) rotas++;
 // ---- Memoria de clientes ----
 console.log('\n=== memoria de clientes ===');
 const antesC = errores.length;
-await page.evaluate(() => { window.location.hash = '#calendario'; });
-await page.waitForTimeout(300);
-await page.click('[data-act="rodaje-rapido-abrir"]');
+// El calendario es solo lectura y ya no abre el rodaje rápido; se dispara la acción
+// directamente para seguir cubriendo la memoria de clientes del drawer.
+await page.evaluate(() => {
+  const app = document.getElementById('app');
+  const t = document.createElement('button');
+  t.setAttribute('data-act', 'rodaje-rapido-abrir');
+  t.style.display = 'none';
+  app.appendChild(t);
+  t.click();
+  t.remove();
+});
 await page.waitForTimeout(400);
 const lista = await page.evaluate(() => {
   const dl = document.getElementById('lista-clientes');
