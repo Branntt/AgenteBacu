@@ -152,11 +152,23 @@ function renderMes(state, ideas, clientes, tareas) {
     dias.push({ dnum, esMes, fs, esHoy, entries });
   }
 
+  // El calendario es solo lectura: registra visualmente lo que ya se agendó desde cada
+  // pestaña, no se crea nada tocando una celda. Para que la cuadrícula no se deforme cuando
+  // un día acumula muchas entradas, se muestran como máximo MAX_VISIBLES y el resto se resume
+  // en un contador "+N más" (el detalle completo del día se ve en la vista Agenda).
+  const MAX_VISIBLES = 3;
+  function entradasCelda(entries) {
+    if (entries.length <= MAX_VISIBLES) return entries.join('');
+    const visibles = entries.slice(0, MAX_VISIBLES - 1);
+    const resto = entries.length - visibles.length;
+    return visibles.join('') + `<div class="cal-more">+${resto} más</div>`;
+  }
+
   const dowHtml = DIAS_SEMANA.map(ds => `<div class="cal-dow">${ds}</div>`).join('');
   const celdasHtml = dias.map(d => `
-    <div class="cal-cell ${d.esMes ? 'clickable' : ''}" ${d.esMes ? `data-act="rodaje-rapido-abrir" data-fecha="${d.fs}"` : ''}>
+    <div class="cal-cell">
       <span class="cal-daynum ${d.esHoy ? 'today' : (!d.esMes ? 'out' : '')}">${d.esMes ? d.dnum : ''}</span>
-      ${d.entries.join('')}
+      ${entradasCelda(d.entries)}
     </div>
   `).join('');
 
@@ -179,8 +191,8 @@ function renderSemana(state, ideas, clientes, tareas) {
         <span class="cal-dow">${DIAS_SEMANA[i]}</span>
         <span class="cal-daynum ${d.esHoy ? 'today' : ''}">${d.dnum}</span>
       </div>
-      <div class="cal-week-body clickable" data-act="rodaje-rapido-abrir" data-fecha="${d.fs}">
-        ${d.entries.length ? d.entries.join('') : '<div class="col-empty">Tocá para agendar.</div>'}
+      <div class="cal-week-body">
+        ${d.entries.length ? d.entries.join('') : '<div class="col-empty">Sin nada agendado.</div>'}
       </div>
     </div>
   `).join('');
@@ -266,7 +278,6 @@ export function renderCalendario(state) {
             <button class="hoy-btn" data-act="cal-hoy" title="Ir a hoy">${hoyBtnLabel}</button>
             <button data-act="cal-next">→</button>
           </div>
-          <button class="btn-primary" data-act="rodaje-rapido-abrir" title="Agendar un rodaje rápido, se agrega hoy por defecto">+ Agregar</button>
         </div>
       </div>
       <div class="cal-stats">${statsHtml}</div>

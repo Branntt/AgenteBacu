@@ -952,7 +952,11 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
 }
 .cal-cell {
   min-height: 112px;
-  /* sin max-height ni scroll interno: la celda crece y todo el texto cabe a la vista */
+  /* Altura tope + overflow oculto: aunque un día acumule muchas entradas, la celda no crece
+     ni deforma la fila. El calendario limita las entradas visibles y resume el resto con un
+     contador "+N más" (ver renderMes), así que nada queda cortado sin avisar. */
+  max-height: 160px;
+  overflow: hidden;
   padding: 6px;
   border-right: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
@@ -960,8 +964,14 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
   flex-direction: column;
   gap: 4px;
 }
-.cal-cell.clickable, .cal-week-body.clickable { cursor: pointer; }
-.cal-cell.clickable:hover, .cal-week-body.clickable:hover { background: var(--panel); }
+.cal-more {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  letter-spacing: .5px;
+  color: var(--muted);
+  padding: 2px 4px;
+  flex-shrink: 0;
+}
 .cal-daynum { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--muted); }
 .cal-daynum.out { color: var(--line); }
 .cal-daynum.today {
