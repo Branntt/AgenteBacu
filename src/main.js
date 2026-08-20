@@ -4,6 +4,7 @@ import { TEMA_MAP } from './data/constants.js';
 import { parseN, escapeHtml } from './lib/format.js';
 import { calcularQuickCheck, logHabitToggle, syncHabitLogToday, isHabitMarkedOnDate } from './lib/bienestar.js';
 import { hoyStr } from './lib/idea.js';
+import { APP_VERSION } from './lib/version.js';
 import { renderHeader } from './components/header.js';
 import { renderDetalle } from './components/detalle.js';
 import { renderClienteDetalle } from './components/clienteDetalle.js';
@@ -161,9 +162,6 @@ const VIEWS = {
   configuraciones: renderConfiguraciones
 };
 
-// Subir esto en cada publicación: es la única forma de saber si el navegador está corriendo
-// el código nuevo o uno viejo cacheado. Sale en consola al arrancar y en los avisos de error.
-const APP_VERSION = 'v3 (2026-08-18)';
 console.log('[BACU] versión', APP_VERSION);
 
 const root = document.getElementById('app');
@@ -379,7 +377,17 @@ window.addEventListener('unhandledrejection', e => mostrarErrorGlobal('promesa',
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js').catch(() => {});
+    navigator.serviceWorker.register('./sw.js').then(reg => {
+      // Volver a la app tiene que ser suficiente para traer lo nuevo. En un teléfono con la
+      // app en la pantalla de inicio no hay "recargar": el sistema la suspende y la
+      // devuelve tal como estaba, así que sin esto se queda con la versión con la que se
+      // abrió la primera vez. Al volver a mirarla, se pregunta si hay una más nueva.
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) reg.update().catch(() => {});
+      });
+      // Y cada media hora si se queda abierta.
+      setInterval(() => reg.update().catch(() => {}), 30 * 60 * 1000);
+    }).catch(() => {});
   });
   // Cuando entra una versión NUEVA del service worker, recargar una sola vez para soltar el
   // código viejo que quedó cacheado.
@@ -492,6 +500,15 @@ root.addEventListener('click', e => {
     case 'guion-item-agregar': actions.addGuionItem(id); break;
     case 'guion-item-quitar': actions.removeGuionItem(id, Number(idx)); break;
     case 'guion-marcar-lista': actions.updIdea(id, { estado: 'lista' }); actions.cerrarGuion(); break;
+    case 'buscar-actualizacion': {
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistration()
+          .then(reg => reg ? reg.update() : null)
+          .then(() => window.location.reload())
+          .catch(() => window.location.reload());
+      } else window.location.reload();
+      break;
+    }
     case 'descartar-aviso-guardado': actions.descartarAvisoGuardado(); break;
     case 'google-conectar': actions.googleConectar(); break;
     case 'google-desconectar': actions.googleDesconectar(); break;
