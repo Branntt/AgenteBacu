@@ -21,10 +21,11 @@ export const state = {
   selId: null,
   guionId: null,
   clienteSelId: null,
+  cartaClienteId: null,
   menuAbierto: false,
   filtroGuiones: loadValue('ui.filtroGuiones', 'todas'),
   guionesVista: loadValue('ui.guionesVista', 'general'),
-  clientesVista: loadValue('ui.clientesVista', 'externos'),
+  clientesVista: loadValue('ui.clientesVista', 'red'),
   filtroCalendario: loadValue('ui.filtroCalendario', 'todas'),
   calVista: loadValue('ui.calVista', 'mes'),
   claseInfo: null,
@@ -229,7 +230,7 @@ async function cargarDatos() {
   ]);
   state.ideas = aplicarOpcionalesLocales('ideas', (ideasRes.data || []).map(fromDbIdea));
   state.snaps = snapsRes.data || [];
-  state.clientes = clientesRes.data || [];
+  state.clientes = aplicarOpcionalesLocales('clientes', clientesRes.data || []);
   state.cuentasCobro = cuentasRes.data || [];
   state.movimientosFinanciamiento = movimientosRes.data || [];
   state.deudas = deudasRes.data || [];
@@ -551,6 +552,24 @@ export function aplicarOpcionalesLocales(tabla, filas) {
   const mapa = loadValue(OPCIONALES_LOCALES_KEY, {})[tabla];
   if (!mapa) return filas;
   return filas.map(f => mapa[f.id] ? { ...mapa[f.id], ...f } : f);
+}
+
+// Igual que insertResiliente, pero para actualizar una fila existente: si la columna que se
+// quiere escribir no existe en esa base, el update falla y se pierde el cambio. Se reintenta
+// sin ella y el valor queda guardado en el navegador, para no perderlo.
+function updateResiliente(tabla, id, patch, opcionales) {
+  supabase.from(tabla).update(patch).eq('id', id).then(({ error }) => {
+    if (!error) { marcarGuardado(true); return; }
+    const minima = { ...patch };
+    const caidos = {};
+    for (const campo of opcionales) {
+      if (campo in minima) { caidos[campo] = minima[campo]; delete minima[campo]; }
+    }
+    if (!Object.keys(caidos).length) { marcarGuardado(false, error); return; }
+    recordarOpcionalesLocal(tabla, id, caidos);
+    if (!Object.keys(minima).length) { marcarGuardado(true); return; }
+    supabase.from(tabla).update(minima).eq('id', id).then(({ error: error2 }) => marcarGuardado(!error2, error2));
+  });
 }
 
 function insertResiliente(tabla, fila, opcionales) {
@@ -972,7 +991,9 @@ export const actions = {
   updCliente: (id, patch) => {
     const cliente = state.clientes.find(c => c.id === id);
     state.clientes = state.clientes.map(c => c.id === id ? { ...c, ...patch } : c);
-    supabase.from('clientes').update(patch).eq('id', id).then(({ error }) => marcarGuardado(!error, error));
+    // `influencia` es una columna nueva (ver su migración): si la base no la tiene, el update
+    // fallaría entero y se perdería también lo demás del patch.
+    updateResiliente('clientes', id, patch, ['influencia']);
 
     // Si cambias estado a "ya_pagos" (Ya pagó), marca como pagadas todas las cuentas de cobro
     // de este cliente que sigan pendientes (cada una registra su propio ingreso — ver
@@ -991,6 +1012,9 @@ export const actions = {
     setState({ clienteSelId: state.clienteSelId === id ? null : state.clienteSelId });
     supabase.from('clientes').delete().eq('id', id).then(({ error }) => marcarGuardado(!error, error));
   },
+  cartaAbrir: id => setState({ cartaClienteId: id }),
+  cartaCerrar: () => setState({ cartaClienteId: null }),
+
   abrirCliente: id => setState({ clienteSelId: id }),
   // Desde una entrada de "Grabación" en el Calendario (views/calendario.js): fuerza la
   // sub-vista de Clientes a 'externos' (el tablero, no "Tus marcas") y abre ese cliente
