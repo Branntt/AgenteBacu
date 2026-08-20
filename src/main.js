@@ -27,7 +27,8 @@ import { renderPersonaje3DCreador, sincronizarPersonaje3D } from './components/p
 import { renderRevisionIdeasModal } from './components/revisionIdeasModal.js';
 import { renderNotificacionBacu } from './components/notificacionBacu.js';
 import { renderClaseInfo } from './components/claseInfo.js';
-import { renderDatalistClientes } from './components/datalistClientes.js';
+import { renderDatalistClientes, renderDatalistParaQuien } from './components/datalistClientes.js';
+import { renderNuevaIdea } from './components/nuevaIdea.js';
 
 /* ---------- Audio: sonidos sintetizados para hábitos ---------- */
 
@@ -293,7 +294,9 @@ ${escapeHtml(String(e && e.stack ? e.stack : e))}</div>
       ${renderRevisionIdeasModal(state)}
       ${renderNotificacionBacu(state)}
       ${renderClaseInfo(state)}
+      ${renderNuevaIdea(state)}
       ${renderDatalistClientes(state)}
+      ${renderDatalistParaQuien(state)}
     </div>
   `;
   restaurarFoco(foco);
@@ -433,7 +436,16 @@ root.addEventListener('click', e => {
     case 'nav-go': actions.setView(view, vista); actions.menuCerrar(); break;
     case 'menu-toggle': actions.menuToggle(); break;
     case 'menu-cerrar': actions.menuCerrar(); break;
-    case 'nueva-idea': actions.nuevaIdea(); break;
+    case 'nueva-idea': actions.nuevaIdeaAbrir(); break;
+    case 'nueva-idea-cerrar': actions.nuevaIdeaCerrar(); break;
+    case 'nueva-idea-guardar': {
+      const val = id2 => document.querySelector('#' + id2)?.value || '';
+      actions.nuevaIdeaGuardar({
+        titulo: val('idea-titulo'), paraQuien: val('idea-para-quien'), consiste: val('idea-consiste'),
+        comoGrabar: val('idea-como-grabar'), queEspero: val('idea-que-espero')
+      });
+      break;
+    }
     case 'marca-abrir': actions.abrirMarca(marca); break;
     case 'idea-abrir': actions.abrirIdea(id); break;
     case 'idea-eliminar': actions.eliminarIdea(id); break;
@@ -776,6 +788,10 @@ root.addEventListener('change', e => {
       case 'idea-estado': actions.updIdea(id, { estado: value }); break;
       case 'idea-metrica': actions.setMetrica(id, campo, value); break;
       case 'idea-aprendizaje': actions.updIdea(id, { aprendizaje: value }); break;
+      case 'idea-cliente': actions.updIdea(id, { cliente: value }); break;
+      case 'idea-consiste': actions.updIdea(id, { consiste: value }); break;
+      case 'idea-como-grabar': actions.updIdea(id, { como_grabar: value }); break;
+      case 'idea-que-espero': actions.updIdea(id, { que_espero: value }); break;
       case 'cliente-nombre': actions.updCliente(id, { nombre: value }); break;
       case 'cliente-proyecto': actions.updCliente(id, { proyecto: value }); break;
       case 'cliente-precio': actions.updCliente(id, { precio: parseN(value) }); break;
