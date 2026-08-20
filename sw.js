@@ -1,8 +1,14 @@
-// Subir este número purga la caché anterior (ver el handler de activate). Hay que hacerlo
-// cada vez que se borra o renombra un archivo que la app importa: si queda cacheado un
-// main.js viejo que importa un módulo que ya no existe, la app no arranca. Pasó al fusionar
-// las dos pestañas de finanzas, que eliminó views/finanzas.js.
-const CACHE_NAME = 'agentebacu-shell-v3';
+// SUBIR ESTE NÚMERO EN CADA PUBLICACIÓN.
+//
+// No es solo por la caché: cambiar este archivo es lo ÚNICO que le avisa al navegador que
+// hay una versión nueva. Si sw.js no cambia, el navegador no reinstala nada, no dispara
+// controllerchange, y un teléfono con la app en la pantalla de inicio se queda con la
+// versión vieja para siempre — pasaron 17 publicaciones así, y el usuario no vio ninguna.
+//
+// Además purga la caché anterior (ver el handler de activate), que hace falta cada vez que
+// se borra o renombra un archivo que la app importa: un main.js viejo cacheado que importe
+// un módulo que ya no existe no arranca. Pasó al fusionar las dos pestañas de finanzas.
+const CACHE_NAME = 'agentebacu-shell-v4';
 const APP_SHELL = [
   './',
   './index.html',

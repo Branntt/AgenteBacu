@@ -1,5 +1,6 @@
 import { TEMA_OPTIONS } from '../data/constants.js';
 import { escapeHtml } from '../lib/format.js';
+import { APP_VERSION } from '../lib/version.js';
 
 function fmtFechaHora(iso) {
   if (!iso) return null;
@@ -77,6 +78,15 @@ export function renderConfiguraciones(state) {
       </div>
 
       ${seccionGoogleCalendar(state)}
+
+      <div class="finanzas-seccion" style="max-width:420px;">
+        <div class="seccion-titulo">Versión</div>
+        <div style="opacity:0.7;font-size:13px;margin-bottom:10px;">
+          Esta app está corriendo <b id="app-version-visible">${escapeHtml(APP_VERSION)}</b>.
+          Si acá no ves la última, cerrá la app del todo y volvé a abrirla.
+        </div>
+        <button class="btn-ghost" data-act="buscar-actualizacion">Buscar actualización</button>
+      </div>
 
       ${state.session ? `
         <div class="finanzas-seccion" style="max-width:420px;">
