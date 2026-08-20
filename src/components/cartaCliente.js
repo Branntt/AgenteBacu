@@ -1,6 +1,7 @@
 import { escapeHtml } from '../lib/format.js';
 import { hoyStr } from '../lib/idea.js';
 import { calcularRedClientes, rangoDeCliente, BENEFICIOS } from '../lib/clienteStats.js';
+import { renderCuentasDeCliente } from './cuentasDeCliente.js';
 
 function fmtMoney(n) {
   const v = Number(n) || 0;
@@ -147,8 +148,9 @@ export function renderCartaCompleta(item, state) {
            lugar sin salida: había que volver a "Por estado" y buscar al cliente de nuevo. -->
       <div class="carta-acciones">
         <button class="btn-ghost" data-act="cliente-abrir" data-id="${escapeHtml(cliente.id)}">✏️ Editar datos</button>
-        <button class="btn-primary" data-act="cc-abrir" data-id="${escapeHtml(cliente.id)}">🧾 Cuenta de cobro</button>
       </div>
+
+      ${renderCuentasDeCliente(state, cliente)}
 
       <div class="section-title">🎚️ En qué te beneficia</div>
       <div class="vista-sub">Estas seis son tu criterio, no un cálculo: un cliente que paga poco pero te abre puertas no vale lo mismo que uno que paga bien y te desgasta. El global es su promedio.</div>

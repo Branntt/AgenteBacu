@@ -1,6 +1,7 @@
 import { MARCAS } from '../data/constants.js';
 import { escapeHtml } from '../lib/format.js';
 import { ATTRS_AUTOCOMPLETAR, clientePorNombre } from './datalistClientes.js';
+import { renderCuentasDeCliente } from './cuentasDeCliente.js';
 
 export function renderRodajeRapido(state) {
   const D = state.rodajeDraft;
@@ -8,14 +9,10 @@ export function renderRodajeRapido(state) {
 
   const marcaOpts = Object.keys(MARCAS).map(k => `<option value="${k}" ${D.marca === k ? 'selected' : ''}>${MARCAS[k].nombre}</option>`).join('');
 
-  // Si el cliente escrito ya existe, se muestra lo suyo igual que en su ficha: cuánto se le
-  // ha facturado, y el botón para hacerle una cuenta de cobro sin salir de acá. Antes había
-  // que agendar el rodaje, buscarlo en Clientes y abrirlo, para llegar al mismo sitio.
+  // Si el cliente escrito ya existe, se muestra exactamente el mismo bloque de cuentas de
+  // cobro que en su ficha: lo facturado, las anteriores descargables, y el botón para
+  // hacerle una nueva. Los dos menús donde aparece un cliente se ven y funcionan igual.
   const clienteExistente = clientePorNombre(state.clientes, D.empresa);
-  const cuentasCliente = clienteExistente
-    ? (state.cuentasCobro || []).filter(cc => cc.cliente_id === clienteExistente.id)
-    : [];
-  const totalCliente = cuentasCliente.reduce((sum, cc) => sum + (Number(cc.total) || 0), 0);
 
   return `
     <div class="drawer-overlay">
@@ -58,11 +55,7 @@ export function renderRodajeRapido(state) {
           </div>
         </div>
 
-        ${cuentasCliente.length ? `<div class="panel-footnote" style="margin:-8px 0 16px;">Facturado en total: $${totalCliente.toLocaleString('es-CO')} · ${cuentasCliente.length} cuenta${cuentasCliente.length === 1 ? '' : 's'} de cobro</div>` : ''}
-
-        ${clienteExistente ? `
-          <button class="btn-ghost" data-act="cc-abrir" data-id="${escapeHtml(clienteExistente.id)}" style="width:100%;margin-bottom:14px;">🧾 Cuenta de cobro de ${escapeHtml(clienteExistente.nombre)}</button>
-        ` : ''}
+        ${clienteExistente ? renderCuentasDeCliente(state, clienteExistente) : ''}
 
         <div class="panel-footnote" style="margin-top:0;">Se crea como "Cubrimiento" en Desarrollo — sin guion, solo notas de qué no perderse. Si pones cliente y precio, se agrega a Clientes (sumando si ya existe) y se genera la cuenta de cobro en PDF.</div>
 

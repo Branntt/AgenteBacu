@@ -37,9 +37,16 @@ await page.waitForTimeout(700);
 await page.click('.carta-mini');
 await page.waitForTimeout(600);
 ok('la carta ofrece editar los datos', !!(await page.$('[data-act="cliente-abrir"]')));
-ok('la carta ofrece hacer cuenta de cobro', !!(await page.$('.carta-acciones [data-act="cc-abrir"]')));
+ok('la carta muestra las cuentas de cobro del cliente', !!(await page.$('.cuentas-cliente')));
+const enCarta = await page.evaluate(() => {
+  const b = document.querySelector('.cuentas-cliente');
+  return { total: b.textContent.includes('$450.000'), anterior: b.textContent.includes('PDF'), nueva: !!b.querySelector('[data-act="cc-abrir"]') };
+});
+ok('con el total facturado', enCarta.total);
+ok('y las anteriores descargables', enCarta.anterior);
+ok('y el botón de hacer una nueva', enCarta.nueva);
 
-await page.click('.carta-acciones [data-act="cc-abrir"]');
+await page.click('.cuentas-cliente [data-act="cc-abrir"]');
 await page.waitForTimeout(600);
 ok('desde la carta se abre la cuenta de cobro', await hayCuentaCobro());
 const conDatos = await page.evaluate(() => document.querySelector('[data-campo="clienteNombre"]')?.value);
@@ -51,7 +58,12 @@ await page.waitForTimeout(400);
 await page.click('[data-act="cliente-abrir"]');
 await page.waitForTimeout(600);
 ok('desde la carta se abre la ficha', !!(await page.$('[data-change="cliente-nombre"]')));
-ok('la ficha muestra lo facturado', (await page.evaluate(() => document.body.textContent)).includes('Facturado en total'));
+const enFicha = await page.evaluate(() => {
+  const b = document.querySelector('.drawer .cuentas-cliente');
+  return { hay: !!b, total: b?.textContent.includes('$450.000'), pdf: !!b?.querySelector('[data-act="cc-historial-descargar"]') };
+});
+ok('la ficha muestra el mismo bloque de cuentas', enFicha.hay);
+ok('con el total y la cuenta anterior descargable', enFicha.total && enFicha.pdf);
 await page.keyboard.press('Escape');
 await page.waitForTimeout(400);
 
@@ -60,21 +72,23 @@ await page.evaluate(() => { window.location.hash = '#calendario'; });
 await page.waitForTimeout(500);
 await page.click('[data-act="rodaje-rapido-abrir"]');
 await page.waitForTimeout(500);
-ok('sin cliente escrito no ofrece cuenta de cobro', !(await page.$('.rodaje-rapido [data-act="cc-abrir"]')));
+ok('sin cliente escrito no muestra cuentas', !(await page.$('.rodaje-rapido .cuentas-cliente')));
 
 await page.fill('[data-campo="empresa"]', 'PRIMAL BRAND SAS');
 await page.dispatchEvent('[data-campo="empresa"]', 'change');
 await page.waitForTimeout(600);
-const r = await page.evaluate(() => ({
-  boton: !!document.querySelector('.rodaje-rapido [data-act="cc-abrir"]'),
-  facturado: (document.querySelector('.rodaje-rapido')?.textContent || '').includes('Facturado en total'),
-  documento: document.querySelector('[data-campo="documento"]')?.value
-}));
-ok('al reconocer al cliente ofrece su cuenta de cobro', r.boton);
-ok('y muestra lo que le tiene facturado', r.facturado);
+const r = await page.evaluate(() => {
+  const b = document.querySelector('.rodaje-rapido .cuentas-cliente');
+  return { boton: !!b?.querySelector('[data-act="cc-abrir"]'), facturado: !!b?.textContent.includes('$450.000'),
+           pdf: !!b?.querySelector('[data-act="cc-historial-descargar"]'),
+           documento: document.querySelector('[data-campo="documento"]')?.value };
+});
+ok('al reconocer al cliente muestra el mismo bloque', r.boton);
+ok('con lo que le tiene facturado', r.facturado);
+ok('y sus cuentas anteriores descargables', r.pdf);
 ok('y le pone su NIT solo', r.documento === '902.037.119-1', `(quedó "${r.documento}")`);
 
-await page.click('.rodaje-rapido [data-act="cc-abrir"]');
+await page.click('.rodaje-rapido .cuentas-cliente [data-act="cc-abrir"]');
 await page.waitForTimeout(600);
 ok('desde el rodaje se abre la cuenta de cobro', await hayCuentaCobro());
 const visible = await page.evaluate(() => {
