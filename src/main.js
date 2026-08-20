@@ -811,7 +811,7 @@ root.addEventListener('change', e => {
       case 'idea-consiste': actions.updIdea(id, { consiste: value }); break;
       case 'idea-como-grabar': actions.updIdea(id, { como_grabar: value }); break;
       case 'idea-que-espero': actions.updIdea(id, { que_espero: value }); break;
-      case 'cliente-influencia': actions.updCliente(id, { influencia: parseN(value) }); break;
+      case 'cliente-beneficio': actions.clienteBeneficio(id, campo, value); break;
       case 'cliente-nombre': actions.updCliente(id, { nombre: value }); break;
       case 'cliente-proyecto': actions.updCliente(id, { proyecto: value }); break;
       case 'cliente-precio': actions.updCliente(id, { precio: parseN(value) }); break;

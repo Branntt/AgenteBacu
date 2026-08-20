@@ -68,7 +68,8 @@ const c = await page.evaluate(() => {
     historial: document.querySelectorAll('.carta-hist-fila').length,
     cobro: t.includes('Reel de producto') && t.includes('$1.000.000'),
     animacion: hex ? getComputedStyle(hex).animationName : null,
-    slider: !!document.querySelector('[data-change="cliente-influencia"]')
+    sliders: document.querySelectorAll('[data-change="cliente-beneficio"]').length,
+    nombresBeneficios: [...document.querySelectorAll('.carta-slider-top label')].map(l => l.textContent.trim())
   };
 });
 ok('la carta muestra el OVR', /^\d+$/.test(c.ovr || ''), `(dio "${c.ovr}")`);
@@ -80,15 +81,22 @@ ok('trae la plantilla de 7 pasos', c.plan === 7, `(trae ${c.plan})`);
 ok('marca en qué paso va según su estado', c.pasoActual === 'Edición', `(marca "${c.pasoActual}")`);
 ok('muestra el historial de trabajos', c.historial === 2, `(muestra ${c.historial})`);
 ok('muestra cómo le cobró cada uno', c.cobro);
-ok('deja ajustar la influencia', c.slider);
+ok('hay un deslizador por cada uno de los 6 beneficios', c.sliders === 6, `(hay ${c.sliders})`);
+ok('los 6 se llaman por su nombre', c.nombresBeneficios.length === 6 && c.nombresBeneficios.some(n => n.includes('Puertas')), `(${c.nombresBeneficios.join(' | ')})`);
 
-await page.evaluate(() => { const s=document.querySelector('[data-change="cliente-influencia"]'); s.value=95; s.dispatchEvent(new Event('change',{bubbles:true})); });
-await page.waitForTimeout(600);
-const infl = await page.evaluate(() => {
-  const b = [...document.querySelectorAll('.carta-barra')].find(x => x.textContent.includes('INF'));
-  return b?.querySelector('.carta-barra-num')?.textContent.trim();
+// Mover un deslizador tiene que cambiar su barra y recalcular el global
+const antesGlobal = +(await page.evaluate(() => document.querySelector('.carta-ovr-num').textContent));
+await page.evaluate(() => {
+  const s = document.querySelector('[data-change="cliente-beneficio"][data-campo="puertas"]');
+  s.value = 99; s.dispatchEvent(new Event('change', { bubbles: true }));
 });
-ok('subir la influencia cambia la carta', infl === '95', `(quedó ${infl})`);
+await page.waitForTimeout(600);
+const tras = await page.evaluate(() => ({
+  barra: [...document.querySelectorAll('.carta-barra')].find(x => x.textContent.includes('PUE'))?.querySelector('.carta-barra-num')?.textContent.trim(),
+  global: +document.querySelector('.carta-ovr-num').textContent
+}));
+ok('mover un deslizador cambia su barra', tras.barra === '99', `(quedó ${tras.barra})`);
+ok('y recalcula el global', tras.global > antesGlobal, `(${antesGlobal} -> ${tras.global})`);
 
 await page.click('[data-act="carta-cerrar"]');
 await page.waitForTimeout(500);
