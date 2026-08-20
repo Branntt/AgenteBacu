@@ -2680,3 +2680,21 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
   .carta-full, .carta-hex-forma, .carta-barra-fill { animation: none; }
   .carta-mini { transition: none; }
 }
+
+/* ---------- Cuentas de cobro de un cliente ----------
+   Mismo bloque en su ficha, en Rodaje rápido y en su carta: los tres menús donde aparece un
+   cliente se ven igual y desde los tres se puede cobrar y bajar las anteriores. */
+.cuentas-cliente { background: var(--panel2); border: 1px solid var(--line); border-left: 3px solid var(--verde); border-radius: 10px; padding: 14px; margin-bottom: 18px; }
+.cuentas-cliente-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.cuentas-cliente-total { font-size: 15px; font-weight: 600; margin-top: 3px; }
+.cuentas-cliente-debe { color: var(--rojo); font-weight: 400; font-size: 12px; }
+.cuentas-cliente-lista { margin-top: 12px; }
+.cuentas-cliente-fila { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid var(--line); }
+.cuentas-cliente-datos { flex: 1; min-width: 0; }
+.cuentas-cliente-num { font-family: 'IBM Plex Mono', monospace; font-size: 12px; }
+.cuentas-cliente-fecha { font-family: 'IBM Plex Mono', monospace; font-size: 10px; opacity: .5; margin-left: 8px; }
+.cuentas-cliente-monto { font-family: 'IBM Plex Mono', monospace; font-size: 13px; white-space: nowrap; }
+.cuentas-cliente-monto.pagada { color: var(--verde); }
+.cuentas-cliente-monto.debe { color: var(--rojo); }
+.cuentas-cliente-pdf { font-size: 11px; padding: 4px 10px; flex: none; }
+.cuentas-cliente-vacio { font-size: 12px; opacity: .5; margin-top: 10px; }
