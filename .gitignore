@@ -1,1 +1,5 @@
-node_modules/
+# Sin barra final: con ella solo se ignoran carpetas, y acá node_modules suele ser un
+# enlace simbólico a otra ruta para poder correr las pruebas de navegador. Ese enlace se
+# coló en un commit y rompió tres publicaciones seguidas de GitHub Pages, que no puede
+# seguir un enlace a una ruta que en su servidor no existe.
+node_modules
