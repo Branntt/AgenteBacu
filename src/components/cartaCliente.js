@@ -142,6 +142,14 @@ export function renderCartaCompleta(item, state) {
         </div>
       </div>
 
+      <!-- La carta es para mirar; para tocar los datos del cliente y cobrarle está su ficha,
+           que es la misma de siempre. Sin estos dos botones la Red quedaba como un tercer
+           lugar sin salida: había que volver a "Por estado" y buscar al cliente de nuevo. -->
+      <div class="carta-acciones">
+        <button class="btn-ghost" data-act="cliente-abrir" data-id="${escapeHtml(cliente.id)}">✏️ Editar datos</button>
+        <button class="btn-primary" data-act="cc-abrir" data-id="${escapeHtml(cliente.id)}">🧾 Cuenta de cobro</button>
+      </div>
+
       <div class="section-title">🎚️ En qué te beneficia</div>
       <div class="vista-sub">Estas seis son tu criterio, no un cálculo: un cliente que paga poco pero te abre puertas no vale lo mismo que uno que paga bien y te desgasta. El global es su promedio.</div>
       <div class="carta-sliders">

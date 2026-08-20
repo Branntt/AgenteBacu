@@ -2638,6 +2638,9 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
 .carta-barra-fill { display: block; height: 100%; background: var(--carta-color); border-radius: 3px; animation: crece-barra .5s ease both; }
 .carta-barra-num { width: 20px; text-align: right; flex: none; }
 
+.carta-acciones { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 22px; }
+.carta-acciones button { flex: 1; min-width: 150px; }
+
 .carta-sliders { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; margin-bottom: 22px; }
 .carta-slider { background: var(--panel2); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; }
 .carta-slider-top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; font-size: 13px; }
