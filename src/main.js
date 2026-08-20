@@ -459,6 +459,8 @@ root.addEventListener('click', e => {
     }
     case 'clase-info-cerrar': actions.claseInfoCerrar(); break;
     case 'cliente-nuevo': actions.nuevoCliente(); break;
+    case 'carta-abrir': actions.cartaAbrir(id); break;
+    case 'carta-cerrar': actions.cartaCerrar(); break;
     case 'cliente-abrir': actions.abrirCliente(id); break;
     case 'cliente-abrir-calendario': actions.abrirClienteDesdeCalendario(id); break;
     case 'cliente-detalle-cerrar': actions.cerrarClienteDetalle(); break;
@@ -792,6 +794,7 @@ root.addEventListener('change', e => {
       case 'idea-consiste': actions.updIdea(id, { consiste: value }); break;
       case 'idea-como-grabar': actions.updIdea(id, { como_grabar: value }); break;
       case 'idea-que-espero': actions.updIdea(id, { que_espero: value }); break;
+      case 'cliente-influencia': actions.updCliente(id, { influencia: parseN(value) }); break;
       case 'cliente-nombre': actions.updCliente(id, { nombre: value }); break;
       case 'cliente-proyecto': actions.updCliente(id, { proyecto: value }); break;
       case 'cliente-precio': actions.updCliente(id, { precio: parseN(value) }); break;

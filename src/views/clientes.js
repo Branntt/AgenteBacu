@@ -1,12 +1,16 @@
 import { escapeHtml } from '../lib/format.js';
 import { renderGuiones } from './guiones.js';
+import { renderRedClientes } from '../components/cartaCliente.js';
 
 // Fusión (2026-07-29): Contenido vivía en su propia pestaña de nav; ahora es la sub-vista
 // "Tus marcas" de acá, porque Brant/Bacu/Novena son las marcas propias del usuario — no
 // clientes externos, pero conceptualmente su "cliente" más importante. Ver clientesVista
 // en store.js. La sub-vista "externos" de abajo es exactamente lo que antes era toda esta
 // pestaña (kanban de clientes que pagan) — sin cambios de datos ni de comportamiento.
-const SUBVISTAS = [['externos', '👥 Clientes'], ['marcas', '🎬 Tus marcas']];
+// 'red' va primero: es la vista que responde "¿quiénes son mis clientes y cómo me va con
+// cada uno?", que es para lo que el usuario quiere esta pestaña. 'externos' es el tablero
+// por estados de siempre, que sigue estando para mover a alguien de columna.
+const SUBVISTAS = [['red', '🕸️ Red'], ['externos', '📋 Por estado'], ['marcas', '🎬 Tus marcas']];
 
 // Gama de 8 colores distintos, de frío a caliente según avanza el cliente; descartado = gris
 const ESTADO_COLORS = {
@@ -101,13 +105,13 @@ function renderClientesExternos(state) {
 }
 
 export function renderClientes(state) {
-  const vista = state.clientesVista || 'externos';
+  const vista = state.clientesVista || 'red';
   const tabsHtml = SUBVISTAS.map(([v, label]) => `
     <button class="inv-tab ${vista === v ? 'active' : ''}" data-act="nav-go" data-view="clientes" data-vista="${v}">${label}</button>
   `).join('');
 
   return `
     <div class="inv-tabs" style="margin-bottom:20px;">${tabsHtml}</div>
-    ${vista === 'marcas' ? renderGuiones(state) : renderClientesExternos(state)}
+    ${vista === 'marcas' ? renderGuiones(state) : vista === 'externos' ? renderClientesExternos(state) : renderRedClientes(state)}
   `;
 }

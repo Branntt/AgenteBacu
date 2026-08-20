@@ -2591,3 +2591,84 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
   background: var(--panel);
   color: var(--verde);
 }
+
+/* ---------- Red de clientes: carta tipo FIFA ----------
+   El hexágono y el global se dibujan al entrar (aparece-carta): es la "animación" pedida,
+   y además hace que el número se lea como un resultado y no como un dato más. Se respeta
+   prefers-reduced-motion más abajo. */
+.carta-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; }
+
+.carta-mini {
+  display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; cursor: pointer;
+  background: var(--panel2); border: 1px solid var(--line); border-left: 3px solid var(--carta-color);
+  border-radius: 10px; padding: 12px 14px; color: inherit; min-width: 0;
+  transition: transform .12s ease, border-color .12s ease;
+}
+.carta-mini:hover { transform: translateY(-2px); border-color: var(--carta-color); }
+.carta-mini-ovr { display: flex; flex-direction: column; align-items: center; flex: none; }
+.carta-mini-num { font-family: 'IBM Plex Mono', monospace; font-size: 26px; font-weight: 700; line-height: 1; color: var(--carta-color); }
+.carta-mini-rango { font-size: 12px; }
+.carta-mini-cuerpo { min-width: 0; flex: 1; }
+.carta-mini-nombre { font-size: 14px; font-weight: 500; overflow-wrap: break-word; }
+.carta-mini-meta { font-family: 'IBM Plex Mono', monospace; font-size: 10px; opacity: .6; margin-top: 2px; }
+.carta-mini-alerta { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--rojo); white-space: nowrap; flex: none; }
+
+.carta-full { animation: aparece-carta .35s ease both; }
+.carta-volver { margin-bottom: 14px; }
+.carta-header { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 18px; }
+.carta-ovr {
+  flex: none; text-align: center; background: var(--panel2); border: 2px solid var(--carta-color);
+  border-radius: 12px; padding: 10px 16px; min-width: 92px;
+}
+.carta-ovr-num { font-family: 'IBM Plex Mono', monospace; font-size: 40px; font-weight: 700; line-height: 1; color: var(--carta-color); }
+.carta-ovr-label { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; opacity: .8; margin-top: 4px; }
+.carta-identidad { min-width: 0; flex: 1; }
+.carta-nombre { font-size: 24px; font-weight: 600; overflow-wrap: break-word; }
+.carta-doc { font-family: 'IBM Plex Mono', monospace; font-size: 11px; opacity: .55; margin-top: 2px; }
+.carta-resumen { display: flex; flex-wrap: wrap; gap: 10px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; opacity: .75; margin-top: 8px; }
+.carta-debe { color: var(--rojo); opacity: 1; }
+
+.carta-stats { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; background: var(--panel2); border: 1px solid var(--line); border-radius: 10px; padding: 14px; margin-bottom: 16px; }
+.carta-hex { width: 220px; max-width: 100%; flex: none; }
+.carta-hex-forma { transform-origin: 110px 100px; animation: crece-hex .5s cubic-bezier(.34,1.3,.64,1) both; }
+.carta-barras { flex: 1; min-width: 190px; display: flex; flex-direction: column; gap: 7px; }
+.carta-barra { display: flex; align-items: center; gap: 8px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; }
+.carta-barra-label { width: 30px; opacity: .6; flex: none; }
+.carta-barra-track { flex: 1; height: 6px; background: var(--panel); border-radius: 3px; overflow: hidden; }
+.carta-barra-fill { display: block; height: 100%; background: var(--carta-color); border-radius: 3px; animation: crece-barra .5s ease both; }
+.carta-barra-num { width: 20px; text-align: right; flex: none; }
+
+.carta-influencia { background: var(--panel2); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; margin-bottom: 20px; }
+.carta-influencia input { width: 100%; accent-color: var(--carta-color); }
+
+.carta-pendientes { display: flex; flex-direction: column; }
+.carta-pendiente { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
+.carta-pendiente-icono { flex: none; }
+.carta-pendiente-texto { flex: 1; min-width: 0; overflow-wrap: break-word; }
+.carta-pendiente-detalle { font-family: 'IBM Plex Mono', monospace; font-size: 10px; opacity: .55; white-space: nowrap; }
+
+.carta-plan { display: flex; flex-direction: column; gap: 4px; }
+.carta-paso { border-left: 2px solid var(--line); padding: 8px 0 8px 14px; }
+.carta-paso-ahora { border-left-color: var(--carta-color); }
+.carta-paso-hecho { opacity: .5; border-left-color: var(--verde); }
+.carta-paso-falta { opacity: .75; }
+.carta-paso-head { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 500; }
+.carta-paso-aqui { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 1px; text-transform: uppercase; background: var(--carta-color); color: #111; border-radius: 10px; padding: 2px 8px; }
+.carta-paso-lista { margin: 6px 0 0; padding-left: 26px; font-size: 12px; opacity: .7; line-height: 1.6; }
+
+.carta-historial { display: flex; flex-direction: column; }
+.carta-hist-fila { display: flex; align-items: baseline; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
+.carta-hist-fecha { font-family: 'IBM Plex Mono', monospace; font-size: 10px; opacity: .55; flex: none; width: 62px; }
+.carta-hist-concepto { flex: 1; min-width: 0; overflow-wrap: break-word; }
+.carta-hist-monto { font-family: 'IBM Plex Mono', monospace; white-space: nowrap; }
+.carta-hist-monto.pagada { color: var(--verde); }
+.carta-hist-monto.debe { color: var(--rojo); }
+
+@keyframes aparece-carta { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes crece-hex { from { transform: scale(.2); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@keyframes crece-barra { from { width: 0 !important; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .carta-full, .carta-hex-forma, .carta-barra-fill { animation: none; }
+  .carta-mini { transition: none; }
+}
