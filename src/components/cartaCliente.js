@@ -1,6 +1,6 @@
 import { escapeHtml } from '../lib/format.js';
 import { hoyStr } from '../lib/idea.js';
-import { calcularRedClientes, rangoDeCliente } from '../lib/clienteStats.js';
+import { calcularRedClientes, rangoDeCliente, BENEFICIOS } from '../lib/clienteStats.js';
 
 function fmtMoney(n) {
   const v = Number(n) || 0;
@@ -13,15 +13,8 @@ function fmtFecha(f) {
   return `${d}/${m}/${a.slice(2)}`;
 }
 
-// Los seis lados del hexágono, en el orden en que se dibujan.
-const EJES = [
-  ['dinero', 'DIN', 'Lo que te ha pagado, comparado con tu mejor cliente'],
-  ['volumen', 'VOL', 'Cuántos trabajos le has hecho'],
-  ['ticket', 'TKT', 'Cuánto vale en promedio cada trabajo suyo'],
-  ['actividad', 'ACT', 'Qué tan reciente fue la última vez'],
-  ['puntualidad', 'PAG', 'Qué proporción de lo facturado ya te pagó'],
-  ['influencia', 'INF', 'Cuánto te abre puertas — este lo pones tú']
-];
+// Los seis lados del hexágono son los seis beneficios (ver BENEFICIOS en lib/clienteStats).
+const EJES = BENEFICIOS.map(([clave, corto, , , ayuda]) => [clave, corto, ayuda]);
 
 // Hexágono de atributos, dibujado a mano en SVG: sin librerías, y así se anima con CSS.
 function hexagonoHtml(attrs, color) {
@@ -139,8 +132,8 @@ export function renderCartaCompleta(item, state) {
       <div class="carta-stats">
         ${hexagonoHtml(attrs, rango.color)}
         <div class="carta-barras">
-          ${EJES.map(([clave, corto, ayuda]) => `
-            <div class="carta-barra" title="${escapeHtml(ayuda)}">
+          ${EJES.map(([clave, corto]) => `
+            <div class="carta-barra">
               <span class="carta-barra-label">${corto}</span>
               <span class="carta-barra-track"><span class="carta-barra-fill" style="width:${attrs[clave]}%;"></span></span>
               <span class="carta-barra-num">${attrs[clave]}</span>
@@ -149,10 +142,21 @@ export function renderCartaCompleta(item, state) {
         </div>
       </div>
 
-      <div class="carta-influencia">
-        <label class="field-label" for="infl-${escapeHtml(cliente.id)}">Influencia — cuánto te abre puertas (1 a 99)</label>
-        <input id="infl-${escapeHtml(cliente.id)}" type="range" min="1" max="99" value="${attrs.influencia}"
-               data-change="cliente-influencia" data-id="${escapeHtml(cliente.id)}">
+      <div class="section-title">🎚️ En qué te beneficia</div>
+      <div class="vista-sub">Estas seis son tu criterio, no un cálculo: un cliente que paga poco pero te abre puertas no vale lo mismo que uno que paga bien y te desgasta. El global es su promedio.</div>
+      <div class="carta-sliders">
+        ${BENEFICIOS.map(([clave, corto, emoji, nombre, ayuda]) => `
+          <div class="carta-slider">
+            <div class="carta-slider-top">
+              <label for="ben-${escapeHtml(clave)}-${escapeHtml(cliente.id)}">${emoji} ${escapeHtml(nombre)}</label>
+              <span class="carta-slider-num">${attrs[clave]}</span>
+            </div>
+            <input id="ben-${escapeHtml(clave)}-${escapeHtml(cliente.id)}" type="range" min="1" max="99"
+                   value="${attrs[clave]}" data-change="cliente-beneficio"
+                   data-id="${escapeHtml(cliente.id)}" data-campo="${escapeHtml(clave)}">
+            <div class="carta-slider-ayuda">${escapeHtml(ayuda)}</div>
+          </div>
+        `).join('')}
       </div>
 
       <div class="section-title">📌 Lo que tenés pendiente con ${escapeHtml(cliente.nombre || 'este cliente')}</div>

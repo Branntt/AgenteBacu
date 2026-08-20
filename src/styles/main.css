@@ -2638,8 +2638,13 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
 .carta-barra-fill { display: block; height: 100%; background: var(--carta-color); border-radius: 3px; animation: crece-barra .5s ease both; }
 .carta-barra-num { width: 20px; text-align: right; flex: none; }
 
-.carta-influencia { background: var(--panel2); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; margin-bottom: 20px; }
-.carta-influencia input { width: 100%; accent-color: var(--carta-color); }
+.carta-sliders { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; margin-bottom: 22px; }
+.carta-slider { background: var(--panel2); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; }
+.carta-slider-top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; font-size: 13px; }
+.carta-slider-num { font-family: 'IBM Plex Mono', monospace; font-weight: 700; color: var(--carta-color); }
+/* Alto cómodo para el pulgar: estos seis se ajustan casi siempre desde el celular. */
+.carta-slider input { width: 100%; margin: 8px 0 4px; accent-color: var(--carta-color); height: 24px; }
+.carta-slider-ayuda { font-size: 11px; opacity: .55; line-height: 1.4; }
 
 .carta-pendientes { display: flex; flex-direction: column; }
 .carta-pendiente { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 13px; }

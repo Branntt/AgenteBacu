@@ -1,27 +1,13 @@
 import { hoyStr } from './idea.js';
 
-// Estadísticas de un cliente, al estilo de una carta de FIFA: seis atributos de 1 a 99 y un
-// global. Todo sale de datos reales que ya están en la app —cuentas de cobro, ideas,
-// fechas— salvo Influencia, que no se puede deducir de ninguna tabla y la pone el usuario.
+// La carta de un cliente, al estilo de FIFA: seis atributos de 1 a 99 y un global.
 //
-// Los atributos son RELATIVOS a tu propia cartera: el que más te ha pagado marca el 99 y el
-// resto se mide contra él. Un número absoluto no diría nada (¿500.000 es mucho?); comparado
-// con tus otros clientes, sí.
+// Los seis los pone el usuario (ver BENEFICIOS): son formas en que ese cliente lo beneficia,
+// y eso es una opinión, no un dato. Lo que sí se calcula de las tablas —cuánto te ha pagado,
+// cuántos trabajos, qué falta por cobrar— se muestra aparte como hechos (ver datosDeCliente).
 
 const TOPE = 99;
 const PISO = 1;
-
-function escala(valor, maximo) {
-  if (!maximo || maximo <= 0) return PISO;
-  return Math.max(PISO, Math.min(TOPE, Math.round((valor / maximo) * TOPE)));
-}
-
-function diasEntre(desde, hasta) {
-  if (!desde || !hasta) return null;
-  const [a1, m1, d1] = desde.split('-').map(Number);
-  const [a2, m2, d2] = hasta.split('-').map(Number);
-  return Math.round((new Date(a2, m2 - 1, d2) - new Date(a1, m1 - 1, d1)) / 86400000);
-}
 
 // Datos crudos de un cliente: lo que facturó, cuánto de eso cobró, cuántos trabajos, cuándo
 // fue el último, y qué ideas hay anotadas a su nombre.
@@ -51,38 +37,40 @@ export function datosDeCliente(cliente, cuentasCobro, ideas) {
   };
 }
 
-// Los seis atributos + el global. `maximos` viene de toda la cartera, para que la escala sea
-// comparativa (ver calcularRedClientes).
-export function atributosDeCliente(datos, maximos, hoy = hoyStr()) {
-  const influenciaManual = Number(datos.cliente.influencia);
+// Las seis formas en que un cliente te beneficia. No son datos calculados: es un juicio que
+// solo puede hacer quien trabaja con él. Un cliente que paga poco pero te abre puertas, o uno
+// que paga bien pero te desgasta, valen distinto, y eso no está en ninguna tabla.
+//
+// Antes cuatro de los seis se calculaban de las facturas, y tenía un problema de fondo: un
+// cliente recién agregado salía con todo en 1 —el mínimo— porque todavía no le habías
+// facturado nada. La carta lo mostraba como el peor cliente del mundo cuando en realidad no
+// se sabía nada de él todavía. Lo cobrado y los trabajos siguen a la vista en la carta, como
+// hechos; para valorarlo están estos seis.
+export const BENEFICIOS = [
+  ['dinero', 'DIN', '💰', 'Dinero', 'Lo que te deja en el bolsillo'],
+  ['puertas', 'PUE', '🚪', 'Puertas', 'A quién te conecta, qué contactos te abre'],
+  ['portafolio', 'POR', '🎨', 'Portafolio', 'Qué tan bien queda para mostrar tu trabajo'],
+  ['aprendizaje', 'APR', '📚', 'Aprendizaje', 'Cuánto creces técnicamente haciéndolo'],
+  ['constancia', 'CON', '🔁', 'Constancia', 'Qué tan seguido vuelve — ingreso que puedes contar'],
+  ['trato', 'TRA', '😌', 'Trato', 'Qué tan fácil y tranquilo es trabajar con él']
+];
 
-  const dias = datos.ultima ? diasEntre(datos.ultima, hoy) : null;
-  // Actividad: 99 recién trabajado, y va cayendo hasta el piso al año de silencio.
-  const actividad = dias == null ? PISO : Math.max(PISO, Math.min(TOPE, Math.round(TOPE - (dias / 365) * (TOPE - PISO))));
+const POR_DEFECTO = 50;
 
-  // Puntualidad: qué proporción de lo facturado ya te lo pagó. Sin facturas todavía no hay
-  // nada que juzgar, así que arranca en la mitad en vez de castigar a un cliente nuevo.
-  const facturado = datos.cobrado + datos.porCobrar;
-  const puntualidad = datos.trabajos === 0 ? 50 : escala(datos.cobrado, facturado);
-
-  const atributos = {
-    dinero: escala(datos.cobrado, maximos.cobrado),
-    volumen: escala(datos.trabajos, maximos.trabajos),
-    ticket: escala(datos.ticket, maximos.ticket),
-    actividad,
-    puntualidad,
-    // Influencia es la única que no sale de los datos: cuánto te abre puertas ese cliente.
-    // Por defecto queda en la mitad, para que la carta no mienta diciendo que es 0.
-    influencia: Number.isFinite(influenciaManual) ? Math.max(PISO, Math.min(TOPE, influenciaManual)) : 50
-  };
-
-  // El global pesa más lo que de verdad sostiene el negocio: la plata y que vuelva.
-  const global = Math.round(
-    atributos.dinero * 0.30 + atributos.volumen * 0.20 + atributos.actividad * 0.20 +
-    atributos.ticket * 0.10 + atributos.puntualidad * 0.10 + atributos.influencia * 0.10
-  );
-
-  return { ...atributos, global: Math.max(PISO, Math.min(TOPE, global)) };
+// Los valores viven en `cliente.beneficios`. Un cliente sin valorar arranca con los seis en
+// la mitad: ni bueno ni malo, que es la verdad mientras no lo hayas trabajado.
+export function atributosDeCliente(datos) {
+  const guardados = datos.cliente.beneficios || {};
+  const attrs = {};
+  for (const [clave] of BENEFICIOS) {
+    const v = Number(guardados[clave]);
+    attrs[clave] = Number.isFinite(v) ? Math.max(PISO, Math.min(TOPE, Math.round(v))) : POR_DEFECTO;
+  }
+  // Promedio simple: las seis son formas de beneficiarte y ninguna manda sobre las otras.
+  // Ponderarlas escondería una opinión mía sobre qué debería importarte más.
+  const suma = BENEFICIOS.reduce((s, [clave]) => s + attrs[clave], 0);
+  attrs.global = Math.max(PISO, Math.min(TOPE, Math.round(suma / BENEFICIOS.length)));
+  return attrs;
 }
 
 // Rango por global, con el mismo espíritu de las cartas: pocos llegan a lo más alto.
@@ -96,13 +84,7 @@ export function rangoDeCliente(global) {
 
 // Toda la cartera de una: primero los máximos, después cada carta, ordenadas por global.
 export function calcularRedClientes(clientes, cuentasCobro, ideas, hoy = hoyStr()) {
-  const datos = (clientes || []).map(c => datosDeCliente(c, cuentasCobro, ideas));
-  const maximos = {
-    cobrado: Math.max(0, ...datos.map(d => d.cobrado)),
-    trabajos: Math.max(0, ...datos.map(d => d.trabajos)),
-    ticket: Math.max(0, ...datos.map(d => d.ticket))
-  };
-  return datos
-    .map(d => ({ ...d, attrs: atributosDeCliente(d, maximos, hoy) }))
-    .sort((a, b) => b.attrs.global - a.attrs.global);
+  return (clientes || [])
+    .map(c => { const d = datosDeCliente(c, cuentasCobro, ideas); return { ...d, attrs: atributosDeCliente(d) }; })
+    .sort((a, b) => b.attrs.global - a.attrs.global || b.cobrado - a.cobrado);
 }

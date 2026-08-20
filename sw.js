@@ -8,7 +8,7 @@
 // Además purga la caché anterior (ver el handler de activate), que hace falta cada vez que
 // se borra o renombra un archivo que la app importa: un main.js viejo cacheado que importe
 // un módulo que ya no existe no arranca. Pasó al fusionar las dos pestañas de finanzas.
-const CACHE_NAME = 'agentebacu-shell-v4';
+const CACHE_NAME = 'agentebacu-shell-v5';
 const APP_SHELL = [
   './',
   './index.html',

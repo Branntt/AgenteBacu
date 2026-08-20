@@ -12,6 +12,12 @@
 //   python3 devserver.py 8777 .
 //   node tests/actualizacion.e2e.mjs
 import { chromium } from 'playwright';
+import fs from 'node:fs';
+
+// La versión esperada se lee del código, no se escribe acá: si no, esta prueba se rompe en
+// cada publicación (que es justamente cuando hay que subirla) y el fallo no significa nada.
+const CACHE_ESPERADA = fs.readFileSync(new URL('../sw.js', import.meta.url), 'utf8').match(/CACHE_NAME = '([^']+)'/)[1];
+const VERSION_ESPERADA = fs.readFileSync(new URL('../src/lib/version.js', import.meta.url), 'utf8').match(/APP_VERSION = '([^']+)'/)[1];
 const STUB = `
 function q(){const p=Promise.resolve({data:[],error:null});
 const o={select:()=>o,order:()=>o,eq:()=>o,neq:()=>o,update:()=>o,delete:()=>o,single:()=>o,insert:()=>o,then:(a,b)=>p.then(a,b),catch:f=>p.catch(f)};return o;}
@@ -44,13 +50,13 @@ ok('toma el control de la página', sw.controlando);
 await page.evaluate(() => { window.location.hash = '#configuraciones'; });
 await page.waitForTimeout(600);
 const v = await page.evaluate(() => document.getElementById('app-version-visible')?.textContent);
-ok('la versión se ve en pantalla', /^v\d+/.test(v || ''), `(dice "${v}")`);
+ok('la versión en pantalla es la del código', v === VERSION_ESPERADA, `(dice "${v}", debería "${VERSION_ESPERADA}")`);
 ok('el botón de buscar actualización existe', !!(await page.$('[data-act="buscar-actualizacion"]')));
 
 // la caché quedó en la versión nueva y no sobrevive ninguna vieja
 const caches = await page.evaluate(() => window.caches.keys());
-ok('la caché es la nueva', caches.includes('agentebacu-shell-v4'), `(hay: ${caches.join(', ')})`);
-ok('no queda ninguna caché vieja', !caches.some(c => c.includes('v3')), `(hay: ${caches.join(', ')})`);
+ok(`la caché es la de esta versión (${CACHE_ESPERADA})`, caches.includes(CACHE_ESPERADA), `(hay: ${caches.join(', ')})`);
+ok('no queda ninguna caché vieja', caches.length === 1, `(hay: ${caches.join(', ')})`);
 
 // no se recarga en bucle en la primera instalación
 const cargas = await page.evaluate(() => performance.getEntriesByType('navigation').length);

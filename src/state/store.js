@@ -1012,6 +1012,18 @@ export const actions = {
     setState({ clienteSelId: state.clienteSelId === id ? null : state.clienteSelId });
     supabase.from('clientes').delete().eq('id', id).then(({ error }) => marcarGuardado(!error, error));
   },
+  // Los seis beneficios viven juntos en un solo campo `beneficios`: son un bloque, se leen y
+  // se guardan como uno, y así una columna nueva alcanza para los seis (y para los que se
+  // agreguen después) en vez de una por cada uno.
+  clienteBeneficio: (id, campo, valor) => {
+    const cliente = state.clientes.find(c => c.id === id);
+    if (!cliente) return;
+    const beneficios = { ...(cliente.beneficios || {}), [campo]: Math.max(1, Math.min(99, parseN(valor))) };
+    state.clientes = state.clientes.map(c => c.id === id ? { ...c, beneficios } : c);
+    notify();
+    updateResiliente('clientes', id, { beneficios }, ['beneficios']);
+  },
+
   cartaAbrir: id => setState({ cartaClienteId: id }),
   cartaCerrar: () => setState({ cartaClienteId: null }),
 
