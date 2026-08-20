@@ -55,6 +55,7 @@ export const state = {
   rodajeDraft: null,
   cuentaCobroDraft: null,
   nuevoContenidoAbierto: false,
+  nuevaIdeaAbierta: false,
   revisionIdeasModal: false,
   revisionIdeasPendientes: [],
   notificacionBacu: null,
@@ -226,7 +227,7 @@ async function cargarDatos() {
     supabase.from('metas_mensuales').select('*'),
     supabase.from('tareas').select('*').order('created_at')
   ]);
-  state.ideas = (ideasRes.data || []).map(fromDbIdea);
+  state.ideas = aplicarOpcionalesLocales('ideas', (ideasRes.data || []).map(fromDbIdea));
   state.snaps = snapsRes.data || [];
   state.clientes = clientesRes.data || [];
   state.cuentasCobro = cuentasRes.data || [];
@@ -524,6 +525,49 @@ function suscribirRealtime() {
   Object.keys(PAYLOAD_HANDLERS).forEach(suscribirCanal);
 }
 
+// ---- Guardado resistente a columnas que faltan ----
+//
+// Varias tablas ganaron columnas con el tiempo, cada una con su migración. Quien no la
+// corrió tiene una base sin esas columnas, y ahí un insert que las mande falla ENTERO: no
+// se guarda "casi todo", no se guarda NADA. Ya costó dos veces —los hábitos con `bloque`,
+// los pendientes de clase con `materia`, estos últimos perdiendo trabajos del usuario— así
+// que acá está el patrón, una sola vez.
+//
+// Se intenta con todo; si falla, se reintenta sin las columnas opcionales para que la fila
+// entre igual, y lo que se cayó se guarda en el navegador para no perderlo y volver a
+// pegárselo a la fila al cargar.
+const OPCIONALES_LOCALES_KEY = 'bacu.filas.campos_opcionales';
+
+function recordarOpcionalesLocal(tabla, id, campos) {
+  if (!campos || !Object.keys(campos).length) return;
+  const mapa = loadValue(OPCIONALES_LOCALES_KEY, {});
+  mapa[tabla] = mapa[tabla] || {};
+  mapa[tabla][id] = { ...(mapa[tabla][id] || {}), ...campos };
+  persistValue(OPCIONALES_LOCALES_KEY, mapa);
+}
+
+// Vuelve a pegarle a cada fila los campos opcionales que su tabla no pudo guardar.
+export function aplicarOpcionalesLocales(tabla, filas) {
+  const mapa = loadValue(OPCIONALES_LOCALES_KEY, {})[tabla];
+  if (!mapa) return filas;
+  return filas.map(f => mapa[f.id] ? { ...mapa[f.id], ...f } : f);
+}
+
+function insertResiliente(tabla, fila, opcionales) {
+  supabase.from(tabla).insert(fila).then(({ error }) => {
+    if (!error) { marcarGuardado(true); return; }
+    const minima = { ...fila };
+    const caidos = {};
+    for (const campo of opcionales) {
+      if (campo in minima) { caidos[campo] = minima[campo]; delete minima[campo]; }
+    }
+    supabase.from(tabla).insert(minima).then(({ error: error2 }) => {
+      if (!error2) { recordarOpcionalesLocal(tabla, fila.id, caidos); marcarGuardado(true); }
+      else marcarGuardado(false, error2);
+    });
+  });
+}
+
 // ---- Pendientes de Universidad: guardado que no puede perder nada ----
 //
 // Un pendiente de clase es la lista de lo que el usuario tiene que entregar: si se pierde
@@ -677,6 +721,36 @@ export const actions = {
     setState({ selId: nueva.id, nuevoContenidoAbierto: false, view: 'clientes', clientesVista: 'marcas' });
     supabase.from('ideas').insert(toDbIdea(nueva)).then(({ error }) => marcarGuardado(!error, error));
   },
+  // Anotar una idea con su brief: para quién, en qué consiste, cómo se graba, qué se espera.
+  nuevaIdeaAbrir: () => setState({ nuevaIdeaAbierta: true }),
+  nuevaIdeaCerrar: () => setState({ nuevaIdeaAbierta: false }),
+  nuevaIdeaGuardar: ({ titulo, paraQuien, consiste, comoGrabar, queEspero }) => {
+    if (!titulo || !titulo.trim()) return;
+    // "Para quién" puede ser una marca propia o un cliente. Si es marca, manda la marca; si
+    // es un cliente, el trabajo es del estudio (Bacu) y el nombre queda en `cliente`. Se
+    // puede cambiar después en el detalle — acá solo se busca no frenar a quien está
+    // anotando una idea que se le acaba de ocurrir.
+    const quien = (paraQuien || '').trim();
+    const MARCAS = { 'brant': 'brant', 'bacu': 'bacu', 'bacu creative': 'bacu', 'novena': 'novena', 'novena crew': 'novena' };
+    const marcaElegida = MARCAS[quien.toLowerCase()];
+    const nueva = {
+      id: 'u' + Date.now(),
+      marca: marcaElegida || (quien ? 'bacu' : 'brant'),
+      colab: '', titulo: titulo.trim(), nota: '', gancho: '', objetivos: [],
+      formato: 'Reel', estado: 'desarrollo', fecha: null, fechaRodaje: null,
+      preguntas: [null, null, null, null], tiempo: '', grabacion: false, edicion: false,
+      prioridad: 'Media', etapa: 0
+    };
+    if (!marcaElegida && quien) nueva.cliente = quien;
+    if (consiste && consiste.trim()) nueva.consiste = consiste.trim();
+    if (comoGrabar && comoGrabar.trim()) nueva.como_grabar = comoGrabar.trim();
+    if (queEspero && queEspero.trim()) nueva.que_espero = queEspero.trim();
+
+    state.ideas = [nueva].concat(state.ideas);
+    setState({ nuevaIdeaAbierta: false });
+    insertResiliente('ideas', toDbIdea(nueva), ['cliente', 'consiste', 'como_grabar', 'que_espero']);
+  },
+
   rodajeRapidoAbrir: fecha => setState({ rodajeDraft: { titulo: '', marca: 'brant', fecha: fecha || hoyStr(), empresa: '', documento: '', precio: 0 } }),
   rodajeRapidoCerrar: () => setState({ rodajeDraft: null }),
   // Al escribir (o elegir de la lista) un cliente que ya existe, su C.C./NIT se pone solo.

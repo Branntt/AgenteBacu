@@ -147,6 +147,26 @@ export function renderDetalle(state) {
           <textarea class="nota-field" data-change="idea-nota" data-id="${id}" rows="3">${escapeHtml(selIdea.nota)}</textarea>
         </div>
 
+        <!-- El brief que se responde al anotar la idea (ver components/nuevaIdea.js). Vive
+             acá para poder releerlo y corregirlo cuando llega el momento de grabar: escribir
+             para qué es y qué se espera no sirve de nada si después no se puede volver a ver. -->
+        <div class="field">
+          <label class="field-label">¿Para quién es?</label>
+          <input data-change="idea-cliente" data-id="${id}" value="${escapeHtml(selIdea.cliente || '')}" placeholder="Un cliente o una de tus marcas" list="lista-para-quien" autocomplete="off">
+        </div>
+        <div class="field">
+          <label class="field-label">¿En qué consiste?</label>
+          <textarea class="nota-field" data-change="idea-consiste" data-id="${id}" rows="2" placeholder="De qué se trata">${escapeHtml(selIdea.consiste || '')}</textarea>
+        </div>
+        <div class="field">
+          <label class="field-label">¿Cómo la vas a grabar?</label>
+          <textarea class="nota-field" data-change="idea-como-grabar" data-id="${id}" rows="2" placeholder="Dónde, con qué, qué planos">${escapeHtml(selIdea.como_grabar || '')}</textarea>
+        </div>
+        <div class="field">
+          <label class="field-label">¿Qué esperás de este video?</label>
+          <textarea class="nota-field" data-change="idea-que-espero" data-id="${id}" rows="2" placeholder="Qué querés que pase cuando lo vean">${escapeHtml(selIdea.que_espero || '')}</textarea>
+        </div>
+
         <button class="btn-ghost" data-act="ir-a-guion" data-id="${id}" style="align-self:flex-start;">Escribir guion →</button>
 
         <div class="field">

@@ -17,6 +17,28 @@ export function clientePorNombre(clientes, nombre) {
   return (clientes || []).find(c => (c.nombre || '').trim().toLowerCase() === buscado) || null;
 }
 
+// Segunda lista, para la pregunta "¿para quién es?" de una idea nueva: además de los
+// clientes, ofrece las tres marcas propias — una idea puede ser para un cliente o para
+// Brant/Bacu/Novena, y en el momento de anotarla no hay por qué elegir entre dos casillas.
+export const LISTA_PARA_QUIEN_ID = 'lista-para-quien';
+
+export function renderDatalistParaQuien(state) {
+  const marcas = [['Brant', 'tu marca personal'], ['Bacu Creative', 'el estudio'], ['Novena Crew', 'la productora']];
+  const nombresMarca = new Set(marcas.map(([n]) => n.toLowerCase()));
+  const clientes = (state.clientes || [])
+    .map(c => (c.nombre || '').trim())
+    .filter(n => n && !nombresMarca.has(n.toLowerCase()));
+  const vistos = new Set();
+  const unicos = clientes.filter(n => { const k = n.toLowerCase(); if (vistos.has(k)) return false; vistos.add(k); return true; })
+    .sort((a, b) => a.localeCompare(b, 'es'));
+  return `
+    <datalist id="${LISTA_PARA_QUIEN_ID}">
+      ${marcas.map(([n, d]) => `<option value="${escapeHtml(n)}">${escapeHtml(d)}</option>`).join('')}
+      ${unicos.map(n => `<option value="${escapeHtml(n)}">cliente</option>`).join('')}
+    </datalist>
+  `;
+}
+
 export function renderDatalistClientes(state) {
   const clientes = state.clientes || [];
   if (!clientes.length) return '';

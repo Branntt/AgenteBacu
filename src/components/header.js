@@ -27,9 +27,12 @@ export function renderHeader(state) {
       <nav class="nav ${state.menuAbierto ? 'nav-abierto' : ''}">${navHtml}</nav>
       ${state.menuAbierto ? '<div class="nav-backdrop" data-act="menu-cerrar"></div>' : ''}
       <button class="btn-ghost" data-act="nav-go" data-view="configuraciones" title="Configuraciones" aria-label="Configuraciones">⚙️</button>
-      ${['calendario', 'financiamiento', 'clientes', 'pared', 'panorama', 'universidad', 'metas', 'bienestar', 'inventario'].includes(state.view) ? '' : `
-        <button class="btn-ghost" data-act="rodaje-rapido-abrir">+ Rodaje rápido</button>
-        <button class="btn-primary" data-act="nueva-idea">+ Nueva idea</button>
+      <!-- Anotar una idea tiene que poder hacerse desde donde estés: se te ocurre mientras
+           mirás el calendario o las finanzas, no solo cuando ya estás en Contenido. Antes
+           esta condición listaba nueve de las diez vistas, así que el botón solo aparecía
+           dentro de Configuraciones — en la práctica, no existía. -->
+      ${state.view === 'configuraciones' ? '' : `
+        <button class="btn-primary" data-act="nueva-idea" title="Anotar una idea">💡 Idea</button>
       `}
     </header>
   `;
