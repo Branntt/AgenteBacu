@@ -371,15 +371,19 @@ const canalesActivos = new Set();
 
 // Mapear qué canales necesita cada vista
 const CHANNEL_MAP = {
-  calendario: ['sync-ideas', 'sync-metas-personales'],
+  // 'sync-tareas' va en TODA vista que muestre tareas, para que un cambio hecho en el cel
+  // aparezca en vivo en el compu (y al revés). Antes faltaba en calendario/pared/panorama —
+  // que son justo donde se ven las tareas (entregas en el calendario, cintas en Pared, resumen
+  // en Panorama) — así que ahí las tareas solo se actualizaban al recargar la página.
+  calendario: ['sync-ideas', 'sync-metas-personales', 'sync-tareas'],
   clientes: ['sync-clientes', 'sync-snaps'],
   financiamiento: ['sync-cuentas-cobro', 'sync-movimientos-financiamiento', 'sync-deudas', 'sync-pagos-mensuales', 'sync-transacciones'],
   inventario: ['sync-metas-personales', 'sync-equipo-produccion'],
   bienestar: ['sync-metas-mensuales', 'sync-tareas'],
   metas: ['sync-metas-mensuales', 'sync-tareas'],
   universidad: ['sync-tareas'],
-  pared: ['sync-ideas', 'sync-clientes'],
-  panorama: ['sync-ideas', 'sync-clientes', 'sync-metas-personales', 'sync-equipo-produccion'],
+  pared: ['sync-ideas', 'sync-clientes', 'sync-tareas'],
+  panorama: ['sync-ideas', 'sync-clientes', 'sync-metas-personales', 'sync-equipo-produccion', 'sync-tareas'],
   configuraciones: [] // hereda de la vista anterior
 };
 
