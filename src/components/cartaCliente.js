@@ -15,11 +15,14 @@ function fmtFecha(f) {
 }
 
 // Los seis lados del hexágono son los seis beneficios (ver BENEFICIOS en lib/clienteStats).
-const EJES = BENEFICIOS.map(([clave, corto, , , ayuda]) => [clave, corto, ayuda]);
+// [clave, corto, emoji, nombre, ayuda] — usamos nombre completo alrededor del hexágono.
+const EJES = BENEFICIOS.map(([clave, corto, emoji, nombre, ayuda]) => [clave, corto, emoji, nombre, ayuda]);
 
-// Hexágono de atributos, dibujado a mano en SVG: sin librerías, y así se anima con CSS.
-function hexagonoHtml(attrs, color) {
-  const cx = 110, cy = 100, r = 74;
+// Hexágono INTERACTIVO: se arrastra cada punto (vértice) para cambiar el valor de ese beneficio.
+// El punto vive sobre su eje — solo se mueve entre el centro (valor 1) y el borde (valor 99).
+// data-attrs con la clave permite a main.js identificar qué campo se está editando al soltarlo.
+function hexagonoHtml(attrs, color, clienteId) {
+  const cx = 130, cy = 130, r = 92;
   const punto = (i, radio) => {
     const ang = (Math.PI / 3) * i - Math.PI / 2;
     return [cx + Math.cos(ang) * radio, cy + Math.sin(ang) * radio];
@@ -27,34 +30,81 @@ function hexagonoHtml(attrs, color) {
   const anillo = f => EJES.map((_, i) => punto(i, r * f).map(n => n.toFixed(1)).join(',')).join(' ');
   const forma = EJES.map(([clave], i) => punto(i, r * (attrs[clave] / 99)).map(n => n.toFixed(1)).join(',')).join(' ');
 
+  // Etiquetas alrededor: nombre completo del beneficio con emoji + número (más grande, legible).
+  const etiquetas = EJES.map(([clave, corto, emoji, nombre], i) => {
+    const [x, y] = punto(i, r + 26);
+    return `
+      <g class="hex-label" data-clave="${clave}">
+        <text x="${x.toFixed(1)}" y="${(y - 6).toFixed(1)}" text-anchor="middle" dominant-baseline="middle" font-size="10" font-family="'IBM Plex Mono',monospace" fill="var(--muted)">${emoji} ${nombre}</text>
+        <text x="${x.toFixed(1)}" y="${(y + 8).toFixed(1)}" text-anchor="middle" dominant-baseline="middle" font-size="12" font-weight="700" font-family="'IBM Plex Mono',monospace" fill="${color}" class="hex-label-num" data-num="${clave}">${attrs[clave]}</text>
+      </g>
+    `;
+  }).join('');
+
+  // Puntos arrastrables: cada uno vive sobre su eje, del centro al borde del hexágono.
+  const puntos = EJES.map(([clave], i) => {
+    const [px, py] = punto(i, r * (attrs[clave] / 99));
+    return `<circle class="hex-drag" data-hex-drag="${clave}" data-eje="${i}" cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="8" fill="${color}" stroke="#fff" stroke-width="2"/>`;
+  }).join('');
+
   return `
-    <svg viewBox="0 0 220 200" class="carta-hex" role="img" aria-label="Atributos del cliente">
+    <svg viewBox="0 0 260 260" class="carta-hex carta-hex-interactivo" role="application"
+         aria-label="Hexágono interactivo — arrastra los puntos para ajustar los beneficios"
+         data-hex-cliente="${escapeHtml(clienteId)}" data-hex-cx="${cx}" data-hex-cy="${cy}" data-hex-r="${r}">
       ${[0.25, 0.5, 0.75, 1].map(f => `<polygon points="${anillo(f)}" fill="none" stroke="var(--line)" stroke-width="1"/>`).join('')}
       ${EJES.map((_, i) => { const [x, y] = punto(i, r); return `<line x1="${cx}" y1="${cy}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="var(--line)" stroke-width="1"/>`; }).join('')}
       <polygon class="carta-hex-forma" points="${forma}" fill="${color}" fill-opacity="0.35" stroke="${color}" stroke-width="2" stroke-linejoin="round"/>
-      ${EJES.map(([clave, corto], i) => {
-        const [x, y] = punto(i, r + 17);
-        return `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="middle" dominant-baseline="middle" font-size="10" font-family="'IBM Plex Mono',monospace" fill="var(--muted)">${corto}</text>`;
-      }).join('')}
+      ${puntos}
+      ${etiquetas}
     </svg>
+  `;
+}
+
+// Un slider por beneficio, con el nombre completo bien visible. Se usa tanto en la mini
+// carta (vista de la Red) como en la carta completa: los seis beneficios se deslizan
+// directamente. Al soltar, main.js dispara actions.clienteBeneficio con el nuevo valor.
+function slidersBeneficios(attrs, cliente, color) {
+  return `
+    <div class="carta-sliders-lista" style="--carta-color:${color};">
+      ${BENEFICIOS.map(([clave, corto, emoji, nombre]) => `
+        <div class="carta-slider-fila">
+          <label for="ben-${escapeHtml(clave)}-${escapeHtml(cliente.id)}" class="carta-slider-nombre">
+            <span class="carta-slider-emoji">${emoji}</span>
+            <span>${escapeHtml(nombre)}</span>
+          </label>
+          <input id="ben-${escapeHtml(clave)}-${escapeHtml(cliente.id)}" type="range" min="1" max="99"
+                 value="${attrs[clave]}" data-change="cliente-beneficio"
+                 data-id="${escapeHtml(cliente.id)}" data-campo="${escapeHtml(clave)}"
+                 aria-label="${escapeHtml(nombre)}">
+          <span class="carta-slider-num" data-slider-num="${escapeHtml(clave)}-${escapeHtml(cliente.id)}">${attrs[clave]}</span>
+        </div>
+      `).join('')}
+    </div>
   `;
 }
 
 export function renderMiniCarta(item) {
   const { cliente, attrs } = item;
   const rango = rangoDeCliente(attrs.global);
+  // La mini carta trae los seis beneficios como sliders con nombre completo. El header
+  // (nombre del cliente + trabajos + rango) sigue abriendo la carta completa al tocarlo;
+  // los sliders no disparan esa acción — solo cambian el valor del beneficio al soltar.
   return `
-    <button class="carta-mini" data-act="carta-abrir" data-id="${escapeHtml(cliente.id)}" style="--carta-color:${rango.color};">
-      <div class="carta-mini-ovr">
-        <span class="carta-mini-num">${attrs.global}</span>
-        <span class="carta-mini-rango">${rango.emoji}</span>
-      </div>
-      <div class="carta-mini-cuerpo">
-        <div class="carta-mini-nombre">${escapeHtml(cliente.nombre || 'Sin nombre')}</div>
-        <div class="carta-mini-meta">${item.trabajos} trabajo${item.trabajos === 1 ? '' : 's'} · ${fmtMoney(item.cobrado)}</div>
-      </div>
-      ${item.porCobrar > 0 ? `<span class="carta-mini-alerta" title="Te debe">${fmtMoney(item.porCobrar)}</span>` : ''}
-    </button>
+    <div class="carta-mini carta-mini-interactiva" style="--carta-color:${rango.color};">
+      <button class="carta-mini-header" data-act="carta-abrir" data-id="${escapeHtml(cliente.id)}"
+              title="Abrir carta completa">
+        <div class="carta-mini-ovr">
+          <span class="carta-mini-num">${attrs.global}</span>
+          <span class="carta-mini-rango">${rango.emoji}</span>
+        </div>
+        <div class="carta-mini-cuerpo">
+          <div class="carta-mini-nombre">${escapeHtml(cliente.nombre || 'Sin nombre')}</div>
+          <div class="carta-mini-meta">${item.trabajos} trabajo${item.trabajos === 1 ? '' : 's'} · ${fmtMoney(item.cobrado)}</div>
+        </div>
+        ${item.porCobrar > 0 ? `<span class="carta-mini-alerta" title="Te debe">${fmtMoney(item.porCobrar)}</span>` : ''}
+      </button>
+      ${slidersBeneficios(attrs, cliente, rango.color)}
+    </div>
   `;
 }
 
@@ -130,17 +180,14 @@ export function renderCartaCompleta(item, state) {
         </div>
       </div>
 
-      <div class="carta-stats">
-        ${hexagonoHtml(attrs, rango.color)}
-        <div class="carta-barras">
-          ${EJES.map(([clave, corto]) => `
-            <div class="carta-barra">
-              <span class="carta-barra-label">${corto}</span>
-              <span class="carta-barra-track"><span class="carta-barra-fill" style="width:${attrs[clave]}%;"></span></span>
-              <span class="carta-barra-num">${attrs[clave]}</span>
-            </div>
-          `).join('')}
-        </div>
+      <!-- Un solo cuadro: hexágono como visualización + los seis sliders con nombre completo.
+           El hexágono se dibuja arriba (sin ser arrastrable acá para no chocar con los sliders);
+           debajo, los seis beneficios se deslizan y el hex se actualiza en vivo. -->
+      <div class="carta-stats carta-stats-uno">
+        <div class="carta-stats-titulo">🎚️ En qué te beneficia</div>
+        <div class="vista-sub" style="margin-bottom:6px;">Estas seis son tu criterio, no un cálculo. El global es su promedio.</div>
+        ${hexagonoHtml(attrs, rango.color, cliente.id)}
+        ${slidersBeneficios(attrs, cliente, rango.color)}
       </div>
 
       <!-- La carta es para mirar; para tocar los datos del cliente y cobrarle está su ficha,
@@ -151,23 +198,6 @@ export function renderCartaCompleta(item, state) {
       </div>
 
       ${renderCuentasDeCliente(state, cliente)}
-
-      <div class="section-title">🎚️ En qué te beneficia</div>
-      <div class="vista-sub">Estas seis son tu criterio, no un cálculo: un cliente que paga poco pero te abre puertas no vale lo mismo que uno que paga bien y te desgasta. El global es su promedio.</div>
-      <div class="carta-sliders">
-        ${BENEFICIOS.map(([clave, corto, emoji, nombre, ayuda]) => `
-          <div class="carta-slider">
-            <div class="carta-slider-top">
-              <label for="ben-${escapeHtml(clave)}-${escapeHtml(cliente.id)}">${emoji} ${escapeHtml(nombre)}</label>
-              <span class="carta-slider-num">${attrs[clave]}</span>
-            </div>
-            <input id="ben-${escapeHtml(clave)}-${escapeHtml(cliente.id)}" type="range" min="1" max="99"
-                   value="${attrs[clave]}" data-change="cliente-beneficio"
-                   data-id="${escapeHtml(cliente.id)}" data-campo="${escapeHtml(clave)}">
-            <div class="carta-slider-ayuda">${escapeHtml(ayuda)}</div>
-          </div>
-        `).join('')}
-      </div>
 
       <div class="section-title">📌 Lo que tenés pendiente con ${escapeHtml(cliente.nombre || 'este cliente')}</div>
       ${pendientes.length ? `

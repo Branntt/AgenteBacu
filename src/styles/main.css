@@ -2624,8 +2624,10 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
    El hexágono y el global se dibujan al entrar (aparece-carta): es la "animación" pedida,
    y además hace que el número se lea como un resultado y no como un dato más. Se respeta
    prefers-reduced-motion más abajo. */
-.carta-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; }
+/* Grid más amplio para que quepa el hexágono interactivo dentro de cada mini carta. */
+.carta-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
 
+/* Mini carta interactiva: header (nombre + trabajos) arriba, hexágono arrastrable abajo. */
 .carta-mini {
   display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; cursor: pointer;
   background: var(--panel2); border: 1px solid var(--line); border-left: 3px solid var(--carta-color);
@@ -2633,6 +2635,46 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
   transition: transform .12s ease, border-color .12s ease;
 }
 .carta-mini:hover { transform: translateY(-2px); border-color: var(--carta-color); }
+
+/* Variante interactiva: contenedor en columna con header arriba y sliders debajo. */
+.carta-mini-interactiva {
+  display: flex; flex-direction: column; align-items: stretch; gap: 8px; padding: 12px;
+  cursor: default;
+}
+.carta-mini-interactiva:hover { transform: none; }
+.carta-mini-header {
+  display: flex; align-items: center; gap: 12px; width: 100%; text-align: left;
+  background: transparent; border: none; padding: 4px 4px 8px; color: inherit; cursor: pointer;
+  border-bottom: 1px solid var(--line);
+}
+.carta-mini-hex {
+  display: flex; justify-content: center; align-items: center; padding: 4px 0 2px;
+}
+.carta-mini-hex .carta-hex { width: 100%; max-width: 260px; }
+
+/* Sliders con nombre completo: una fila por beneficio (nombre | slider | número). */
+.carta-sliders-lista { display: flex; flex-direction: column; gap: 10px; padding: 4px 2px 2px; }
+.carta-slider-fila {
+  display: grid; grid-template-columns: 116px 1fr 30px; align-items: center; gap: 10px;
+}
+.carta-slider-nombre {
+  display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 500;
+  color: var(--text); cursor: pointer; min-width: 0;
+}
+.carta-slider-emoji { flex: none; font-size: 14px; line-height: 1; }
+.carta-sliders-lista input[type="range"] {
+  width: 100%; margin: 0; accent-color: var(--carta-color); height: 22px; cursor: grab;
+}
+.carta-sliders-lista input[type="range"]:active { cursor: grabbing; }
+.carta-slider-num {
+  font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 700;
+  color: var(--carta-color); text-align: right;
+}
+@media (max-width: 480px) {
+  .carta-slider-fila { grid-template-columns: 96px 1fr 26px; gap: 8px; }
+  .carta-slider-nombre { font-size: 11px; }
+}
+
 .carta-mini-ovr { display: flex; flex-direction: column; align-items: center; flex: none; }
 .carta-mini-num { font-family: 'IBM Plex Mono', monospace; font-size: 26px; font-weight: 700; line-height: 1; color: var(--carta-color); }
 .carta-mini-rango { font-size: 12px; }
@@ -2659,23 +2701,24 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
 .carta-stats { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; background: var(--panel2); border: 1px solid var(--line); border-radius: 10px; padding: 14px; margin-bottom: 16px; }
 .carta-hex { width: 220px; max-width: 100%; flex: none; }
 .carta-hex-forma { transform-origin: 110px 100px; animation: crece-hex .5s cubic-bezier(.34,1.3,.64,1) both; }
-.carta-barras { flex: 1; min-width: 190px; display: flex; flex-direction: column; gap: 7px; }
-.carta-barra { display: flex; align-items: center; gap: 8px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; }
-.carta-barra-label { width: 30px; opacity: .6; flex: none; }
-.carta-barra-track { flex: 1; height: 6px; background: var(--panel); border-radius: 3px; overflow: hidden; }
-.carta-barra-fill { display: block; height: 100%; background: var(--carta-color); border-radius: 3px; animation: crece-barra .5s ease both; }
-.carta-barra-num { width: 20px; text-align: right; flex: none; }
+
+/* Un solo cuadro consolidado: el hexágono interactivo con los nombres alrededor. */
+.carta-stats-uno { flex-direction: column; align-items: stretch; gap: 8px; padding: 18px; margin-bottom: 22px; }
+.carta-stats-titulo { font-size: 14px; font-weight: 600; letter-spacing: .3px; text-align: center; }
+.carta-stats-uno .carta-hex { width: 100%; max-width: 340px; margin: 6px auto 0; }
+.carta-hex-interactivo { touch-action: none; user-select: none; cursor: default; }
+.carta-hex-interactivo .hex-drag {
+  cursor: grab;
+  transition: r .15s ease, filter .15s ease;
+  filter: drop-shadow(0 1px 4px rgba(0,0,0,.35));
+}
+.carta-hex-interactivo .hex-drag:hover { r: 10; }
+.carta-hex-interactivo .hex-drag:active,
+.carta-hex-interactivo .hex-drag.dragging { cursor: grabbing; r: 11; filter: drop-shadow(0 2px 6px rgba(0,0,0,.55)); }
+.carta-hex-interactivo .hex-label { pointer-events: none; }
 
 .carta-acciones { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 22px; }
 .carta-acciones button { flex: 1; min-width: 150px; }
-
-.carta-sliders { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; margin-bottom: 22px; }
-.carta-slider { background: var(--panel2); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; }
-.carta-slider-top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; font-size: 13px; }
-.carta-slider-num { font-family: 'IBM Plex Mono', monospace; font-weight: 700; color: var(--carta-color); }
-/* Alto cómodo para el pulgar: estos seis se ajustan casi siempre desde el celular. */
-.carta-slider input { width: 100%; margin: 8px 0 4px; accent-color: var(--carta-color); height: 24px; }
-.carta-slider-ayuda { font-size: 11px; opacity: .55; line-height: 1.4; }
 
 .carta-pendientes { display: flex; flex-direction: column; }
 .carta-pendiente { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 13px; }

@@ -888,3 +888,104 @@ root.addEventListener('change', e => {
     return;
   }
 });
+
+// ---- Hexágono interactivo (Red de Clientes) ----
+// Cada vértice del hexágono es un beneficio. Se arrastra sobre su eje (del centro al borde)
+// y el número/forma se actualizan en vivo. Al soltarlo se persiste con clienteBeneficio,
+// que ya existe para los sliders de siempre — así el cambio queda en Supabase igual.
+(function() {
+  let hexDrag = null; // { svg, circle, clave, eje, cx, cy, r, clienteId, valor }
+
+  function angleFor(eje) { return (Math.PI / 3) * eje - Math.PI / 2; }
+
+  // Proyecta el puntero sobre el eje del vértice y devuelve el radio efectivo (0..r).
+  function proyectar(hex, clientX, clientY) {
+    const rect = hex.svg.getBoundingClientRect();
+    // Coordenadas locales del SVG (el viewBox es 260x260).
+    const vbW = 260, vbH = 260;
+    const px = (clientX - rect.left) * (vbW / rect.width) - hex.cx;
+    const py = (clientY - rect.top) * (vbH / rect.height) - hex.cy;
+    const ang = angleFor(hex.eje);
+    const dx = Math.cos(ang), dy = Math.sin(ang);
+    // Proyección escalar sobre el eje (px,py)·(dx,dy).
+    let t = px * dx + py * dy;
+    if (t < 0) t = 0;
+    if (t > hex.r) t = hex.r;
+    return t;
+  }
+
+  function actualizarVisual(hex, radio) {
+    const ang = angleFor(hex.eje);
+    const nx = hex.cx + Math.cos(ang) * radio;
+    const ny = hex.cy + Math.sin(ang) * radio;
+    hex.circle.setAttribute('cx', nx.toFixed(1));
+    hex.circle.setAttribute('cy', ny.toFixed(1));
+    // Valor 1..99. El fondo del hexágono representa 99, el centro 1.
+    const valor = Math.max(1, Math.min(99, Math.round((radio / hex.r) * 99)));
+    hex.valor = valor;
+    // Actualizar número visible.
+    const num = hex.svg.querySelector(`[data-num="${hex.clave}"]`);
+    if (num) num.textContent = valor;
+    // Actualizar la forma (polygon) del hexágono con los valores actuales.
+    const forma = hex.svg.querySelector('.carta-hex-forma');
+    if (forma) {
+      const puntos = [];
+      hex.svg.querySelectorAll('.hex-drag').forEach(c => {
+        puntos.push([parseFloat(c.getAttribute('cx')), parseFloat(c.getAttribute('cy'))]);
+      });
+      forma.setAttribute('points', puntos.map(p => p.map(n => n.toFixed(1)).join(',')).join(' '));
+    }
+  }
+
+  root.addEventListener('pointerdown', e => {
+    const circle = e.target.closest('.hex-drag');
+    if (!circle) return;
+    const svg = circle.closest('.carta-hex-interactivo');
+    if (!svg) return;
+    e.preventDefault();
+    circle.classList.add('dragging');
+    circle.setPointerCapture(e.pointerId);
+    hexDrag = {
+      svg, circle,
+      clave: circle.dataset.hexDrag,
+      eje: parseInt(circle.dataset.eje, 10),
+      cx: parseFloat(svg.dataset.hexCx),
+      cy: parseFloat(svg.dataset.hexCy),
+      r: parseFloat(svg.dataset.hexR),
+      clienteId: svg.dataset.hexCliente,
+      pointerId: e.pointerId,
+      valor: null
+    };
+  });
+
+  root.addEventListener('pointermove', e => {
+    if (!hexDrag || e.pointerId !== hexDrag.pointerId) return;
+    const radio = proyectar(hexDrag, e.clientX, e.clientY);
+    actualizarVisual(hexDrag, radio);
+  });
+
+  function soltar(e) {
+    if (!hexDrag || e.pointerId !== hexDrag.pointerId) return;
+    const { clienteId, clave, valor, circle } = hexDrag;
+    circle.classList.remove('dragging');
+    try { circle.releasePointerCapture(e.pointerId); } catch (_) { /* ya soltado */ }
+    if (valor != null && typeof actions.clienteBeneficio === 'function') {
+      actions.clienteBeneficio(clienteId, clave, valor);
+    }
+    hexDrag = null;
+  }
+
+  root.addEventListener('pointerup', soltar);
+  root.addEventListener('pointercancel', soltar);
+})();
+
+// ---- Sliders de beneficios (Red de Clientes) ----
+// El handler 'change' de siempre persiste el valor al soltar el slider. Este 'input'
+// solo actualiza el número visible al lado para dar feedback en vivo mientras se desliza.
+root.addEventListener('input', e => {
+  const el = e.target;
+  if (!(el instanceof HTMLInputElement)) return;
+  if (el.type !== 'range' || el.dataset.change !== 'cliente-beneficio') return;
+  const num = document.querySelector(`[data-slider-num="${el.dataset.campo}-${el.dataset.id}"]`);
+  if (num) num.textContent = el.value;
+});
