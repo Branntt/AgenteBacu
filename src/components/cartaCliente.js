@@ -83,27 +83,26 @@ function slidersBeneficios(attrs, cliente, color) {
   `;
 }
 
-export function renderMiniCarta(item) {
+export function renderMiniCarta(item, expandido = false) {
   const { cliente, attrs } = item;
   const rango = rangoDeCliente(attrs.global);
-  // La mini carta trae los seis beneficios como sliders con nombre completo. El header
-  // (nombre del cliente + trabajos + rango) sigue abriendo la carta completa al tocarlo;
-  // los sliders no disparan esa acción — solo cambian el valor del beneficio al soltar.
+  // Mini carta minimalista: por defecto se ve solo el número global + emoji del rango
+  // + nombre. Al tocar el chevron se expanden los seis sliders. Al tocar el nombre se
+  // abre la carta completa como siempre.
   return `
-    <div class="carta-mini carta-mini-interactiva" style="--carta-color:${rango.color};">
+    <div class="carta-mini carta-mini-min ${expandido ? 'carta-mini-abierta' : ''}"
+         style="--carta-color:${rango.color};" data-cliente-id="${escapeHtml(cliente.id)}">
       <button class="carta-mini-header" data-act="carta-abrir" data-id="${escapeHtml(cliente.id)}"
               title="Abrir carta completa">
-        <div class="carta-mini-ovr">
-          <span class="carta-mini-num">${attrs.global}</span>
-          <span class="carta-mini-rango">${rango.emoji}</span>
-        </div>
-        <div class="carta-mini-cuerpo">
-          <div class="carta-mini-nombre">${escapeHtml(cliente.nombre || 'Sin nombre')}</div>
-          <div class="carta-mini-meta">${item.trabajos} trabajo${item.trabajos === 1 ? '' : 's'} · ${fmtMoney(item.cobrado)}</div>
-        </div>
-        ${item.porCobrar > 0 ? `<span class="carta-mini-alerta" title="Te debe">${fmtMoney(item.porCobrar)}</span>` : ''}
+        <span class="carta-mini-glob">${attrs.global}</span>
+        <span class="carta-mini-nombre">${escapeHtml(cliente.nombre || 'Sin nombre')}</span>
+        ${item.porCobrar > 0 ? `<span class="carta-mini-deb" title="Te debe ${fmtMoney(item.porCobrar)}">●</span>` : ''}
       </button>
-      ${slidersBeneficios(attrs, cliente, rango.color)}
+      <button class="carta-mini-toggle" data-act="carta-mini-toggle" data-id="${escapeHtml(cliente.id)}"
+              title="${expandido ? 'Ocultar beneficios' : 'Ajustar beneficios'}">
+        ${expandido ? '▲' : '▼'}
+      </button>
+      ${expandido ? `<div class="carta-mini-panel">${slidersBeneficios(attrs, cliente, rango.color)}</div>` : ''}
     </div>
   `;
 }
@@ -232,6 +231,21 @@ export function renderCartaCompleta(item, state) {
   `;
 }
 
+// Agrupa la red por tier (Leyenda/Oro/Plata/Bronce/Nuevo). Es la lectura rápida:
+// "quiénes son los que funcionan y quiénes no". Un tier con cero clientes no se muestra.
+const TIERS = [
+  { clave: 'leyenda', nombre: 'Leyenda', emoji: '👑', min: 85 },
+  { clave: 'oro',     nombre: 'Oro',     emoji: '🥇', min: 70 },
+  { clave: 'plata',   nombre: 'Plata',   emoji: '🥈', min: 50 },
+  { clave: 'bronce',  nombre: 'Bronce',  emoji: '🥉', min: 30 },
+  { clave: 'nuevo',   nombre: 'Nuevo',   emoji: '🌱', min: 0  }
+];
+
+function tierDeGlobal(g) {
+  for (const t of TIERS) if (g >= t.min) return t.clave;
+  return 'nuevo';
+}
+
 export function renderRedClientes(state) {
   const red = calcularRedClientes(state.clientes, state.cuentasCobro, state.ideas);
   if (!red.length) {
@@ -239,19 +253,58 @@ export function renderRedClientes(state) {
   }
 
   const abierta = state.cartaClienteId && red.find(r => r.cliente.id === state.cartaClienteId);
-  // <main> igual que las otras sub-vistas de Clientes: es el envoltorio que espera el resto
-  // de la app (estilos y ancho de página cuelgan de él).
   if (abierta) return `<main class="clientes">${renderCartaCompleta(abierta, state)}</main>`;
 
   const totalCobrado = red.reduce((s, r) => s + r.cobrado, 0);
   const totalPorCobrar = red.reduce((s, r) => s + r.porCobrar, 0);
+  const filtroTier = state.redFiltroTier || 'todos'; // 'todos' o clave de tier
+  const abiertos = state.redAbiertos || {}; // { [clienteId]: true }
+
+  // Filtrado por tier. 'todos' agrupa por tier (mejores arriba); un tier específico solo muestra ese.
+  const filtrada = filtroTier === 'todos' ? red : red.filter(r => tierDeGlobal(r.attrs.global) === filtroTier);
+
+  // Chips de filtro con el conteo real de cada tier.
+  const conteos = { todos: red.length };
+  for (const t of TIERS) conteos[t.clave] = red.filter(r => tierDeGlobal(r.attrs.global) === t.clave).length;
+
+  const chips = `
+    <div class="red-chips" role="tablist" aria-label="Filtrar por rango">
+      <button class="red-chip ${filtroTier === 'todos' ? 'red-chip-on' : ''}" data-act="red-filtro-tier" data-tier="todos">
+        Todos <span class="red-chip-num">${conteos.todos}</span>
+      </button>
+      ${TIERS.filter(t => conteos[t.clave] > 0).map(t => `
+        <button class="red-chip ${filtroTier === t.clave ? 'red-chip-on' : ''}" data-act="red-filtro-tier" data-tier="${t.clave}">
+          ${t.emoji} ${t.nombre} <span class="red-chip-num">${conteos[t.clave]}</span>
+        </button>
+      `).join('')}
+    </div>
+  `;
+
+  // Cuando el filtro es 'todos', agrupamos por tier con un separador. Con un tier específico,
+  // es una sola lista sin separadores para no saturar.
+  let cuerpo;
+  if (filtroTier === 'todos') {
+    cuerpo = TIERS.map(t => {
+      const items = filtrada.filter(r => tierDeGlobal(r.attrs.global) === t.clave);
+      if (!items.length) return '';
+      return `
+        <div class="red-grupo">
+          <div class="red-grupo-titulo">${t.emoji} ${t.nombre}<span class="red-grupo-num">${items.length}</span></div>
+          <div class="carta-grid">${items.map(it => renderMiniCarta(it, !!abiertos[it.cliente.id])).join('')}</div>
+        </div>
+      `;
+    }).join('');
+  } else {
+    cuerpo = `<div class="carta-grid">${filtrada.map(it => renderMiniCarta(it, !!abiertos[it.cliente.id])).join('')}</div>`;
+  }
 
   return `
     <main class="clientes">
-    <div class="vista-sub" style="margin-bottom:14px;">
-      ${red.length} cliente${red.length === 1 ? '' : 's'} · ${fmtMoney(totalCobrado)} cobrado${totalPorCobrar > 0 ? ` · <b style="color:var(--rojo);">${fmtMoney(totalPorCobrar)} sin cobrar</b>` : ''}
-    </div>
-    <div class="carta-grid">${red.map(renderMiniCarta).join('')}</div>
+      <div class="vista-sub" style="margin-bottom:10px;">
+        ${red.length} cliente${red.length === 1 ? '' : 's'} · ${fmtMoney(totalCobrado)} cobrado${totalPorCobrar > 0 ? ` · <b style="color:var(--rojo);">${fmtMoney(totalPorCobrar)} sin cobrar</b>` : ''}
+      </div>
+      ${chips}
+      ${cuerpo}
     </main>
   `;
 }
