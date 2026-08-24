@@ -371,15 +371,19 @@ const canalesActivos = new Set();
 
 // Mapear qué canales necesita cada vista
 const CHANNEL_MAP = {
-  calendario: ['sync-ideas', 'sync-metas-personales'],
+  // 'sync-tareas' va en TODA vista que muestre tareas, para que un cambio hecho en el cel
+  // aparezca en vivo en el compu (y al revés). Antes faltaba en calendario/pared/panorama —
+  // que son justo donde se ven las tareas (entregas en el calendario, cintas en Pared, resumen
+  // en Panorama) — así que ahí las tareas solo se actualizaban al recargar la página.
+  calendario: ['sync-ideas', 'sync-metas-personales', 'sync-tareas'],
   clientes: ['sync-clientes', 'sync-snaps'],
   financiamiento: ['sync-cuentas-cobro', 'sync-movimientos-financiamiento', 'sync-deudas', 'sync-pagos-mensuales', 'sync-transacciones'],
   inventario: ['sync-metas-personales', 'sync-equipo-produccion'],
   bienestar: ['sync-metas-mensuales', 'sync-tareas'],
   metas: ['sync-metas-mensuales', 'sync-tareas'],
   universidad: ['sync-tareas'],
-  pared: ['sync-ideas', 'sync-clientes'],
-  panorama: ['sync-ideas', 'sync-clientes', 'sync-metas-personales', 'sync-equipo-produccion'],
+  pared: ['sync-ideas', 'sync-clientes', 'sync-tareas'],
+  panorama: ['sync-ideas', 'sync-clientes', 'sync-metas-personales', 'sync-equipo-produccion', 'sync-tareas'],
   configuraciones: [] // hereda de la vista anterior
 };
 
@@ -748,7 +752,7 @@ export const actions = {
   // Anotar una idea con su brief: para quién, en qué consiste, cómo se graba, qué se espera.
   nuevaIdeaAbrir: () => setState({ nuevaIdeaAbierta: true }),
   nuevaIdeaCerrar: () => setState({ nuevaIdeaAbierta: false }),
-  nuevaIdeaGuardar: ({ titulo, paraQuien, consiste, comoGrabar, queEspero }) => {
+  nuevaIdeaGuardar: ({ titulo, paraQuien, consiste, comoGrabar, queEspero, fecha }) => {
     if (!titulo || !titulo.trim()) return;
     // "Para quién" puede ser una marca propia o un cliente. Si es marca, manda la marca; si
     // es un cliente, el trabajo es del estudio (Bacu) y el nombre queda en `cliente`. Se
@@ -761,7 +765,10 @@ export const actions = {
       id: 'u' + Date.now(),
       marca: marcaElegida || (quien ? 'bacu' : 'brant'),
       colab: '', titulo: titulo.trim(), nota: '', gancho: '', objetivos: [],
-      formato: 'Reel', estado: 'desarrollo', fecha: null, fechaRodaje: null,
+      // Si el aviso trae fecha, cae en el Calendario ese día (y se sincroniza por Supabase
+      // como toda idea, así se ve igual en el cel y en el compu). Sin fecha, queda solo en el
+      // banco de ideas hasta que se le ponga una.
+      formato: 'Reel', estado: 'desarrollo', fecha: (fecha && fecha.trim()) ? fecha.trim() : null, fechaRodaje: null,
       preguntas: [null, null, null, null], tiempo: '', grabacion: false, edicion: false,
       prioridad: 'Media', etapa: 0
     };

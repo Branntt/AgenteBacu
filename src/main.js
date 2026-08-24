@@ -450,7 +450,7 @@ root.addEventListener('click', e => {
       const val = id2 => document.querySelector('#' + id2)?.value || '';
       actions.nuevaIdeaGuardar({
         titulo: val('idea-titulo'), paraQuien: val('idea-para-quien'), consiste: val('idea-consiste'),
-        comoGrabar: val('idea-como-grabar'), queEspero: val('idea-que-espero')
+        comoGrabar: val('idea-como-grabar'), queEspero: val('idea-que-espero'), fecha: val('idea-fecha')
       });
       break;
     }
