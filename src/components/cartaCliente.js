@@ -63,18 +63,27 @@ function hexagonoHtml(attrs, color, clienteId) {
 export function renderMiniCarta(item) {
   const { cliente, attrs } = item;
   const rango = rangoDeCliente(attrs.global);
+  // La mini carta ya trae el hexágono interactivo: se pueden arrastrar los seis beneficios
+  // desde la Red misma, sin abrir la carta completa. El header (nombre + trabajos) sigue
+  // abriendo la carta como antes; solo los círculos del hex son arrastrables.
   return `
-    <button class="carta-mini" data-act="carta-abrir" data-id="${escapeHtml(cliente.id)}" style="--carta-color:${rango.color};">
-      <div class="carta-mini-ovr">
-        <span class="carta-mini-num">${attrs.global}</span>
-        <span class="carta-mini-rango">${rango.emoji}</span>
+    <div class="carta-mini carta-mini-interactiva" style="--carta-color:${rango.color};">
+      <button class="carta-mini-header" data-act="carta-abrir" data-id="${escapeHtml(cliente.id)}"
+              title="Abrir carta completa">
+        <div class="carta-mini-ovr">
+          <span class="carta-mini-num">${attrs.global}</span>
+          <span class="carta-mini-rango">${rango.emoji}</span>
+        </div>
+        <div class="carta-mini-cuerpo">
+          <div class="carta-mini-nombre">${escapeHtml(cliente.nombre || 'Sin nombre')}</div>
+          <div class="carta-mini-meta">${item.trabajos} trabajo${item.trabajos === 1 ? '' : 's'} · ${fmtMoney(item.cobrado)}</div>
+        </div>
+        ${item.porCobrar > 0 ? `<span class="carta-mini-alerta" title="Te debe">${fmtMoney(item.porCobrar)}</span>` : ''}
+      </button>
+      <div class="carta-mini-hex">
+        ${hexagonoHtml(attrs, rango.color, cliente.id)}
       </div>
-      <div class="carta-mini-cuerpo">
-        <div class="carta-mini-nombre">${escapeHtml(cliente.nombre || 'Sin nombre')}</div>
-        <div class="carta-mini-meta">${item.trabajos} trabajo${item.trabajos === 1 ? '' : 's'} · ${fmtMoney(item.cobrado)}</div>
-      </div>
-      ${item.porCobrar > 0 ? `<span class="carta-mini-alerta" title="Te debe">${fmtMoney(item.porCobrar)}</span>` : ''}
-    </button>
+    </div>
   `;
 }
 

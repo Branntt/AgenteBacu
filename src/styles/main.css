@@ -2624,8 +2624,10 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
    El hexágono y el global se dibujan al entrar (aparece-carta): es la "animación" pedida,
    y además hace que el número se lea como un resultado y no como un dato más. Se respeta
    prefers-reduced-motion más abajo. */
-.carta-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; }
+/* Grid más amplio para que quepa el hexágono interactivo dentro de cada mini carta. */
+.carta-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
 
+/* Mini carta interactiva: header (nombre + trabajos) arriba, hexágono arrastrable abajo. */
 .carta-mini {
   display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; cursor: pointer;
   background: var(--panel2); border: 1px solid var(--line); border-left: 3px solid var(--carta-color);
@@ -2633,6 +2635,23 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
   transition: transform .12s ease, border-color .12s ease;
 }
 .carta-mini:hover { transform: translateY(-2px); border-color: var(--carta-color); }
+
+/* Variante interactiva: contenedor en columna y hexágono debajo del header. */
+.carta-mini-interactiva {
+  display: flex; flex-direction: column; align-items: stretch; gap: 8px; padding: 12px;
+  cursor: default;
+}
+.carta-mini-interactiva:hover { transform: none; }
+.carta-mini-header {
+  display: flex; align-items: center; gap: 12px; width: 100%; text-align: left;
+  background: transparent; border: none; padding: 4px 4px 8px; color: inherit; cursor: pointer;
+  border-bottom: 1px solid var(--line);
+}
+.carta-mini-hex {
+  display: flex; justify-content: center; align-items: center; padding: 4px 0 2px;
+}
+.carta-mini-hex .carta-hex { width: 100%; max-width: 260px; }
+
 .carta-mini-ovr { display: flex; flex-direction: column; align-items: center; flex: none; }
 .carta-mini-num { font-family: 'IBM Plex Mono', monospace; font-size: 26px; font-weight: 700; line-height: 1; color: var(--carta-color); }
 .carta-mini-rango { font-size: 12px; }
