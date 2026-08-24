@@ -148,8 +148,9 @@ function renderMes(state, ideas, clientes, tareas) {
     const esMes = dnum >= 1 && dnum <= diasMes;
     const fs = esMes ? state.month + '-' + String(dnum).padStart(2, '0') : null;
     const esHoy = fs === hoy;
+    const esPasado = esMes && fs < hoy;
     const entries = esMes ? entradasDeDia(ideas, clientes, tareas, fs) : [];
-    dias.push({ dnum, esMes, fs, esHoy, entries });
+    dias.push({ dnum, esMes, fs, esHoy, esPasado, entries });
   }
 
   // El calendario es solo lectura: registra visualmente lo que ya se agendó desde cada
@@ -164,9 +165,12 @@ function renderMes(state, ideas, clientes, tareas) {
     return visibles.join('') + `<div class="cal-more">+${resto} más</div>`;
   }
 
+  // El paso del tiempo se ve: los días ya pasados se atenúan (clase 'pasado') y sus entradas
+  // se reducen a marcas finas vía CSS, y hoy se resalta (clase 'hoy'), para que lo que viene
+  // y lo importante destaque sobre lo ya cumplido.
   const dowHtml = DIAS_SEMANA.map(ds => `<div class="cal-dow">${ds}</div>`).join('');
   const celdasHtml = dias.map(d => `
-    <div class="cal-cell">
+    <div class="cal-cell${d.esPasado ? ' pasado' : ''}${d.esHoy ? ' hoy' : ''}">
       <span class="cal-daynum ${d.esHoy ? 'today' : (!d.esMes ? 'out' : '')}">${d.esMes ? d.dnum : ''}</span>
       ${entradasCelda(d.entries)}
     </div>
@@ -182,11 +186,11 @@ function renderSemana(state, ideas, clientes, tareas) {
     const fs = sumarDias(state.semanaInicio, c);
     const [, , dnum] = fs.split('-').map(Number);
     const entries = entradasDeDia(ideas, clientes, tareas, fs);
-    dias.push({ fs, dnum, esHoy: fs === hoy, entries });
+    dias.push({ fs, dnum, esHoy: fs === hoy, esPasado: fs < hoy, entries });
   }
 
   const colsHtml = dias.map((d, i) => `
-    <div class="cal-week-col">
+    <div class="cal-week-col${d.esPasado ? ' pasado' : ''}">
       <div class="cal-week-head ${d.esHoy ? 'today' : ''}">
         <span class="cal-dow">${DIAS_SEMANA[i]}</span>
         <span class="cal-daynum ${d.esHoy ? 'today' : ''}">${d.dnum}</span>
@@ -209,7 +213,7 @@ function renderAgenda(state, ideas, clientes, tareas) {
   for (let dnum = 1; dnum <= diasMes; dnum++) {
     const fs = state.month + '-' + String(dnum).padStart(2, '0');
     if (!tieneEntradas(ideas, clientes, tareas, fs)) continue;
-    dias.push({ dnum, fs, esHoy: fs === hoy, entries: entradasDeDia(ideas, clientes, tareas, fs) });
+    dias.push({ dnum, fs, esHoy: fs === hoy, esPasado: fs < hoy, entries: entradasDeDia(ideas, clientes, tareas, fs) });
   }
 
   if (!dias.length) {
@@ -219,7 +223,7 @@ function renderAgenda(state, ideas, clientes, tareas) {
   const mesLabel = MESES[mesNum - 1];
   const DIAS_SEMANA = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
   return `<div class="cal-agenda">${dias.map(d => `
-    <div class="cal-agenda-day ${d.esHoy ? 'today' : ''}">
+    <div class="cal-agenda-day ${d.esHoy ? 'today' : ''}${d.esPasado ? ' pasado' : ''}">
       <div class="cal-agenda-date">${DIAS_SEMANA[new Date(anio, mesNum - 1, d.dnum).getDay()]} ${d.dnum} de ${mesLabel}${d.esHoy ? ' <span class="today-mark">· hoy</span>' : ''}</div>
       ${d.entries.join('')}
     </div>

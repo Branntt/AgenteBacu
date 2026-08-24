@@ -982,6 +982,22 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
   border-radius: 50%;
 }
 
+/* --- Paso del tiempo --- El calendario es una foto de "cómo voy": lo ya cumplido no se
+   borra, pero cede protagonismo. Los días pasados se atenúan y en el mes sus entradas se
+   colapsan a marcas finas (sin texto), para que hoy y lo que viene resalten. */
+.cal-cell.hoy { background: color-mix(in srgb, var(--verde) 8%, transparent); }
+.cal-cell.pasado { opacity: .4; }
+.cal-cell.pasado .cal-daynum:not(.today) { color: var(--line); }
+.cal-grid .cal-cell.pasado .cal-entry { padding: 0; min-height: 0; background: transparent; border: none; }
+.cal-grid .cal-cell.pasado .cal-entry:hover { background: transparent; }
+.cal-grid .cal-cell.pasado .cal-entry-title,
+.cal-grid .cal-cell.pasado .cal-entry-meta { display: none; }
+.cal-grid .cal-cell.pasado .cal-entry-bar { width: 100%; height: 3px; border-radius: 2px; }
+.cal-cell.pasado .cal-more { display: none; }
+/* Semana y Agenda: mismo principio, solo atenuado (conservan el detalle porque tienen espacio). */
+.cal-week-col.pasado { opacity: .5; }
+.cal-agenda-day.pasado { opacity: .55; }
+
 /* Semana: 7 vertical columns, one card per day, more room per entry than the month grid. */
 .cal-week { display: grid; grid-template-columns: repeat(7, minmax(170px, 1fr)); gap: 10px; overflow-x: auto; }
 .cal-week-col { background: var(--panel); border: 1px solid var(--line); min-height: 340px; }
