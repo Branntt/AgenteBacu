@@ -38,6 +38,12 @@ export function renderNuevaIdea(state) {
           <input id="idea-titulo" placeholder="Cómo la vas a llamar" autocomplete="off">
         </div>
 
+        <div class="field">
+          <label class="field-label" for="idea-fecha">📅 Fecha (opcional)</label>
+          <input id="idea-fecha" type="date" min="2026-01-01" style="color-scheme:dark;" autocomplete="off">
+          <div style="font-size:11px;opacity:0.55;margin-top:4px;">Si le pones fecha, el aviso aparece en el Calendario ese día (y se ve igual en el cel y el compu).</div>
+        </div>
+
         ${camposHtml}
 
         <button class="btn-primary" data-act="nueva-idea-guardar" style="width:100%;margin-top:14px;">Guardar idea</button>

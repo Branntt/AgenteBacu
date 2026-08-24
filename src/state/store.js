@@ -748,7 +748,7 @@ export const actions = {
   // Anotar una idea con su brief: para quién, en qué consiste, cómo se graba, qué se espera.
   nuevaIdeaAbrir: () => setState({ nuevaIdeaAbierta: true }),
   nuevaIdeaCerrar: () => setState({ nuevaIdeaAbierta: false }),
-  nuevaIdeaGuardar: ({ titulo, paraQuien, consiste, comoGrabar, queEspero }) => {
+  nuevaIdeaGuardar: ({ titulo, paraQuien, consiste, comoGrabar, queEspero, fecha }) => {
     if (!titulo || !titulo.trim()) return;
     // "Para quién" puede ser una marca propia o un cliente. Si es marca, manda la marca; si
     // es un cliente, el trabajo es del estudio (Bacu) y el nombre queda en `cliente`. Se
@@ -761,7 +761,10 @@ export const actions = {
       id: 'u' + Date.now(),
       marca: marcaElegida || (quien ? 'bacu' : 'brant'),
       colab: '', titulo: titulo.trim(), nota: '', gancho: '', objetivos: [],
-      formato: 'Reel', estado: 'desarrollo', fecha: null, fechaRodaje: null,
+      // Si el aviso trae fecha, cae en el Calendario ese día (y se sincroniza por Supabase
+      // como toda idea, así se ve igual en el cel y en el compu). Sin fecha, queda solo en el
+      // banco de ideas hasta que se le ponga una.
+      formato: 'Reel', estado: 'desarrollo', fecha: (fecha && fecha.trim()) ? fecha.trim() : null, fechaRodaje: null,
       preguntas: [null, null, null, null], tiempo: '', grabacion: false, edicion: false,
       prioridad: 'Media', etapa: 0
     };
