@@ -2636,7 +2636,7 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
 }
 .carta-mini:hover { transform: translateY(-2px); border-color: var(--carta-color); }
 
-/* Variante interactiva: contenedor en columna y hexágono debajo del header. */
+/* Variante interactiva: contenedor en columna con header arriba y sliders debajo. */
 .carta-mini-interactiva {
   display: flex; flex-direction: column; align-items: stretch; gap: 8px; padding: 12px;
   cursor: default;
@@ -2651,6 +2651,29 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
   display: flex; justify-content: center; align-items: center; padding: 4px 0 2px;
 }
 .carta-mini-hex .carta-hex { width: 100%; max-width: 260px; }
+
+/* Sliders con nombre completo: una fila por beneficio (nombre | slider | número). */
+.carta-sliders-lista { display: flex; flex-direction: column; gap: 10px; padding: 4px 2px 2px; }
+.carta-slider-fila {
+  display: grid; grid-template-columns: 116px 1fr 30px; align-items: center; gap: 10px;
+}
+.carta-slider-nombre {
+  display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 500;
+  color: var(--text); cursor: pointer; min-width: 0;
+}
+.carta-slider-emoji { flex: none; font-size: 14px; line-height: 1; }
+.carta-sliders-lista input[type="range"] {
+  width: 100%; margin: 0; accent-color: var(--carta-color); height: 22px; cursor: grab;
+}
+.carta-sliders-lista input[type="range"]:active { cursor: grabbing; }
+.carta-slider-num {
+  font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 700;
+  color: var(--carta-color); text-align: right;
+}
+@media (max-width: 480px) {
+  .carta-slider-fila { grid-template-columns: 96px 1fr 26px; gap: 8px; }
+  .carta-slider-nombre { font-size: 11px; }
+}
 
 .carta-mini-ovr { display: flex; flex-direction: column; align-items: center; flex: none; }
 .carta-mini-num { font-family: 'IBM Plex Mono', monospace; font-size: 26px; font-weight: 700; line-height: 1; color: var(--carta-color); }

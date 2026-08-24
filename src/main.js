@@ -978,3 +978,14 @@ root.addEventListener('change', e => {
   root.addEventListener('pointerup', soltar);
   root.addEventListener('pointercancel', soltar);
 })();
+
+// ---- Sliders de beneficios (Red de Clientes) ----
+// El handler 'change' de siempre persiste el valor al soltar el slider. Este 'input'
+// solo actualiza el número visible al lado para dar feedback en vivo mientras se desliza.
+root.addEventListener('input', e => {
+  const el = e.target;
+  if (!(el instanceof HTMLInputElement)) return;
+  if (el.type !== 'range' || el.dataset.change !== 'cliente-beneficio') return;
+  const num = document.querySelector(`[data-slider-num="${el.dataset.campo}-${el.dataset.id}"]`);
+  if (num) num.textContent = el.value;
+});

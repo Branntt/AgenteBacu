@@ -60,12 +60,35 @@ function hexagonoHtml(attrs, color, clienteId) {
   `;
 }
 
+// Un slider por beneficio, con el nombre completo bien visible. Se usa tanto en la mini
+// carta (vista de la Red) como en la carta completa: los seis beneficios se deslizan
+// directamente. Al soltar, main.js dispara actions.clienteBeneficio con el nuevo valor.
+function slidersBeneficios(attrs, cliente, color) {
+  return `
+    <div class="carta-sliders-lista" style="--carta-color:${color};">
+      ${BENEFICIOS.map(([clave, corto, emoji, nombre]) => `
+        <div class="carta-slider-fila">
+          <label for="ben-${escapeHtml(clave)}-${escapeHtml(cliente.id)}" class="carta-slider-nombre">
+            <span class="carta-slider-emoji">${emoji}</span>
+            <span>${escapeHtml(nombre)}</span>
+          </label>
+          <input id="ben-${escapeHtml(clave)}-${escapeHtml(cliente.id)}" type="range" min="1" max="99"
+                 value="${attrs[clave]}" data-change="cliente-beneficio"
+                 data-id="${escapeHtml(cliente.id)}" data-campo="${escapeHtml(clave)}"
+                 aria-label="${escapeHtml(nombre)}">
+          <span class="carta-slider-num" data-slider-num="${escapeHtml(clave)}-${escapeHtml(cliente.id)}">${attrs[clave]}</span>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
 export function renderMiniCarta(item) {
   const { cliente, attrs } = item;
   const rango = rangoDeCliente(attrs.global);
-  // La mini carta ya trae el hexágono interactivo: se pueden arrastrar los seis beneficios
-  // desde la Red misma, sin abrir la carta completa. El header (nombre + trabajos) sigue
-  // abriendo la carta como antes; solo los círculos del hex son arrastrables.
+  // La mini carta trae los seis beneficios como sliders con nombre completo. El header
+  // (nombre del cliente + trabajos + rango) sigue abriendo la carta completa al tocarlo;
+  // los sliders no disparan esa acción — solo cambian el valor del beneficio al soltar.
   return `
     <div class="carta-mini carta-mini-interactiva" style="--carta-color:${rango.color};">
       <button class="carta-mini-header" data-act="carta-abrir" data-id="${escapeHtml(cliente.id)}"
@@ -80,9 +103,7 @@ export function renderMiniCarta(item) {
         </div>
         ${item.porCobrar > 0 ? `<span class="carta-mini-alerta" title="Te debe">${fmtMoney(item.porCobrar)}</span>` : ''}
       </button>
-      <div class="carta-mini-hex">
-        ${hexagonoHtml(attrs, rango.color, cliente.id)}
-      </div>
+      ${slidersBeneficios(attrs, cliente, rango.color)}
     </div>
   `;
 }
@@ -159,12 +180,14 @@ export function renderCartaCompleta(item, state) {
         </div>
       </div>
 
-      <!-- Un solo cuadro para el hexágono interactivo: los nombres viven alrededor y los puntos
-           se arrastran directamente para cambiar los valores. Ya no hay barras aparte ni sliders. -->
+      <!-- Un solo cuadro: hexágono como visualización + los seis sliders con nombre completo.
+           El hexágono se dibuja arriba (sin ser arrastrable acá para no chocar con los sliders);
+           debajo, los seis beneficios se deslizan y el hex se actualiza en vivo. -->
       <div class="carta-stats carta-stats-uno">
-        <div class="carta-stats-titulo">🎚️ En qué te beneficia — arrastra los puntos</div>
+        <div class="carta-stats-titulo">🎚️ En qué te beneficia</div>
         <div class="vista-sub" style="margin-bottom:6px;">Estas seis son tu criterio, no un cálculo. El global es su promedio.</div>
         ${hexagonoHtml(attrs, rango.color, cliente.id)}
+        ${slidersBeneficios(attrs, cliente, rango.color)}
       </div>
 
       <!-- La carta es para mirar; para tocar los datos del cliente y cobrarle está su ficha,
