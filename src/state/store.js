@@ -14,7 +14,10 @@ export const state = {
   // 'financiamiento' (una sola Finanzas). Quien la tenga guardada de antes aterriza ahí en
   // vez de caer al fallback de Panorama sin entender por qué.
   view: (v => v === 'finanzas' ? 'financiamiento' : v)(loadValue('app.view', 'calendario')),
-  month: loadValue('ui.month', mesActual()),
+  // El mes visible se recuerda entre sesiones, pero si el guardado ya quedó en el pasado
+  // (ej. entraste en julio y hoy es agosto) se salta solo al mes actual — antes el calendario
+  // abría en un mes viejo y "los días no se veían actualizados". Un mes futuro sí se respeta.
+  month: (m => m < mesActual() ? mesActual() : m)(loadValue('ui.month', mesActual())),
   ideas: [],
   snaps: [],
   clientes: [],
@@ -49,7 +52,9 @@ export const state = {
   avatarGlbUrl: null,
   personaje3dAbierto: false,
   uniBloquesAbiertos: loadValue('ui.uniBloquesAbiertos', {}),
-  semanaInicio: loadValue('ui.semanaInicio', lunesDe(hoyStr())),
+  // Igual que 'month': si la semana guardada ya terminó por completo antes de hoy, se salta a
+  // la semana actual en vez de abrir en una semana vieja.
+  semanaInicio: (s => sumarDias(s, 6) < hoyStr() ? lunesDe(hoyStr()) : s)(loadValue('ui.semanaInicio', lunesDe(hoyStr()))),
   diaSeleccionadoBienestar: loadValue('ui.diaSeleccionadoBienestar', hoyStr()),
   semanaSeleccionadaBienestar: loadValue('ui.semanaSeleccionadaBienestar', lunesDe(hoyStr())),
   snapDraft: null,

@@ -27,13 +27,12 @@ export function renderHeader(state) {
       <nav class="nav ${state.menuAbierto ? 'nav-abierto' : ''}">${navHtml}</nav>
       ${state.menuAbierto ? '<div class="nav-backdrop" data-act="menu-cerrar"></div>' : ''}
       <button class="btn-ghost" data-act="nav-go" data-view="configuraciones" title="Configuraciones" aria-label="Configuraciones">⚙️</button>
-      <!-- Anotar una idea tiene que poder hacerse desde donde estés: se te ocurre mientras
-           mirás el calendario o las finanzas, no solo cuando ya estás en Contenido. Antes
-           esta condición listaba nueve de las diez vistas, así que el botón solo aparecía
-           dentro de Configuraciones — en la práctica, no existía. -->
-      ${state.view === 'configuraciones' ? '' : `
+      <!-- El botón de anotar idea vive únicamente en la pestaña Clientes: es ahí donde se
+           trabaja el contenido de cada cliente. En el resto de vistas (calendario, finanzas,
+           etc.) no aparece, para mantener cada pestaña enfocada en lo suyo. -->
+      ${state.view === 'clientes' ? `
         <button class="btn-primary" data-act="nueva-idea" title="Anotar una idea">💡 Idea</button>
-      `}
+      ` : ''}
     </header>
   `;
 }
