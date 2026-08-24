@@ -165,16 +165,21 @@ function renderMes(state, ideas, clientes, tareas) {
     return visibles.join('') + `<div class="cal-more">+${resto} más</div>`;
   }
 
-  // El paso del tiempo se ve: los días ya pasados se atenúan (clase 'pasado') y sus entradas
-  // se reducen a marcas finas vía CSS, y hoy se resalta (clase 'hoy'), para que lo que viene
-  // y lo importante destaque sobre lo ya cumplido.
+  // El paso del tiempo se ve: hoy se resalta (clase 'hoy') y los días ya pasados (clase
+  // 'pasado') resumen sus entradas en una fila discreta de puntos de color — uno por entrada,
+  // cada uno con el color de su marca/tipo (lo pone el .cal-entry-bar de cada tarjeta, que el
+  // CSS convierte en punto). Así lo cumplido se ve de un vistazo sin competir con lo que viene.
   const dowHtml = DIAS_SEMANA.map(ds => `<div class="cal-dow">${ds}</div>`).join('');
-  const celdasHtml = dias.map(d => `
+  const celdasHtml = dias.map(d => {
+    const cuerpo = d.esPasado
+      ? `<div class="cal-past-dots">${d.entries.join('')}</div>`
+      : entradasCelda(d.entries);
+    return `
     <div class="cal-cell${d.esPasado ? ' pasado' : ''}${d.esHoy ? ' hoy' : ''}">
       <span class="cal-daynum ${d.esHoy ? 'today' : (!d.esMes ? 'out' : '')}">${d.esMes ? d.dnum : ''}</span>
-      ${entradasCelda(d.entries)}
-    </div>
-  `).join('');
+      ${cuerpo}
+    </div>`;
+  }).join('');
 
   return `<div class="cal-grid">${dowHtml}${celdasHtml}</div>`;
 }

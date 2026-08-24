@@ -983,20 +983,38 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
 }
 
 /* --- Paso del tiempo --- El calendario es una foto de "cómo voy": lo ya cumplido no se
-   borra, pero cede protagonismo. Los días pasados se atenúan y en el mes sus entradas se
-   colapsan a marcas finas (sin texto), para que hoy y lo que viene resalten. */
-.cal-cell.hoy { background: color-mix(in srgb, var(--verde) 8%, transparent); }
-.cal-cell.pasado { opacity: .4; }
-.cal-cell.pasado .cal-daynum:not(.today) { color: var(--line); }
-.cal-grid .cal-cell.pasado .cal-entry { padding: 0; min-height: 0; background: transparent; border: none; }
-.cal-grid .cal-cell.pasado .cal-entry:hover { background: transparent; }
-.cal-grid .cal-cell.pasado .cal-entry-title,
-.cal-grid .cal-cell.pasado .cal-entry-meta { display: none; }
-.cal-grid .cal-cell.pasado .cal-entry-bar { width: 100%; height: 3px; border-radius: 2px; }
-.cal-cell.pasado .cal-more { display: none; }
-/* Semana y Agenda: mismo principio, solo atenuado (conservan el detalle porque tienen espacio). */
-.cal-week-col.pasado { opacity: .5; }
-.cal-agenda-day.pasado { opacity: .55; }
+   borra, pero cede protagonismo con elegancia. Hoy se resalta con un fondo verde suave;
+   los días pasados se recogen a un tono apagado y sus eventos se resumen en una fila
+   ordenada de puntos de color (uno por entrada), para que lo que viene destaque. */
+.cal-cell.hoy {
+  background: color-mix(in srgb, var(--verde) 9%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--verde) 35%, transparent);
+}
+.cal-cell.pasado { background: color-mix(in srgb, var(--panel) 55%, transparent); }
+.cal-cell.pasado .cal-daynum:not(.today) { color: var(--muted); opacity: .7; }
+
+/* Cada entrada de un día pasado se colapsa en un punto de color (reusa el .cal-entry-bar,
+   que ya trae el color de la marca/tipo). Fila compacta que envuelve, alineada arriba. */
+.cal-past-dots { display: flex; flex-wrap: wrap; align-content: flex-start; gap: 5px; padding-top: 2px; }
+.cal-past-dots .cal-entry {
+  display: block; width: auto; padding: 0; min-height: 0; gap: 0;
+  background: none; border: none; cursor: pointer;
+}
+.cal-past-dots .cal-entry:hover { background: none; }
+.cal-past-dots .cal-entry-title,
+.cal-past-dots .cal-entry-meta { display: none; }
+.cal-past-dots .cal-entry-bar {
+  width: 7px; height: 7px; border-radius: 50%; opacity: .65;
+  transition: opacity .12s ease, transform .12s ease;
+}
+.cal-past-dots .cal-entry:hover .cal-entry-bar { opacity: 1; transform: scale(1.25); }
+
+/* Semana y Agenda: mismo principio, solo un atenuado suave (conservan el detalle porque
+   tienen espacio de sobra). */
+.cal-week-col.pasado { opacity: .62; }
+.cal-week-col.pasado:hover { opacity: 1; }
+.cal-agenda-day.pasado { opacity: .66; }
+.cal-agenda-day.pasado:hover { opacity: 1; }
 
 /* Semana: 7 vertical columns, one card per day, more room per entry than the month grid. */
 .cal-week { display: grid; grid-template-columns: repeat(7, minmax(170px, 1fr)); gap: 10px; overflow-x: auto; }
