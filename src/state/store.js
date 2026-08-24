@@ -25,6 +25,8 @@ export const state = {
   guionId: null,
   clienteSelId: null,
   cartaClienteId: null,
+  redFiltroTier: 'todos',
+  redAbiertos: {},
   menuAbierto: false,
   filtroGuiones: loadValue('ui.filtroGuiones', 'todas'),
   guionesVista: loadValue('ui.guionesVista', 'general'),
@@ -1031,6 +1033,17 @@ export const actions = {
 
   cartaAbrir: id => setState({ cartaClienteId: id }),
   cartaCerrar: () => setState({ cartaClienteId: null }),
+
+  // Filtro por tier en la Red (Todos / Leyenda / Oro / Plata / Bronce / Nuevo).
+  // Persistir no vale la pena — cada apertura de la vista quiere ver todos por defecto.
+  redFiltroTier: tier => setState({ redFiltroTier: tier || 'todos' }),
+  // Expandir/colapsar los sliders de una mini carta sin abrir la carta completa.
+  // Se guarda como { [clienteId]: true }: acumulativo, cada uno se abre/cierra por su cuenta.
+  redToggleAbierto: id => {
+    const abiertos = { ...(state.redAbiertos || {}) };
+    if (abiertos[id]) delete abiertos[id]; else abiertos[id] = true;
+    setState({ redAbiertos: abiertos });
+  },
 
   abrirCliente: id => setState({ clienteSelId: id }),
   // Desde una entrada de "Grabación" en el Calendario (views/calendario.js): fuerza la

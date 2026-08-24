@@ -2624,33 +2624,75 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
    El hexágono y el global se dibujan al entrar (aparece-carta): es la "animación" pedida,
    y además hace que el número se lea como un resultado y no como un dato más. Se respeta
    prefers-reduced-motion más abajo. */
-/* Grid más amplio para que quepa el hexágono interactivo dentro de cada mini carta. */
-.carta-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+/* Grid minimalista: una lista de filas compactas. Un cliente ocupa una línea. */
+.carta-grid { display: flex; flex-direction: column; gap: 6px; }
 
-/* Mini carta interactiva: header (nombre + trabajos) arriba, hexágono arrastrable abajo. */
+/* Chips de filtro por tier (Todos / Leyenda / Oro / Plata / Bronce / Nuevo). */
+.red-chips {
+  display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px;
+}
+.red-chip {
+  display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px;
+  background: var(--panel2); border: 1px solid var(--line); color: var(--text);
+  border-radius: 999px; font-size: 12px; font-family: inherit; cursor: pointer;
+  transition: border-color .12s ease, background .12s ease;
+}
+.red-chip:hover { border-color: var(--verde); }
+.red-chip-on { background: var(--verde); border-color: var(--verde); color: #0C0E0D; font-weight: 600; }
+.red-chip-num {
+  font-family: 'IBM Plex Mono', monospace; font-size: 10px; opacity: .7;
+  background: rgba(255,255,255,.08); padding: 1px 6px; border-radius: 999px;
+}
+.red-chip-on .red-chip-num { background: rgba(0,0,0,.18); opacity: 1; }
+
+/* Grupo por tier: título discreto + su grid. */
+.red-grupo { margin-bottom: 18px; }
+.red-grupo-titulo {
+  display: flex; align-items: center; gap: 8px; padding: 4px 2px 8px;
+  font-family: 'IBM Plex Mono', monospace; font-size: 11px;
+  letter-spacing: 1px; text-transform: uppercase; opacity: .55;
+}
+.red-grupo-num { font-size: 10px; opacity: .7; }
+
+/* Fila minimalista: [global] [nombre..............] [debe?] [▼] — una sola línea. */
 .carta-mini {
-  display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; cursor: pointer;
+  display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; cursor: pointer;
   background: var(--panel2); border: 1px solid var(--line); border-left: 3px solid var(--carta-color);
-  border-radius: 10px; padding: 12px 14px; color: inherit; min-width: 0;
+  border-radius: 8px; padding: 8px 12px; color: inherit; min-width: 0;
   transition: transform .12s ease, border-color .12s ease;
 }
-.carta-mini:hover { transform: translateY(-2px); border-color: var(--carta-color); }
+.carta-mini:hover { border-color: var(--carta-color); }
 
-/* Variante interactiva: contenedor en columna con header arriba y sliders debajo. */
-.carta-mini-interactiva {
-  display: flex; flex-direction: column; align-items: stretch; gap: 8px; padding: 12px;
-  cursor: default;
+.carta-mini-min { display: grid; grid-template-columns: 1fr auto; gap: 0; padding: 0; }
+.carta-mini-min .carta-mini-header {
+  display: flex; align-items: center; gap: 10px; padding: 10px 6px 10px 14px;
+  background: transparent; border: none; color: inherit; cursor: pointer; text-align: left;
+  min-width: 0;
 }
-.carta-mini-interactiva:hover { transform: none; }
-.carta-mini-header {
-  display: flex; align-items: center; gap: 12px; width: 100%; text-align: left;
-  background: transparent; border: none; padding: 4px 4px 8px; color: inherit; cursor: pointer;
-  border-bottom: 1px solid var(--line);
+.carta-mini-glob {
+  font-family: 'IBM Plex Mono', monospace; font-size: 14px; font-weight: 700;
+  color: var(--carta-color); flex: none; min-width: 24px; text-align: center;
 }
-.carta-mini-hex {
-  display: flex; justify-content: center; align-items: center; padding: 4px 0 2px;
+.carta-mini-min .carta-mini-nombre {
+  font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden;
+  text-overflow: ellipsis; min-width: 0; flex: 1;
 }
-.carta-mini-hex .carta-hex { width: 100%; max-width: 260px; }
+.carta-mini-deb {
+  color: var(--rojo); font-size: 10px; flex: none; line-height: 1;
+}
+.carta-mini-toggle {
+  background: transparent; border: none; color: var(--muted); cursor: pointer;
+  padding: 0 14px; font-size: 12px; align-self: stretch;
+  border-left: 1px solid var(--line);
+  transition: color .12s ease, background .12s ease;
+}
+.carta-mini-toggle:hover { color: var(--carta-color); background: rgba(255,255,255,.02); }
+.carta-mini-panel {
+  grid-column: 1 / -1; padding: 8px 14px 12px; border-top: 1px solid var(--line);
+  animation: aparece-panel .18s ease both;
+}
+.carta-mini-abierta { border-color: var(--carta-color); }
+@keyframes aparece-panel { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
 
 /* Sliders con nombre completo: una fila por beneficio (nombre | slider | número). */
 .carta-sliders-lista { display: flex; flex-direction: column; gap: 10px; padding: 4px 2px 2px; }

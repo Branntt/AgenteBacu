@@ -469,6 +469,8 @@ root.addEventListener('click', e => {
     case 'cliente-nuevo': actions.nuevoCliente(); break;
     case 'carta-abrir': actions.cartaAbrir(id); break;
     case 'carta-cerrar': actions.cartaCerrar(); break;
+    case 'carta-mini-toggle': actions.redToggleAbierto(id); break;
+    case 'red-filtro-tier': actions.redFiltroTier(el.dataset.tier); break;
     case 'cliente-abrir': actions.abrirCliente(id); break;
     case 'cliente-abrir-calendario': actions.abrirClienteDesdeCalendario(id); break;
     case 'cliente-detalle-cerrar': actions.cerrarClienteDetalle(); break;
