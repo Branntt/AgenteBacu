@@ -17,7 +17,6 @@ import { renderPanorama } from './views/panorama.js';
 import { renderCalendario } from './views/calendario.js';
 import { renderClientes } from './views/clientes.js';
 import { renderFinanciamiento } from './views/financiamiento.js';
-import { renderFinanzasPersonales } from './views/finanzas_personales.js';
 import { renderInventario } from './views/inventario.js';
 import { renderBienestar } from './views/bienestar.js';
 import { renderMetas } from './views/metas.js';
@@ -155,7 +154,6 @@ const VIEWS = {
   calendario: renderCalendario,
   clientes: renderClientes,
   financiamiento: renderFinanciamiento,
-  finanzas_personales: renderFinanzasPersonales,
   inventario: renderInventario,
   bienestar: renderBienestar,
   metas: renderMetas,
@@ -704,56 +702,6 @@ root.addEventListener('click', e => {
     case 'bacu-set-estado': actions.bacuSetEstado(id, el.dataset.estado, el.dataset.label); break;
     case 'bacu-posponer': actions.bacuPosponer(id); break;
     case 'cerrar-notificacion-bacu': actions.cerrarNotificacionBacu(); break;
-
-    // Finanzas Personales
-    case 'fp-nuevo-gasto': actions.fpAbrirModalGasto(); break;
-    case 'fp-nueva-suscripcion': actions.fpAbrirModalSuscripcion(); break;
-    case 'fp-nueva-cuenta': actions.fpAbrirModalCuenta(); break;
-    case 'fp-cerrar-modal': actions.fpCerrarModal(); break;
-    case 'fp-guardar-gasto': {
-      const fecha = document.querySelector('#fp-gasto-fecha')?.value;
-      const categoria = document.querySelector('#fp-gasto-categoria')?.value;
-      const descripcion = document.querySelector('#fp-gasto-descripcion')?.value;
-      const monto = parseN(document.querySelector('#fp-gasto-monto')?.value);
-      const cuenta = document.querySelector('#fp-gasto-cuenta')?.value;
-      if (fecha && categoria && monto > 0 && cuenta) {
-        actions.fpNuevoGasto(fecha, categoria, descripcion, monto, cuenta);
-        actions.fpCerrarModal();
-      }
-      break;
-    }
-    case 'fp-guardar-suscripcion': {
-      const nombre = document.querySelector('#fp-suscripcion-nombre')?.value;
-      const monto = parseN(document.querySelector('#fp-suscripcion-monto')?.value);
-      const dia_pago = parseN(document.querySelector('#fp-suscripcion-dia')?.value);
-      const categoria = document.querySelector('#fp-suscripcion-categoria')?.value;
-      if (nombre && monto > 0 && dia_pago > 0 && categoria) {
-        actions.fpNuevaSuscripcion(nombre, monto, dia_pago, categoria);
-        actions.fpCerrarModal();
-      }
-      break;
-    }
-    case 'fp-guardar-cuenta': {
-      const nombre_cuenta = document.querySelector('#fp-cuenta-nombre')?.value;
-      const monto_actual = parseN(document.querySelector('#fp-cuenta-monto')?.value);
-      if (nombre_cuenta && monto_actual >= 0) {
-        actions.fpNuevaCuenta(nombre_cuenta, monto_actual);
-        actions.fpCerrarModal();
-      }
-      break;
-    }
-    case 'fp-eliminar-gasto': actions.fpEliminarGasto(id); break;
-    case 'fp-eliminar-suscripcion': actions.fpEliminarSuscripcion(id); break;
-    case 'fp-edit-saldo': {
-      const nuevoMonto = prompt('Nuevo saldo:', el.dataset.monto);
-      if (nuevoMonto !== null && nuevoMonto.trim()) {
-        const parsed = parseN(nuevoMonto);
-        if (parsed >= 0) {
-          actions.fpActualizarSaldo(id, parsed);
-        }
-      }
-      break;
-    }
   }
 });
 

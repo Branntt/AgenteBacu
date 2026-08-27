@@ -1,8 +1,22 @@
 import { escapeHtml } from '../lib/format.js';
 import { calcularFinanciamiento, cuentasCobroPendientes, esVencida } from '../lib/financiamiento.js';
 import { renderTablaFinanzas } from '../components/tablaFinanzas.js';
-import { obtenerEmoji, agruparPorCategoria, calcularResumen } from '../lib/transacciones.js';
+import { obtenerEmoji, agruparPorCategoria, calcularResumen, rubroPresupuestoDeCategoria } from '../lib/transacciones.js';
+import { renderSimuladorPresupuesto } from '../components/simuladorPresupuesto.js';
 import { hoyStr } from '../lib/idea.js';
+
+// Rubros del presupuesto (ver state.presupuesto) en el orden en que se muestran — 'ahorro' no
+// entra: no es un gasto que se detecte en transacciones, es la meta de lo que debería sobrar.
+const RUBROS_PRESUPUESTO = [
+  ['arriendo', '🏠 Arriendo'],
+  ['servicios', '💡 Servicios'],
+  ['comida', '🍽️ Comida'],
+  ['transporte', '🚗 Transporte'],
+  ['telefono', '📱 Teléfono'],
+  ['salud', '⚕️ Salud'],
+  ['entretenimiento', '🎬 Entretenimiento'],
+  ['personales', '🧴 Personales'],
+];
 
 function fmtMoney(n) {
   const v = Number(n) || 0;
@@ -188,8 +202,19 @@ export function renderFinanciamiento(state) {
     .slice(0, 12);
   const sinMovimientos = movimientos.length === 0 && transacciones.length === 0;
 
+  // --- Presupuesto: cuánto de "en bolsillo" ya tiene dueño ---
+  // Cada gasto del mes se reparte en el rubro del presupuesto que le corresponde (ver
+  // rubroPresupuestoDeCategoria) para poder responder "esta plata, ¿para qué es" — antes solo
+  // se veía el total gastado por categoría de transacción, sin comparar contra lo presupuestado.
+  const presupuesto = state.presupuesto || {};
+  const gastadoPorRubro = {};
+  transMes.filter(t => t.tipo === 'gasto').forEach(t => {
+    const rubro = rubroPresupuestoDeCategoria(t.categoria);
+    gastadoPorRubro[rubro] = (gastadoPorRubro[rubro] || 0) + (Number(t.monto) || 0);
+  });
+
   const vista = state.finanzasVista || 'dia';
-  const TABS = [['dia', '📆 Día a día'], ['ingresos', '💵 Te deben'], ['gastos', '💸 Fijos'], ['deudas', '⚠️ Deudas']];
+  const TABS = [['dia', '📆 Día a día'], ['presupuesto', '🎯 Presupuesto'], ['ingresos', '💵 Te deben'], ['gastos', '💸 Fijos'], ['deudas', '⚠️ Deudas']];
   const tabsHtml = TABS.map(([v, label]) => `
     <button class="inv-tab ${vista === v ? 'active' : ''}" data-act="finanzas-vista" data-value="${v}">${label}</button>
   `).join('');
@@ -212,6 +237,37 @@ export function renderFinanciamiento(state) {
       ${facturasPendientes.length === 0 && meDebenHtml.length === 0 ? '<div style="opacity:0.5;font-size:12px;">Nadie te debe ahora mismo 🎉</div>' : ''}
     </div>
     <div class="finanzas-seccion" style="margin-bottom:24px;">${renderTablaFinanzas(movimientos, 'entrada')}</div>
+  `;
+
+  // Presupuesto vs. real: por cada rubro, lo que te propusiste gastar este mes contra lo que
+  // ya llevas gastado — la barra se pone roja si te pasaste, y "Sin asignar" muestra qué falta
+  // por presupuestar entre lo que ya gastaste en categorías sin rubro fijo.
+  const vistaPresupuestoHtml = `
+    <div class="finanzas-seccion" style="margin-bottom:24px;">
+      <div class="seccion-titulo">🎯 Presupuesto vs. Real — Este mes</div>
+      ${card('var(--verde)', RUBROS_PRESUPUESTO.map(([rubro, label]) => {
+        const presupuestado = Number(presupuesto[rubro]) || 0;
+        const gastado = gastadoPorRubro[rubro] || 0;
+        const pct = presupuestado > 0 ? Math.round((gastado / presupuestado) * 100) : (gastado > 0 ? 100 : 0);
+        const seExcedio = presupuestado > 0 && gastado > presupuestado;
+        const color = seExcedio ? 'var(--rojo)' : 'var(--verde)';
+        return `
+          <div style="margin-bottom:14px;">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:13px;margin-bottom:5px;">
+              <span>${label}</span>
+              <b style="white-space:nowrap;color:${color};">${fmtMoney(gastado)} <span style="opacity:0.6;font-weight:normal;font-size:11px;">/ ${fmtMoney(presupuestado)}</span></b>
+            </div>
+            <div style="height:7px;background:var(--panel);border-radius:4px;overflow:hidden;">
+              <div style="height:100%;width:${Math.min(pct, 100)}%;background:${color};border-radius:4px;"></div>
+            </div>
+            ${seExcedio ? `<div style="font-size:10px;color:var(--rojo);margin-top:3px;">Te pasaste por ${fmtMoney(gastado - presupuestado)}</div>` : ''}
+          </div>
+        `;
+      }).join(''))}
+    </div>
+    <div class="finanzas-seccion" style="margin-bottom:24px;">
+      ${renderSimuladorPresupuesto(presupuesto)}
+    </div>
   `;
 
   const vistaGastosHtml = `
@@ -337,6 +393,7 @@ export function renderFinanciamiento(state) {
   const vistaHtml = vista === 'gastos' ? vistaGastosHtml
     : vista === 'deudas' ? vistaDeudasHtml
     : vista === 'ingresos' ? vistaIngresosHtml
+    : vista === 'presupuesto' ? vistaPresupuestoHtml
     : vistaDiaHtml;
 
   return `

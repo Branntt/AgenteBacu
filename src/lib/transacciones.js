@@ -1,7 +1,13 @@
-// Categorías de gastos detectadas automáticamente
+// Categorías de gastos detectadas automáticamente. 'arriendo', 'servicios' y 'telefono' se
+// agregaron porque antes NO existían: un gasto de arriendo caía siempre en "otros" y era
+// imposible ver cuánto de la plata mensual estaba comprometida en lo fijo — justo lo que hacía
+// falta para poder responder "esta plata para qué es".
 const CATEGORIA_MAP = {
-  comida: ['comida', 'restaurante', 'uber eats', 'pizza', 'groceries', 'mercado', 'supermercado', 'almuerzo', 'desayuno', 'cena', 'café', 'coffee', 'food'],
-  transporte: ['uber', 'taxi', 'gasolina', 'gasolinera', 'transporte', 'bus', 'metro', 'parking', 'peaje'],
+  arriendo: ['arriendo', 'renta', 'alquiler', 'canon de arrendamiento', 'canon arriendo'],
+  servicios: ['luz', 'electricidad', 'acueducto', 'alcantarillado', 'internet', 'wifi', 'gas natural', 'servicio público', 'servicios públicos', 'factura de servicios'],
+  telefono: ['claro', 'movistar', 'tigo', 'recarga', 'plan de datos', 'celular', 'teléfono', 'telefono'],
+  comida: ['comida', 'restaurante', 'uber eats', 'rappi', 'pizza', 'groceries', 'mercado', 'supermercado', 'almuerzo', 'desayuno', 'cena', 'café', 'coffee', 'food'],
+  transporte: ['uber', 'didi', 'taxi', 'gasolina', 'gasolinera', 'transporte', 'bus', 'metro', 'parking', 'peaje'],
   entretenimiento: ['cine', 'netflix', 'spotify', 'disney', 'juego', 'game', 'concierto', 'beer', 'cerveza', 'bar', 'club'],
   suscripciones: ['netflix', 'spotify', 'claude', 'github', 'figma', 'adobe', 'capcut', 'lightroom', 'apple', 'google play', 'gym'],
   salud: ['farmacia', 'doctor', 'hospital', 'dentista', 'gym', 'yoga', 'medicinas'],
@@ -25,6 +31,9 @@ export function detectarCategoria(descripcion) {
 
 export function obtenerEmoji(categoria) {
   const emojis = {
+    arriendo: '🏠',
+    servicios: '💡',
+    telefono: '📱',
     comida: '🍽️',
     transporte: '🚗',
     entretenimiento: '🎬',
@@ -35,6 +44,29 @@ export function obtenerEmoji(categoria) {
     otros: '📦'
   };
   return emojis[categoria] || '📦';
+}
+
+// Bolsillo del presupuesto (ver state.presupuesto / simuladorPresupuesto.js) al que pertenece
+// cada categoría de transacción — es lo que permite comparar "lo que me propuse gastar en
+// arriendo" contra "lo que de verdad llevo gastado en arriendo este mes" en la pestaña
+// Presupuesto. Las categorías sin rubro propio (ropa, tecnología, otros) caen en 'personales',
+// el cajón discrecional del presupuesto.
+const RUBRO_PRESUPUESTO_POR_CATEGORIA = {
+  arriendo: 'arriendo',
+  servicios: 'servicios',
+  telefono: 'telefono',
+  comida: 'comida',
+  transporte: 'transporte',
+  entretenimiento: 'entretenimiento',
+  suscripciones: 'entretenimiento',
+  salud: 'salud',
+  ropa: 'personales',
+  tecnología: 'personales',
+  otros: 'personales'
+};
+
+export function rubroPresupuestoDeCategoria(categoria) {
+  return RUBRO_PRESUPUESTO_POR_CATEGORIA[categoria] || 'personales';
 }
 
 export function agruparPorCategoria(transacciones) {
