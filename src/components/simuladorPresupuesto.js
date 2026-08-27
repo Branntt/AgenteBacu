@@ -1,8 +1,12 @@
 import { escapeHtml } from '../lib/format.js';
 
+// El balance mensual puede ser negativo (gastas más de lo que ganas) — sin el signo, un
+// balance de -$2.000.000 se veía como "$2.000.000" en rojo, que parece un sobrante y no un
+// faltante. El texto de abajo lo aclaraba, pero el número grande mentía.
 function fmtMoney(n) {
   const v = Number(n) || 0;
-  return '$' + Math.abs(v).toLocaleString('es-CO');
+  const signo = v < 0 ? '-' : '';
+  return signo + '$' + Math.abs(v).toLocaleString('es-CO');
 }
 
 function rubloHtml(label, valor, monto, cambiar) {
