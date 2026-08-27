@@ -2,6 +2,7 @@ const NAV = [
   ['calendario', 'Calendario'],
   ['clientes', 'Clientes'],
   ['financiamiento', 'Finanzas'],
+  ['finanzas_personales', 'Mi Finanzas'],
   ['inventario', 'Inventario'],
   ['bienestar', 'Bienestar'],
   ['metas', 'Metas'],
