@@ -131,6 +131,14 @@ export const state = {
   saveError: false,
   saveErrorMotivo: null,
 
+  // Finanzas Personales
+  saldosPersonales: [],
+  gastosPersonales: [],
+  suscripcionesPersonales: [],
+  fpModalAbiertoGasto: false,
+  fpModalAbiertoSuscripcion: false,
+  fpModalAbiertoCuenta: false,
+
   session: null,
   authReady: false,
   authBusy: false,
@@ -221,7 +229,7 @@ export async function initAuth() {
 }
 
 async function cargarDatos() {
-  const [ideasRes, snapsRes, clientesRes, cuentasRes, movimientosRes, deudasRes, pagosMensualesRes, transaccionesRes, equipoProduccionRes, metasPersonalesRes, metasMensualesRes, tareasRes] = await Promise.all([
+  const [ideasRes, snapsRes, clientesRes, cuentasRes, movimientosRes, deudasRes, pagosMensualesRes, transaccionesRes, equipoProduccionRes, metasPersonalesRes, metasMensualesRes, tareasRes, gastosPersonalesRes, saldosPersonalesRes, suscripcionesPersonalesRes] = await Promise.all([
     supabase.from('ideas').select('*').order('id'),
     supabase.from('snaps').select('*').order('fecha'),
     supabase.from('clientes').select('*').order('id'),
@@ -233,7 +241,10 @@ async function cargarDatos() {
     supabase.from('equipo_produccion').select('*').order('created_at'),
     supabase.from('metas_personales').select('*').order('created_at'),
     supabase.from('metas_mensuales').select('*'),
-    supabase.from('tareas').select('*').order('created_at')
+    supabase.from('tareas').select('*').order('created_at'),
+    supabase.from('gastos_personales').select('*').order('fecha', { ascending: false }),
+    supabase.from('saldos_personales').select('*').order('nombre_cuenta'),
+    supabase.from('suscripciones_personales').select('*').order('nombre')
   ]);
   state.ideas = aplicarOpcionalesLocales('ideas', (ideasRes.data || []).map(fromDbIdea));
   state.snaps = snapsRes.data || [];
@@ -247,6 +258,9 @@ async function cargarDatos() {
   state.metasPersonales = metasPersonalesRes.data || [];
   state.metasMensuales = metasMensualesRes.data || [];
   state.tareas = tareasRes.data || [];
+  state.gastosPersonales = gastosPersonalesRes.data || [];
+  state.saldosPersonales = saldosPersonalesRes.data || [];
+  state.suscripcionesPersonales = suscripcionesPersonalesRes.data || [];
   state.dataReady = true;
   recuperarPendientesUni();
   notify();
@@ -1544,5 +1558,156 @@ export const actions = {
     state.transacciones = state.transacciones.map(t => t.id === id ? actualizada : t);
     notify();
     supabase.from('transacciones').update({ [campo]: valor }).eq('id', id).then(({ error }) => marcarGuardado(!error, error));
-  }
+  },
+
+  // ===== FINANZAS PERSONALES =====
+  fpCargarDatos: async () => {
+    try {
+      const [saldosRes, gastosRes, subsRes] = await Promise.all([
+        supabase.from('saldos_personales').select('*'),
+        supabase.from('gastos_personales').select('*').order('fecha', { ascending: false }),
+        supabase.from('suscripciones_personales').select('*').order('nombre')
+      ]);
+
+      setState({
+        saldosPersonales: saldosRes.data || [],
+        gastosPersonales: gastosRes.data || [],
+        suscripcionesPersonales: subsRes.data || []
+      });
+    } catch (error) {
+      console.error('Error cargando finanzas:', error);
+      marcarGuardado(false, error);
+    }
+  },
+
+  fpNuevoGasto: async (fecha, categoria, descripcion, monto, cuenta) => {
+    try {
+      const { data, error } = await supabase
+        .from('gastos_personales')
+        .insert([{ fecha, categoria, descripcion, monto: parseFloat(monto), cuenta }])
+        .select();
+
+      if (error) throw error;
+
+      state.gastosPersonales = [data[0], ...state.gastosPersonales];
+      setState({ fpModalAbiertoGasto: false });
+      notify();
+      marcarGuardado(true);
+
+      // Actualizar saldo
+      const saldo = state.saldosPersonales.find(s => s.nombre_cuenta === cuenta);
+      if (saldo) {
+        const nuevoMonto = parseFloat(saldo.monto_actual) - parseFloat(monto);
+        actions.fpActualizarSaldo(saldo.id, nuevoMonto);
+      }
+    } catch (error) {
+      console.error('Error guardando gasto:', error);
+      marcarGuardado(false, error);
+    }
+  },
+
+  fpEliminarGasto: async (id) => {
+    try {
+      const gasto = state.gastosPersonales.find(g => g.id === id);
+      if (!gasto) return;
+
+      const { error } = await supabase.from('gastos_personales').delete().eq('id', id);
+      if (error) throw error;
+
+      state.gastosPersonales = state.gastosPersonales.filter(g => g.id !== id);
+      notify();
+      marcarGuardado(true);
+
+      // Restaurar saldo
+      const saldo = state.saldosPersonales.find(s => s.nombre_cuenta === gasto.cuenta);
+      if (saldo) {
+        const nuevoMonto = parseFloat(saldo.monto_actual) + parseFloat(gasto.monto);
+        actions.fpActualizarSaldo(saldo.id, nuevoMonto);
+      }
+    } catch (error) {
+      console.error('Error eliminando gasto:', error);
+      marcarGuardado(false, error);
+    }
+  },
+
+  fpNuevaSuscripcion: async (nombre, monto, dia_pago, categoria) => {
+    try {
+      const { data, error } = await supabase
+        .from('suscripciones_personales')
+        .insert([{ nombre, monto: parseFloat(monto), dia_pago: parseInt(dia_pago), categoria, activa: true }])
+        .select();
+
+      if (error) throw error;
+
+      state.suscripcionesPersonales = [...state.suscripcionesPersonales, data[0]];
+      setState({ fpModalAbiertoSuscripcion: false });
+      notify();
+      marcarGuardado(true);
+    } catch (error) {
+      console.error('Error guardando suscripción:', error);
+      marcarGuardado(false, error);
+    }
+  },
+
+  fpEliminarSuscripcion: async (id) => {
+    try {
+      const { error } = await supabase.from('suscripciones_personales').delete().eq('id', id);
+      if (error) throw error;
+
+      state.suscripcionesPersonales = state.suscripcionesPersonales.filter(s => s.id !== id);
+      notify();
+      marcarGuardado(true);
+    } catch (error) {
+      console.error('Error eliminando suscripción:', error);
+      marcarGuardado(false, error);
+    }
+  },
+
+  fpNuevaCuenta: async (nombre_cuenta, monto_actual) => {
+    try {
+      const { data, error } = await supabase
+        .from('saldos_personales')
+        .insert([{ nombre_cuenta, monto_actual: parseFloat(monto_actual), monto_inicial: parseFloat(monto_actual) }])
+        .select();
+
+      if (error) throw error;
+
+      state.saldosPersonales = [...state.saldosPersonales, data[0]];
+      setState({ fpModalAbiertoCuenta: false });
+      notify();
+      marcarGuardado(true);
+    } catch (error) {
+      console.error('Error creando cuenta:', error);
+      marcarGuardado(false, error);
+    }
+  },
+
+  fpActualizarSaldo: async (id, nuevoMonto) => {
+    try {
+      const { error } = await supabase
+        .from('saldos_personales')
+        .update({ monto_actual: parseFloat(nuevoMonto) })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      state.saldosPersonales = state.saldosPersonales.map(s =>
+        s.id === id ? { ...s, monto_actual: parseFloat(nuevoMonto) } : s
+      );
+      notify();
+      marcarGuardado(true);
+    } catch (error) {
+      console.error('Error actualizando saldo:', error);
+      marcarGuardado(false, error);
+    }
+  },
+
+  fpAbrirModalGasto: () => setState({ fpModalAbiertoGasto: true }),
+  fpAbrirModalSuscripcion: () => setState({ fpModalAbiertoSuscripcion: true }),
+  fpAbrirModalCuenta: () => setState({ fpModalAbiertoCuenta: true }),
+  fpCerrarModal: () => setState({
+    fpModalAbiertoGasto: false,
+    fpModalAbiertoSuscripcion: false,
+    fpModalAbiertoCuenta: false
+  })
 };
