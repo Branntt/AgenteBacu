@@ -1,0 +1,580 @@
+/* === FINANZAS PERSONALES === */
+
+.fp-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* HEADER */
+.fp-header {
+  background: linear-gradient(135deg, var(--verde), rgba(0,255,0,0.1));
+  border-radius: 12px;
+  padding: 24px;
+  border: 1px solid rgba(0,255,0,0.2);
+  margin-bottom: 12px;
+}
+
+.fp-title {
+  font-size: 28px;
+  font-weight: 600;
+  margin: 0 0 16px 0;
+  color: var(--text);
+}
+
+.fp-total-saldos {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fp-total-label {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: rgba(var(--text-rgb), 0.7);
+}
+
+.fp-total-amount {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--verde);
+  font-family: 'Courier New', monospace;
+}
+
+/* SECTIONS */
+.fp-section {
+  background: rgba(0,0,0,0.05);
+  border-radius: 12px;
+  padding: 20px;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+.fp-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.fp-section-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+  color: var(--text);
+}
+
+/* BUTTONS */
+.fp-btn-add {
+  background: rgba(0,255,0,0.15);
+  border: 1px solid rgba(0,255,0,0.3);
+  color: var(--verde);
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.fp-btn-add:active {
+  background: rgba(0,255,0,0.3);
+  transform: scale(0.96);
+}
+
+.fp-btn-add-main {
+  background: var(--verde);
+  color: #000;
+  font-weight: 700;
+  padding: 10px 16px;
+}
+
+.fp-btn-add-main:active {
+  background: rgba(0,255,0,0.8);
+}
+
+.fp-btn-submit {
+  width: 100%;
+  background: var(--verde);
+  color: #000;
+  border: none;
+  padding: 12px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 16px;
+  transition: all 0.2s;
+}
+
+.fp-btn-submit:active {
+  background: rgba(0,255,0,0.8);
+  transform: scale(0.98);
+}
+
+/* SALDOS GRID */
+.fp-saldos-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+@media (min-width: 600px) {
+  .fp-saldos-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 900px) {
+  .fp-saldos-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.fp-saldo-card {
+  background: rgba(0,255,0,0.08);
+  border: 1px solid rgba(0,255,0,0.2);
+  border-radius: 10px;
+  padding: 16px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fp-saldo-label {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: rgba(var(--text-rgb), 0.6);
+}
+
+.fp-saldo-amount {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--verde);
+  font-family: 'Courier New', monospace;
+}
+
+.fp-edit-saldo {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(0,255,0,0.2);
+  border: none;
+  color: var(--verde);
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.2s;
+}
+
+.fp-edit-saldo:active {
+  background: rgba(0,255,0,0.4);
+}
+
+/* SUSCRIPCIONES */
+.fp-suscripciones-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.fp-suscripcion-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 14px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.fp-suscripcion-item:active {
+  background: rgba(255,255,255,0.06);
+}
+
+.fp-sub-info {
+  flex: 1;
+}
+
+.fp-sub-nombre {
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.fp-sub-meta {
+  font-size: 12px;
+  color: rgba(var(--text-rgb), 0.6);
+}
+
+.fp-sub-monto {
+  font-weight: 700;
+  color: var(--rojo);
+  font-family: 'Courier New', monospace;
+  margin: 0 12px;
+  min-width: 80px;
+  text-align: right;
+}
+
+.fp-sub-del {
+  background: rgba(255,0,0,0.15);
+  border: none;
+  color: var(--rojo);
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.fp-sub-del:active {
+  background: rgba(255,0,0,0.3);
+}
+
+/* GASTOS LIST */
+.fp-gastos-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.fp-gasto-item {
+  display: grid;
+  grid-template-columns: 40px 1fr auto 28px;
+  gap: 12px;
+  align-items: center;
+  padding: 12px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.fp-gasto-item:active {
+  background: rgba(255,255,255,0.06);
+}
+
+.fp-gasto-icon {
+  font-size: 18px;
+  text-align: center;
+}
+
+.fp-gasto-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.fp-gasto-cat {
+  font-weight: 600;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fp-gasto-desc {
+  font-size: 13px;
+  color: rgba(var(--text-rgb), 0.7);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fp-gasto-fecha {
+  font-size: 11px;
+  color: rgba(var(--text-rgb), 0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.fp-gasto-monto {
+  font-weight: 700;
+  color: var(--rojo);
+  font-family: 'Courier New', monospace;
+  text-align: right;
+}
+
+.fp-gasto-del {
+  background: rgba(255,0,0,0.15);
+  border: none;
+  color: var(--rojo);
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.2s;
+}
+
+.fp-gasto-del:active {
+  background: rgba(255,0,0,0.3);
+}
+
+/* RESUMEN */
+.fp-resumen {
+  background: rgba(0,255,0,0.08);
+  border: 1px solid rgba(0,255,0,0.2);
+  border-radius: 12px;
+  padding: 20px;
+  margin-top: 12px;
+}
+
+.fp-resumen-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 16px 0;
+  color: var(--text);
+}
+
+.fp-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+@media (min-width: 600px) {
+  .fp-stats-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.fp-stat {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px;
+  padding: 12px;
+  text-align: center;
+}
+
+.fp-stat-total {
+  grid-column: 1 / -1;
+  background: rgba(0,255,0,0.15);
+  border-color: rgba(0,255,0,0.3);
+}
+
+@media (min-width: 600px) {
+  .fp-stat-total {
+    grid-column: auto;
+  }
+}
+
+.fp-stat-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: rgba(var(--text-rgb), 0.6);
+  margin-bottom: 4px;
+}
+
+.fp-stat-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--verde);
+  font-family: 'Courier New', monospace;
+}
+
+.fp-stat-total .fp-stat-value {
+  font-size: 22px;
+}
+
+.fp-breakdown {
+  margin-top: 16px;
+}
+
+.fp-breakdown-title {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: rgba(var(--text-rgb), 0.7);
+  margin: 0 0 12px 0;
+}
+
+.fp-cat-breakdown {
+  display: grid;
+  grid-template-columns: 100px 1fr 60px;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.fp-cat-label {
+  font-size: 12px;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fp-cat-bar {
+  height: 8px;
+  border-radius: 4px;
+  min-width: 20px;
+  transition: width 0.3s;
+}
+
+.fp-cat-amount {
+  font-size: 12px;
+  font-weight: 700;
+  text-align: right;
+  font-family: 'Courier New', monospace;
+}
+
+/* MODALES */
+.fp-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 1000;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 16px;
+  animation: fp-slide-up 0.3s ease-out;
+}
+
+.fp-modal.open {
+  display: flex;
+}
+
+@keyframes fp-slide-up {
+  from { transform: translateY(100px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.fp-modal-content {
+  background: var(--bg);
+  border-radius: 16px 16px 0 0;
+  padding: 24px 20px;
+  max-width: 500px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+@media (min-width: 600px) {
+  .fp-modal {
+    align-items: center;
+    padding: 32px;
+  }
+
+  .fp-modal-content {
+    border-radius: 12px;
+    max-width: 400px;
+  }
+}
+
+.fp-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  padding-bottom: 16px;
+}
+
+.fp-modal-header h2 {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0;
+  color: var(--text);
+}
+
+.fp-modal-close {
+  background: transparent;
+  border: none;
+  color: rgba(var(--text-rgb), 0.6);
+  font-size: 24px;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.fp-modal-close:active {
+  color: var(--text);
+}
+
+/* FORMS */
+.fp-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.fp-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fp-form-group label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: rgba(var(--text-rgb), 0.7);
+}
+
+.fp-form-group input,
+.fp-form-group select {
+  padding: 10px 12px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 6px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.fp-form-group input:focus,
+.fp-form-group select:focus {
+  outline: none;
+  border-color: rgba(0,255,0,0.5);
+  background: rgba(0,255,0,0.08);
+}
+
+.fp-form-group input::placeholder {
+  color: rgba(var(--text-rgb), 0.4);
+}
+
+/* EMPTY STATE */
+.fp-empty {
+  text-align: center;
+  padding: 32px 16px;
+  color: rgba(var(--text-rgb), 0.5);
+  font-size: 14px;
+  margin: 0;
+}
+
+/* Responsive tweaks */
+@media (min-width: 900px) {
+  .fp-header {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: start;
+    gap: 32px;
+  }
+
+  .fp-title {
+    font-size: 32px;
+  }
+
+  .fp-total-saldos {
+    text-align: right;
+  }
+
+  .fp-gasto-item {
+    grid-template-columns: 40px 1fr auto auto 28px;
+  }
+}
