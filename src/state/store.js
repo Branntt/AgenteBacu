@@ -37,6 +37,7 @@ export const state = {
   invVista: loadValue('ui.invVista', 'personal'),
   uniPendMateria: loadValue('ui.uniPendMateria', ''),
   finanzasVista: loadValue('ui.finanzasVista', 'ingresos'),
+  historialMes: loadValue('ui.historialMes', null), // null = mes actual (ver vistaHistorialHtml)
   // Sync S.A.O BACU → Google Calendar (ver lib/googleCalendar.js). googleConectado es de
   // sesión (el token de Google no sobrevive un refresh de página, hay que re-obtenerlo) — el
   // resto sí se guarda porque son preferencias/estado real de la última sincronización.
@@ -70,6 +71,7 @@ export const state = {
   transacciones: [],
   cuentasCobro: [],
   movimientosFinanciamiento: [],
+  saldosCuentas: [],
   deudas: [],
   pagosMensuales: [],
   equipoProduccion: [],
@@ -154,7 +156,7 @@ function notify() {
 }
 
 // Claves de interfaz que se recuerdan entre sesiones (cada pestaña vuelve donde quedó)
-const UI_PERSIST = ['month', 'filtroGuiones', 'guionesVista', 'clientesVista', 'filtroCalendario', 'calVista', 'semanaInicio', 'invVista', 'finanzasVista', 'uniBloquesAbiertos', 'uniPendMateria', 'diaSeleccionadoBienestar', 'semanaSeleccionadaBienestar'];
+const UI_PERSIST = ['month', 'filtroGuiones', 'guionesVista', 'clientesVista', 'filtroCalendario', 'calVista', 'semanaInicio', 'invVista', 'finanzasVista', 'historialMes', 'uniBloquesAbiertos', 'uniPendMateria', 'diaSeleccionadoBienestar', 'semanaSeleccionadaBienestar'];
 
 function setState(patch) {
   Object.assign(state, patch);
@@ -224,7 +226,7 @@ export async function initAuth() {
 }
 
 async function cargarDatos() {
-  const [ideasRes, snapsRes, clientesRes, cuentasRes, movimientosRes, deudasRes, pagosMensualesRes, transaccionesRes, equipoProduccionRes, metasPersonalesRes, metasMensualesRes, tareasRes] = await Promise.all([
+  const [ideasRes, snapsRes, clientesRes, cuentasRes, movimientosRes, deudasRes, pagosMensualesRes, transaccionesRes, equipoProduccionRes, metasPersonalesRes, metasMensualesRes, tareasRes, saldosCuentasRes] = await Promise.all([
     supabase.from('ideas').select('*').order('id'),
     supabase.from('snaps').select('*').order('fecha'),
     supabase.from('clientes').select('*').order('id'),
@@ -236,7 +238,8 @@ async function cargarDatos() {
     supabase.from('equipo_produccion').select('*').order('created_at'),
     supabase.from('metas_personales').select('*').order('created_at'),
     supabase.from('metas_mensuales').select('*'),
-    supabase.from('tareas').select('*').order('created_at')
+    supabase.from('tareas').select('*').order('created_at'),
+    supabase.from('saldos_cuentas').select('*')
   ]);
   state.ideas = aplicarOpcionalesLocales('ideas', (ideasRes.data || []).map(fromDbIdea));
   state.snaps = snapsRes.data || [];
@@ -250,6 +253,7 @@ async function cargarDatos() {
   state.metasPersonales = metasPersonalesRes.data || [];
   state.metasMensuales = metasMensualesRes.data || [];
   state.tareas = tareasRes.data || [];
+  state.saldosCuentas = saldosCuentasRes.data || [];
   state.dataReady = true;
   recuperarPendientesUni();
   notify();
@@ -378,7 +382,7 @@ const canalesActivos = new Set();
 const CHANNEL_MAP = {
   calendario: ['sync-ideas', 'sync-metas-personales'],
   clientes: ['sync-clientes', 'sync-snaps'],
-  financiamiento: ['sync-cuentas-cobro', 'sync-movimientos-financiamiento', 'sync-deudas', 'sync-pagos-mensuales', 'sync-transacciones'],
+  financiamiento: ['sync-cuentas-cobro', 'sync-movimientos-financiamiento', 'sync-deudas', 'sync-pagos-mensuales', 'sync-transacciones', 'sync-saldos-cuentas'],
   inventario: ['sync-metas-personales', 'sync-equipo-produccion'],
   bienestar: ['sync-metas-mensuales', 'sync-tareas'],
   metas: ['sync-metas-mensuales', 'sync-tareas'],
@@ -387,7 +391,7 @@ const CHANNEL_MAP = {
   // Panorama muestra el Patrimonio Neto (calcularFinanciamiento sobre movimientos,
   // deudas, cuentas de cobro y transacciones) — sin estos canales, un gasto agregado desde
   // el celular no se veía reflejado en la computadora hasta cambiar de pestaña y volver.
-  panorama: ['sync-ideas', 'sync-clientes', 'sync-metas-personales', 'sync-equipo-produccion', 'sync-cuentas-cobro', 'sync-movimientos-financiamiento', 'sync-deudas', 'sync-pagos-mensuales', 'sync-transacciones'],
+  panorama: ['sync-ideas', 'sync-clientes', 'sync-metas-personales', 'sync-equipo-produccion', 'sync-cuentas-cobro', 'sync-movimientos-financiamiento', 'sync-deudas', 'sync-pagos-mensuales', 'sync-transacciones', 'sync-saldos-cuentas'],
   configuraciones: [] // hereda de la vista anterior
 };
 
@@ -453,6 +457,16 @@ const PAYLOAD_HANDLERS = {
     } else {
       const existe = state.pagosMensuales.some(p => p.id === payload.new.id);
       state.pagosMensuales = existe ? state.pagosMensuales.map(p => p.id === payload.new.id ? payload.new : p) : state.pagosMensuales.concat([payload.new]);
+    }
+    notify();
+  },
+  // saldos_cuentas usa 'fuente' como llave (no 'id') — una fila por cuenta.
+  'sync-saldos-cuentas': payload => {
+    if (payload.eventType === 'DELETE') {
+      state.saldosCuentas = state.saldosCuentas.filter(s => s.fuente !== payload.old.fuente);
+    } else {
+      const existe = state.saldosCuentas.some(s => s.fuente === payload.new.fuente);
+      state.saldosCuentas = existe ? state.saldosCuentas.map(s => s.fuente === payload.new.fuente ? payload.new : s) : state.saldosCuentas.concat([payload.new]);
     }
     notify();
   },
@@ -939,6 +953,7 @@ export const actions = {
   claseInfoCerrar: () => setState({ claseInfo: null }),
   invSetVista: v => setState({ invVista: v }),
   finanzasSetVista: v => setState({ finanzasVista: v }),
+  historialSetMes: v => setState({ historialMes: v }),
 
   personaje3dAbrir: () => setState({ personaje3dAbierto: true }),
   personaje3dCerrar: () => setState({ personaje3dAbierto: false }),
@@ -1552,5 +1567,18 @@ export const actions = {
     state.transacciones = state.transacciones.map(t => t.id === id ? actualizada : t);
     notify();
     supabase.from('transacciones').update({ [campo]: valor }).eq('id', id).then(({ error }) => marcarGuardado(!error, error));
+  },
+
+  // Redeclara el saldo real de una cuenta HOY (ver saldos_cuentas / calcularFinanciamiento):
+  // desde este momento, esta cuenta arranca en `monto` y solo suma lo que se registre de aquí
+  // en adelante — lo anterior queda archivado (sigue viéndose en Historial, deja de sumar al
+  // saldo en vivo). Es "corregir la verdad de hoy", no editar un dato viejo.
+  actualizarSaldoCuenta: (fuente, monto) => {
+    const hoy = hoyStr();
+    const nueva = { fuente, monto: parseN(monto), fecha_corte: hoy, actualizado_en: new Date().toISOString() };
+    const existe = state.saldosCuentas.some(s => s.fuente === fuente);
+    state.saldosCuentas = existe ? state.saldosCuentas.map(s => s.fuente === fuente ? nueva : s) : state.saldosCuentas.concat([nueva]);
+    notify();
+    supabase.from('saldos_cuentas').upsert(nueva, { onConflict: 'fuente' }).then(({ error }) => marcarGuardado(!error, error));
   }
 };

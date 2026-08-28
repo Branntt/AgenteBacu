@@ -4,6 +4,7 @@ import { renderTablaFinanzas } from '../components/tablaFinanzas.js';
 import { obtenerEmoji, agruparPorCategoria, calcularResumen, rubroPresupuestoDeCategoria } from '../lib/transacciones.js';
 import { renderSimuladorPresupuesto } from '../components/simuladorPresupuesto.js';
 import { hoyStr } from '../lib/idea.js';
+import { MESES } from '../data/constants.js';
 
 // Rubros del presupuesto (ver state.presupuesto) en el orden en que se muestran — 'ahorro' no
 // entra: no es un gasto que se detecte en transacciones, es la meta de lo que debería sobrar.
@@ -139,13 +140,15 @@ export function renderFinanciamiento(state) {
   const deudas = state.deudas || [];
   const cuentasCobro = state.cuentasCobro || [];
   const pagosMensuales = state.pagosMensuales || [];
+  const saldosCuentas = state.saldosCuentas || [];
   const hoy = hoyStr();
 
   // Cálculos financieros — misma función que usa Panorama, para que ambas pantallas concuerden.
   // teDeben/patrimonio YA excluyen lo vencido (ver esVencida en lib/financiamiento.js) — una
   // factura o deuda a tu favor que se pasó de fecha deja de sumarse sola al número de confianza
   // hasta que decidas qué pasó con ella (renegociar la fecha o eliminarla).
-  const { efectivo, porFuente, debes, teDeben, teDebenVencido, futuroPago, patrimonio } = calcularFinanciamiento(movimientos, deudas, cuentasCobro, hoy, transacciones);
+  const { efectivo, porFuente, debes, teDeben, teDebenVencido, futuroPago, patrimonio } = calcularFinanciamiento(movimientos, deudas, cuentasCobro, hoy, transacciones, saldosCuentas);
+  const corteDe = fuente => (saldosCuentas.find(s => s.fuente === fuente) || {}).fecha_corte || null;
 
   // Quién te debe: cuentas de cobro sin pagar (por cliente) + deudas personales a tu favor.
   // El estado de pago vive en cada factura, no en el cliente — ver calcularFinanciamiento.
@@ -214,7 +217,7 @@ export function renderFinanciamiento(state) {
   });
 
   const vista = state.finanzasVista || 'dia';
-  const TABS = [['dia', '📆 Día a día'], ['presupuesto', '🎯 Presupuesto'], ['ingresos', '💵 Te deben'], ['gastos', '💸 Fijos'], ['deudas', '⚠️ Deudas']];
+  const TABS = [['dia', '📆 Día a día'], ['presupuesto', '🎯 Presupuesto'], ['ingresos', '💵 Te deben'], ['gastos', '💸 Fijos'], ['deudas', '⚠️ Deudas'], ['historial', '📚 Historial']];
   const tabsHtml = TABS.map(([v, label]) => `
     <button class="inv-tab ${vista === v ? 'active' : ''}" data-act="finanzas-vista" data-value="${v}">${label}</button>
   `).join('');
@@ -267,6 +270,82 @@ export function renderFinanciamiento(state) {
     </div>
     <div class="finanzas-seccion" style="margin-bottom:24px;">
       ${renderSimuladorPresupuesto(presupuesto)}
+    </div>
+  `;
+
+  // --- Historial: los 12 meses del año, siempre navegables, aunque estén vacíos ---
+  // Junta las dos tablas que mueven plata (transacciones + movimientos_financiamiento, ver
+  // calcularFinanciamiento) en una sola línea de tiempo por mes — "la verdad y solo la verdad":
+  // nada de lo registrado alguna vez desaparece, solo se archiva por mes para poder mirarlo
+  // sin que ensucie el saldo de hoy (ver saldos_cuentas / fecha_corte).
+  const añoActual = hoy.slice(0, 4);
+  const mesSeleccionado = state.historialMes || hoy.slice(0, 7);
+  const entradasUnificadas = transacciones.map(t => ({
+    fecha: t.fecha, monto: Number(t.monto) || 0, esIngreso: t.tipo === 'ingreso',
+    descripcion: t.descripcion || obtenerEmoji(t.categoria), fuente: t.fuente, origen: 'día a día',
+  })).concat(movimientos.map(m => ({
+    fecha: m.fecha, monto: Number(m.monto) || 0, esIngreso: m.tipo === 'entrada',
+    descripcion: m.nota || '(sin nota)', fuente: m.fuente, origen: 'registro anterior',
+  })));
+  const mesesConDatos = new Set(entradasUnificadas.map(e => (e.fecha || '').slice(0, 7)));
+  const mesesBotonesHtml = MESES.map((nombre, i) => {
+    const key = `${añoActual}-${String(i + 1).padStart(2, '0')}`;
+    const tieneDatos = mesesConDatos.has(key);
+    return `<button class="inv-tab ${mesSeleccionado === key ? 'active' : ''}" data-act="historial-mes" data-value="${key}" style="position:relative;">
+      ${nombre.slice(0, 3)}${tieneDatos ? '<span style="position:absolute;top:4px;right:6px;width:5px;height:5px;border-radius:50%;background:var(--verde);"></span>' : ''}
+    </button>`;
+  }).join('');
+
+  const entradasDelMes = entradasUnificadas.filter(e => (e.fecha || '').startsWith(mesSeleccionado))
+    .sort((a, b) => b.fecha.localeCompare(a.fecha));
+  const ingresosMes = entradasDelMes.filter(e => e.esIngreso).reduce((s, e) => s + e.monto, 0);
+  const gastosDelMesHist = entradasDelMes.filter(e => !e.esIngreso).reduce((s, e) => s + e.monto, 0);
+  const categoriasDelMesHist = agruparPorCategoria(transacciones.filter(t => t.tipo === 'gasto' && (t.fecha || '').startsWith(mesSeleccionado)));
+  const categoriasDelMesOrdenadas = Object.entries(categoriasDelMesHist)
+    .map(([nombre, d]) => ({ nombre, total: d.total, count: d.count }))
+    .sort((a, b) => b.total - a.total);
+  const [añoMes, mesNum] = mesSeleccionado.split('-');
+  const nombreMesSeleccionado = `${MESES[Number(mesNum) - 1]} ${añoMes}`;
+  const resumenCardHist = (label, valor, color) => card(color, `
+    <div style="opacity:0.7;font-size:11px;margin-bottom:4px;">${label}</div>
+    <div style="font-size:19px;font-weight:bold;color:${color};overflow-wrap:break-word;">${fmtMoney(valor)}</div>
+  `, 'padding:12px 14px;');
+
+  const vistaHistorialHtml = `
+    <div class="finanzas-seccion" style="margin-bottom:24px;">
+      <div class="seccion-titulo">📚 Historial ${añoActual}</div>
+      <div class="inv-tabs" style="flex-wrap:wrap;">${mesesBotonesHtml}</div>
+    </div>
+    <div class="finanzas-seccion" style="margin-bottom:24px;">
+      <div class="seccion-titulo" style="text-transform:capitalize;">${nombreMesSeleccionado}</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;">
+        ${resumenCardHist('Entró', ingresosMes, 'var(--verde)')}
+        ${resumenCardHist('Salió', gastosDelMesHist, 'var(--rojo)')}
+        ${resumenCardHist('Neto', ingresosMes - gastosDelMesHist, (ingresosMes - gastosDelMesHist) >= 0 ? 'var(--verde)' : 'var(--rojo)')}
+      </div>
+      ${categoriasDelMesOrdenadas.length ? card('var(--rojo)', categoriasDelMesOrdenadas.map(c => {
+        const pct = gastosDelMesHist > 0 ? Math.round((c.total / gastosDelMesHist) * 100) : 0;
+        return `
+          <div style="margin-bottom:12px;">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:13px;margin-bottom:5px;">
+              <span style="min-width:0;overflow-wrap:break-word;">${obtenerEmoji(c.nombre)} ${escapeHtml(c.nombre)} <span style="opacity:0.5;font-size:11px;">· ${c.count}</span></span>
+              <b style="white-space:nowrap;">${fmtMoney(c.total)} <span style="opacity:0.6;font-weight:normal;font-size:11px;">${pct}%</span></b>
+            </div>
+            <div style="height:7px;background:var(--panel);border-radius:4px;overflow:hidden;">
+              <div style="height:100%;width:${pct}%;background:var(--rojo);border-radius:4px;"></div>
+            </div>
+          </div>
+        `;
+      }).join(''), 'margin-bottom:16px;') : ''}
+      ${entradasDelMes.length ? card('var(--azul)', entradasDelMes.map(e => `
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);">
+          <div style="min-width:0;">
+            <div style="font-size:13px;overflow-wrap:break-word;">${escapeHtml(e.descripcion)}</div>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;opacity:0.55;margin-top:2px;">${fmtFecha(e.fecha)} · ${escapeHtml(e.fuente || '')} · <span style="opacity:0.7;">${e.origen}</span></div>
+          </div>
+          <b style="white-space:nowrap;color:${e.esIngreso ? 'var(--verde)' : 'var(--rojo)'};">${e.esIngreso ? '+' : '−'}${fmtMoney(e.monto)}</b>
+        </div>
+      `).join('')) : '<div style="opacity:0.5;font-size:12px;">Nada registrado en este mes.</div>'}
     </div>
   `;
 
@@ -394,6 +473,7 @@ export function renderFinanciamiento(state) {
     : vista === 'deudas' ? vistaDeudasHtml
     : vista === 'ingresos' ? vistaIngresosHtml
     : vista === 'presupuesto' ? vistaPresupuestoHtml
+    : vista === 'historial' ? vistaHistorialHtml
     : vistaDiaHtml;
 
   return `
@@ -435,13 +515,17 @@ export function renderFinanciamiento(state) {
           </div>
 
           <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:20px;">
-            ${[['🏦', 'Bancolombia', porFuente.bancolombia], ['📱', 'Nequi', porFuente.nequi], ['💵', 'Efectivo', porFuente.efectivo]].map(([icono, label, monto]) => `
+            ${[['🏦', 'bancolombia', 'Bancolombia', porFuente.bancolombia], ['📱', 'nequi', 'Nequi', porFuente.nequi], ['💵', 'efectivo', 'Efectivo', porFuente.efectivo]].map(([icono, fuente, label, monto]) => {
+              const corte = corteDe(fuente);
+              return `
               <div style="background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 4px;text-align:center;min-width:0;">
                 <div style="font-size:16px;margin-bottom:4px;">${icono}</div>
                 <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:0.5px;text-transform:uppercase;opacity:0.6;margin-bottom:3px;">${label}</div>
-                <div style="font-family:'IBM Plex Mono',monospace;font-weight:bold;font-size:11px;overflow-wrap:break-word;color:var(--verde);">${fmtMoney(monto)}</div>
+                <input class="saldo-cuenta-input" data-change="saldo-cuenta" data-fuente="${fuente}" value="${monto ? fmtMoney(monto) : '$0'}" inputmode="numeric" title="Corregir el saldo real de ${label} — hoy" style="background:none;border:none;text-align:center;width:100%;color:var(--verde);font-weight:bold;font-family:'IBM Plex Mono',monospace;font-size:11px;padding:0;">
+                <div style="font-size:8px;opacity:0.45;margin-top:2px;">${corte ? `desde ${fmtFecha(corte)}` : 'toca y fija tu saldo real'}</div>
               </div>
-            `).join('')}
+            `;
+            }).join('')}
           </div>
           ${futuroPago > 0 ? `<div style="margin-top:14px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:11px;opacity:0.75;">🗓️ Futuro pago (ya con fecha) <b style="color:var(--azul);">${fmtMoney(futuroPago)}</b></div>` : ''}
           ${porPagarHtml}

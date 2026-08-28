@@ -575,6 +575,7 @@ root.addEventListener('click', e => {
     case 'meta-personal-nueva': actions.metaPersonalNueva(categoria); break;
     case 'inv-vista': actions.invSetVista(value); break;
     case 'finanzas-vista': actions.finanzasSetVista(value); break;
+    case 'historial-mes': actions.historialSetMes(value); break;
     case 'habito-nuevo': actions.habitoNuevo(); break;
     case 'habito-toggle': {
       const h = state.metasPersonales.find(m => m.id === id);
@@ -783,7 +784,7 @@ root.addEventListener('submit', e => {
 root.addEventListener('change', e => {
   const el = e.target.closest('[data-change]');
   if (el) {
-    const { change, id, campo, key, idx, marca } = el.dataset;
+    const { change, id, campo, key, idx, marca, fuente } = el.dataset;
     const value = el.type === 'checkbox' ? el.checked : el.value;
 
     switch (change) {
@@ -880,6 +881,7 @@ root.addEventListener('change', e => {
       case 'presupuesto-telefono': actions.updPresupuesto('telefono', value); break;
       case 'presupuesto-salud': actions.updPresupuesto('salud', value); break;
       case 'presupuesto-ahorro': actions.updPresupuesto('ahorro', value); break;
+      case 'saldo-cuenta': actions.actualizarSaldoCuenta(fuente, parseN(value)); break;
       case 'tarea-fecha': actions.updTarea(id, { fecha: value || null }); break;
       case 'tarea-columna': actions.updTarea(id, { columna: value }); break;
       case 'cal-vista-set': actions.setCalVista(value); break;
