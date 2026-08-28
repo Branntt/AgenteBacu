@@ -17,7 +17,6 @@ import { renderPanorama } from './views/panorama.js';
 import { renderCalendario } from './views/calendario.js';
 import { renderClientes } from './views/clientes.js';
 import { renderFinanciamiento } from './views/financiamiento.js';
-import { renderFinanzasPersonales } from './views/finanzas_personales.js';
 import { renderInventario } from './views/inventario.js';
 import { renderBienestar } from './views/bienestar.js';
 import { renderMetas } from './views/metas.js';
@@ -155,7 +154,6 @@ const VIEWS = {
   calendario: renderCalendario,
   clientes: renderClientes,
   financiamiento: renderFinanciamiento,
-  finanzas_personales: renderFinanzasPersonales,
   inventario: renderInventario,
   bienestar: renderBienestar,
   metas: renderMetas,
@@ -275,6 +273,13 @@ ${escapeHtml(String(e && e.stack ? e.stack : e))}</div>
   };
   root.innerHTML = `
     <div class="app-root" data-tema="${temaAttr}">
+      ${state.cargaError ? `
+        <div class="save-error-banner" role="alert">
+          <span>⚠️ ${escapeHtml(state.cargaError)}</span>
+          <button data-act="reintentar-carga" style="margin-right:6px;">Reintentar</button>
+          <button data-act="descartar-aviso-carga">✕</button>
+        </div>
+      ` : ''}
       ${state.saveError ? `
         <div class="save-error-banner" role="alert">
           <span>No se pudo guardar el último cambio.${state.saveErrorMotivo ? ` <b>${escapeHtml(String(state.saveErrorMotivo))}</b>` : ' Puede que el almacenamiento del navegador esté lleno o en modo privado.'}</span>
@@ -514,6 +519,8 @@ root.addEventListener('click', e => {
       break;
     }
     case 'descartar-aviso-guardado': actions.descartarAvisoGuardado(); break;
+    case 'descartar-aviso-carga': actions.descartarAvisoCarga(); break;
+    case 'reintentar-carga': actions.reintentarCarga(); break;
     case 'google-conectar': actions.googleConectar(); break;
     case 'google-desconectar': actions.googleDesconectar(); break;
     case 'google-sincronizar': actions.googleSincronizarAhora(); break;
@@ -577,6 +584,7 @@ root.addEventListener('click', e => {
     case 'meta-personal-nueva': actions.metaPersonalNueva(categoria); break;
     case 'inv-vista': actions.invSetVista(value); break;
     case 'finanzas-vista': actions.finanzasSetVista(value); break;
+    case 'historial-mes': actions.historialSetMes(value); break;
     case 'habito-nuevo': actions.habitoNuevo(); break;
     case 'habito-toggle': {
       const h = state.metasPersonales.find(m => m.id === id);
@@ -704,56 +712,6 @@ root.addEventListener('click', e => {
     case 'bacu-set-estado': actions.bacuSetEstado(id, el.dataset.estado, el.dataset.label); break;
     case 'bacu-posponer': actions.bacuPosponer(id); break;
     case 'cerrar-notificacion-bacu': actions.cerrarNotificacionBacu(); break;
-
-    // Finanzas Personales
-    case 'fp-nuevo-gasto': actions.fpAbrirModalGasto(); break;
-    case 'fp-nueva-suscripcion': actions.fpAbrirModalSuscripcion(); break;
-    case 'fp-nueva-cuenta': actions.fpAbrirModalCuenta(); break;
-    case 'fp-cerrar-modal': actions.fpCerrarModal(); break;
-    case 'fp-guardar-gasto': {
-      const fecha = document.querySelector('#fp-gasto-fecha')?.value;
-      const categoria = document.querySelector('#fp-gasto-categoria')?.value;
-      const descripcion = document.querySelector('#fp-gasto-descripcion')?.value;
-      const monto = parseN(document.querySelector('#fp-gasto-monto')?.value);
-      const cuenta = document.querySelector('#fp-gasto-cuenta')?.value;
-      if (fecha && categoria && monto > 0 && cuenta) {
-        actions.fpNuevoGasto(fecha, categoria, descripcion, monto, cuenta);
-        actions.fpCerrarModal();
-      }
-      break;
-    }
-    case 'fp-guardar-suscripcion': {
-      const nombre = document.querySelector('#fp-suscripcion-nombre')?.value;
-      const monto = parseN(document.querySelector('#fp-suscripcion-monto')?.value);
-      const dia_pago = parseN(document.querySelector('#fp-suscripcion-dia')?.value);
-      const categoria = document.querySelector('#fp-suscripcion-categoria')?.value;
-      if (nombre && monto > 0 && dia_pago > 0 && categoria) {
-        actions.fpNuevaSuscripcion(nombre, monto, dia_pago, categoria);
-        actions.fpCerrarModal();
-      }
-      break;
-    }
-    case 'fp-guardar-cuenta': {
-      const nombre_cuenta = document.querySelector('#fp-cuenta-nombre')?.value;
-      const monto_actual = parseN(document.querySelector('#fp-cuenta-monto')?.value);
-      if (nombre_cuenta && monto_actual >= 0) {
-        actions.fpNuevaCuenta(nombre_cuenta, monto_actual);
-        actions.fpCerrarModal();
-      }
-      break;
-    }
-    case 'fp-eliminar-gasto': actions.fpEliminarGasto(id); break;
-    case 'fp-eliminar-suscripcion': actions.fpEliminarSuscripcion(id); break;
-    case 'fp-edit-saldo': {
-      const nuevoMonto = prompt('Nuevo saldo:', el.dataset.monto);
-      if (nuevoMonto !== null && nuevoMonto.trim()) {
-        const parsed = parseN(nuevoMonto);
-        if (parsed >= 0) {
-          actions.fpActualizarSaldo(id, parsed);
-        }
-      }
-      break;
-    }
   }
 });
 
@@ -835,7 +793,7 @@ root.addEventListener('submit', e => {
 root.addEventListener('change', e => {
   const el = e.target.closest('[data-change]');
   if (el) {
-    const { change, id, campo, key, idx, marca } = el.dataset;
+    const { change, id, campo, key, idx, marca, fuente } = el.dataset;
     const value = el.type === 'checkbox' ? el.checked : el.value;
 
     switch (change) {
@@ -932,6 +890,7 @@ root.addEventListener('change', e => {
       case 'presupuesto-telefono': actions.updPresupuesto('telefono', value); break;
       case 'presupuesto-salud': actions.updPresupuesto('salud', value); break;
       case 'presupuesto-ahorro': actions.updPresupuesto('ahorro', value); break;
+      case 'saldo-cuenta': actions.actualizarSaldoCuenta(fuente, parseN(value)); break;
       case 'tarea-fecha': actions.updTarea(id, { fecha: value || null }); break;
       case 'tarea-columna': actions.updTarea(id, { columna: value }); break;
       case 'cal-vista-set': actions.setCalVista(value); break;

@@ -37,6 +37,7 @@ export const state = {
   invVista: loadValue('ui.invVista', 'personal'),
   uniPendMateria: loadValue('ui.uniPendMateria', ''),
   finanzasVista: loadValue('ui.finanzasVista', 'ingresos'),
+  historialMes: loadValue('ui.historialMes', null), // null = mes actual (ver vistaHistorialHtml)
   // Sync S.A.O BACU → Google Calendar (ver lib/googleCalendar.js). googleConectado es de
   // sesión (el token de Google no sobrevive un refresh de página, hay que re-obtenerlo) — el
   // resto sí se guarda porque son preferencias/estado real de la última sincronización.
@@ -70,13 +71,17 @@ export const state = {
   transacciones: [],
   cuentasCobro: [],
   movimientosFinanciamiento: [],
+  saldosCuentas: [],
   deudas: [],
   pagosMensuales: [],
   equipoProduccion: [],
   metasPersonales: [],
   metasMensuales: [],
   tareas: [],
-  presupuesto: {
+  // updPresupuesto nunca guardaba esto en ningún lado — se editaba en memoria y al recargar
+  // la página volvía a los valores de ejemplo de acá abajo, como si nunca lo hubieras tocado.
+  // Se persiste igual que las demás preferencias de la app (loadValue/persistValue).
+  presupuesto: loadValue('finanzas.presupuesto', {
     arriendo: 700000,
     servicios: 200000,
     comida: 450000,
@@ -87,7 +92,7 @@ export const state = {
     salud: 100000,
     ahorro: 200000,
     ingresosMensuales: 0
-  },
+  }),
   gastosVivirSolo: [
     { id: 'g1', nombre: 'Arriendo (CRÍTICO)', emoji: '🏠', monto: 700000, dia_vencimiento: 1 },
     { id: 'g2', nombre: 'Mercado/Comida (CRÍTICO)', emoji: '🍽️', monto: 450000, dia_vencimiento: 1 },
@@ -131,20 +136,13 @@ export const state = {
   saveError: false,
   saveErrorMotivo: null,
 
-  // Finanzas Personales
-  saldosPersonales: [],
-  gastosPersonales: [],
-  suscripcionesPersonales: [],
-  fpModalAbiertoGasto: false,
-  fpModalAbiertoSuscripcion: false,
-  fpModalAbiertoCuenta: false,
-
   session: null,
   authReady: false,
   authBusy: false,
   authError: null,
   authInfo: null,
-  dataReady: false
+  dataReady: false,
+  cargaError: null
 };
 
 const listeners = [];
@@ -159,7 +157,7 @@ function notify() {
 }
 
 // Claves de interfaz que se recuerdan entre sesiones (cada pestaña vuelve donde quedó)
-const UI_PERSIST = ['month', 'filtroGuiones', 'guionesVista', 'clientesVista', 'filtroCalendario', 'calVista', 'semanaInicio', 'invVista', 'finanzasVista', 'uniBloquesAbiertos', 'uniPendMateria', 'diaSeleccionadoBienestar', 'semanaSeleccionadaBienestar'];
+const UI_PERSIST = ['month', 'filtroGuiones', 'guionesVista', 'clientesVista', 'filtroCalendario', 'calVista', 'semanaInicio', 'invVista', 'finanzasVista', 'historialMes', 'uniBloquesAbiertos', 'uniPendMateria', 'diaSeleccionadoBienestar', 'semanaSeleccionadaBienestar'];
 
 function setState(patch) {
   Object.assign(state, patch);
@@ -224,28 +222,40 @@ export async function initAuth() {
     state.session = session;
     notify();
     if (session && !teniaSesion) cargarDatos();
-    if (!session) setState({ ideas: [], snaps: [], clientes: [], dataReady: false });
+    if (!session) setState({ ideas: [], snaps: [], clientes: [], dataReady: false, cargaError: null });
   });
 }
 
+// Si una sola consulta falla a nivel de RED (no un error normal de Supabase, que ya viene
+// como { data:null, error } — sino que el fetch() mismo revienta: sin internet, timeout,
+// CORS), Promise.all tira TODO lo demás a la basura y esta función nunca termina. Antes de
+// esto, un solo hipo de conexión dejaba la app pegada en "Sincronizando datos…" PARA SIEMPRE,
+// sin ningún aviso — el usuario no tenía forma de saber que algo se rompió, solo un spinner
+// eterno. Cada consulta se blinda por separado así una que falle no tumbe a las demás: la app
+// carga con lo que sí llegó y avisa claramente qué faltó, en vez de quedarse muda.
+function segura(promesa, nombre) {
+  return Promise.resolve(promesa).catch(error => ({ data: null, error: error || { message: 'fallo de red' }, _tabla: nombre }));
+}
+
 async function cargarDatos() {
-  const [ideasRes, snapsRes, clientesRes, cuentasRes, movimientosRes, deudasRes, pagosMensualesRes, transaccionesRes, equipoProduccionRes, metasPersonalesRes, metasMensualesRes, tareasRes, gastosPersonalesRes, saldosPersonalesRes, suscripcionesPersonalesRes] = await Promise.all([
-    supabase.from('ideas').select('*').order('id'),
-    supabase.from('snaps').select('*').order('fecha'),
-    supabase.from('clientes').select('*').order('id'),
-    supabase.from('cuentas_cobro').select('*').order('numero'),
-    supabase.from('movimientos_financiamiento').select('*').order('fecha'),
-    supabase.from('deudas').select('*').order('created_at'),
-    supabase.from('pagos_mensuales').select('*').order('dia_pago'),
-    supabase.from('transacciones').select('*').order('fecha', { ascending: false }),
-    supabase.from('equipo_produccion').select('*').order('created_at'),
-    supabase.from('metas_personales').select('*').order('created_at'),
-    supabase.from('metas_mensuales').select('*'),
-    supabase.from('tareas').select('*').order('created_at'),
-    supabase.from('gastos_personales').select('*').order('fecha', { ascending: false }),
-    supabase.from('saldos_personales').select('*').order('nombre_cuenta'),
-    supabase.from('suscripciones_personales').select('*').order('nombre')
-  ]);
+  const consultas = [
+    ['ideas', supabase.from('ideas').select('*').order('id')],
+    ['snaps', supabase.from('snaps').select('*').order('fecha')],
+    ['clientes', supabase.from('clientes').select('*').order('id')],
+    ['cuentas_cobro', supabase.from('cuentas_cobro').select('*').order('numero')],
+    ['movimientos_financiamiento', supabase.from('movimientos_financiamiento').select('*').order('fecha')],
+    ['deudas', supabase.from('deudas').select('*').order('created_at')],
+    ['pagos_mensuales', supabase.from('pagos_mensuales').select('*').order('dia_pago')],
+    ['transacciones', supabase.from('transacciones').select('*').order('fecha', { ascending: false })],
+    ['equipo_produccion', supabase.from('equipo_produccion').select('*').order('created_at')],
+    ['metas_personales', supabase.from('metas_personales').select('*').order('created_at')],
+    ['metas_mensuales', supabase.from('metas_mensuales').select('*')],
+    ['tareas', supabase.from('tareas').select('*').order('created_at')],
+    ['saldos_cuentas', supabase.from('saldos_cuentas').select('*')]
+  ];
+  const [ideasRes, snapsRes, clientesRes, cuentasRes, movimientosRes, deudasRes, pagosMensualesRes, transaccionesRes, equipoProduccionRes, metasPersonalesRes, metasMensualesRes, tareasRes, saldosCuentasRes] =
+    await Promise.all(consultas.map(([nombre, p]) => segura(p, nombre)));
+
   state.ideas = aplicarOpcionalesLocales('ideas', (ideasRes.data || []).map(fromDbIdea));
   state.snaps = snapsRes.data || [];
   state.clientes = aplicarOpcionalesLocales('clientes', clientesRes.data || []);
@@ -258,10 +268,15 @@ async function cargarDatos() {
   state.metasPersonales = metasPersonalesRes.data || [];
   state.metasMensuales = metasMensualesRes.data || [];
   state.tareas = tareasRes.data || [];
-  state.gastosPersonales = gastosPersonalesRes.data || [];
-  state.saldosPersonales = saldosPersonalesRes.data || [];
-  state.suscripcionesPersonales = suscripcionesPersonalesRes.data || [];
+  state.saldosCuentas = saldosCuentasRes.data || [];
+
+  // dataReady se pone en true SIEMPRE, haya fallado algo o no — es la diferencia entre "la
+  // pantalla de carga eterna" y una app usable con un aviso claro de qué no llegó.
+  const resultados = [ideasRes, snapsRes, clientesRes, cuentasRes, movimientosRes, deudasRes, pagosMensualesRes, transaccionesRes, equipoProduccionRes, metasPersonalesRes, metasMensualesRes, tareasRes, saldosCuentasRes];
+  const fallidas = resultados.filter(r => r && r.error).map(r => r._tabla).filter(Boolean);
   state.dataReady = true;
+  state.cargaError = fallidas.length ? `No cargó: ${fallidas.join(', ')}. Revisa tu conexión y recarga la página.` : null;
+
   recuperarPendientesUni();
   notify();
   suscribirRealtime();
@@ -389,13 +404,16 @@ const canalesActivos = new Set();
 const CHANNEL_MAP = {
   calendario: ['sync-ideas', 'sync-metas-personales'],
   clientes: ['sync-clientes', 'sync-snaps'],
-  financiamiento: ['sync-cuentas-cobro', 'sync-movimientos-financiamiento', 'sync-deudas', 'sync-pagos-mensuales', 'sync-transacciones'],
+  financiamiento: ['sync-cuentas-cobro', 'sync-movimientos-financiamiento', 'sync-deudas', 'sync-pagos-mensuales', 'sync-transacciones', 'sync-saldos-cuentas'],
   inventario: ['sync-metas-personales', 'sync-equipo-produccion'],
   bienestar: ['sync-metas-mensuales', 'sync-tareas'],
   metas: ['sync-metas-mensuales', 'sync-tareas'],
   universidad: ['sync-tareas'],
   pared: ['sync-ideas', 'sync-clientes'],
-  panorama: ['sync-ideas', 'sync-clientes', 'sync-metas-personales', 'sync-equipo-produccion'],
+  // Panorama muestra el Patrimonio Neto (calcularFinanciamiento sobre movimientos,
+  // deudas, cuentas de cobro y transacciones) — sin estos canales, un gasto agregado desde
+  // el celular no se veía reflejado en la computadora hasta cambiar de pestaña y volver.
+  panorama: ['sync-ideas', 'sync-clientes', 'sync-metas-personales', 'sync-equipo-produccion', 'sync-cuentas-cobro', 'sync-movimientos-financiamiento', 'sync-deudas', 'sync-pagos-mensuales', 'sync-transacciones', 'sync-saldos-cuentas'],
   configuraciones: [] // hereda de la vista anterior
 };
 
@@ -461,6 +479,16 @@ const PAYLOAD_HANDLERS = {
     } else {
       const existe = state.pagosMensuales.some(p => p.id === payload.new.id);
       state.pagosMensuales = existe ? state.pagosMensuales.map(p => p.id === payload.new.id ? payload.new : p) : state.pagosMensuales.concat([payload.new]);
+    }
+    notify();
+  },
+  // saldos_cuentas usa 'fuente' como llave (no 'id') — una fila por cuenta.
+  'sync-saldos-cuentas': payload => {
+    if (payload.eventType === 'DELETE') {
+      state.saldosCuentas = state.saldosCuentas.filter(s => s.fuente !== payload.old.fuente);
+    } else {
+      const existe = state.saldosCuentas.some(s => s.fuente === payload.new.fuente);
+      state.saldosCuentas = existe ? state.saldosCuentas.map(s => s.fuente === payload.new.fuente ? payload.new : s) : state.saldosCuentas.concat([payload.new]);
     }
     notify();
   },
@@ -700,6 +728,8 @@ export const actions = {
   setTema: v => { const ok = persistValue('sistemaEditorial.tema', v); setState({ tema: v }); marcarGuardado(ok); },
   setModoCalma: v => { const ok = persistValue('sistemaEditorial.modoCalma', v); setState({ modoCalma: v }); marcarGuardado(ok); },
   descartarAvisoGuardado: () => setState({ saveError: false }),
+  descartarAvisoCarga: () => setState({ cargaError: null }),
+  reintentarCarga: () => cargarDatos(),
 
   // --- Google Calendar (Configuraciones) ---
   setGoogleClientId: v => { persistValue('google.clientId', v); setState({ googleClientId: v }); },
@@ -947,6 +977,7 @@ export const actions = {
   claseInfoCerrar: () => setState({ claseInfo: null }),
   invSetVista: v => setState({ invVista: v }),
   finanzasSetVista: v => setState({ finanzasVista: v }),
+  historialSetMes: v => setState({ historialMes: v }),
 
   personaje3dAbrir: () => setState({ personaje3dAbierto: true }),
   personaje3dCerrar: () => setState({ personaje3dAbierto: false }),
@@ -1503,7 +1534,9 @@ export const actions = {
   },
   updPresupuesto: (campo, valor) => {
     state.presupuesto = { ...state.presupuesto, [campo]: parseN(valor) };
+    const ok = persistValue('finanzas.presupuesto', state.presupuesto);
     notify();
+    marcarGuardado(ok);
   },
 
   gastoNuevo: () => {
@@ -1560,154 +1593,16 @@ export const actions = {
     supabase.from('transacciones').update({ [campo]: valor }).eq('id', id).then(({ error }) => marcarGuardado(!error, error));
   },
 
-  // ===== FINANZAS PERSONALES =====
-  fpCargarDatos: async () => {
-    try {
-      const [saldosRes, gastosRes, subsRes] = await Promise.all([
-        supabase.from('saldos_personales').select('*'),
-        supabase.from('gastos_personales').select('*').order('fecha', { ascending: false }),
-        supabase.from('suscripciones_personales').select('*').order('nombre')
-      ]);
-
-      setState({
-        saldosPersonales: saldosRes.data || [],
-        gastosPersonales: gastosRes.data || [],
-        suscripcionesPersonales: subsRes.data || []
-      });
-    } catch (error) {
-      console.error('Error cargando finanzas:', error);
-      marcarGuardado(false, error);
-    }
-  },
-
-  fpNuevoGasto: async (fecha, categoria, descripcion, monto, cuenta) => {
-    try {
-      const { data, error } = await supabase
-        .from('gastos_personales')
-        .insert([{ fecha, categoria, descripcion, monto: parseFloat(monto), cuenta }])
-        .select();
-
-      if (error) throw error;
-
-      state.gastosPersonales = [data[0], ...state.gastosPersonales];
-      setState({ fpModalAbiertoGasto: false });
-      notify();
-      marcarGuardado(true);
-
-      // Actualizar saldo
-      const saldo = state.saldosPersonales.find(s => s.nombre_cuenta === cuenta);
-      if (saldo) {
-        const nuevoMonto = parseFloat(saldo.monto_actual) - parseFloat(monto);
-        actions.fpActualizarSaldo(saldo.id, nuevoMonto);
-      }
-    } catch (error) {
-      console.error('Error guardando gasto:', error);
-      marcarGuardado(false, error);
-    }
-  },
-
-  fpEliminarGasto: async (id) => {
-    try {
-      const gasto = state.gastosPersonales.find(g => g.id === id);
-      if (!gasto) return;
-
-      const { error } = await supabase.from('gastos_personales').delete().eq('id', id);
-      if (error) throw error;
-
-      state.gastosPersonales = state.gastosPersonales.filter(g => g.id !== id);
-      notify();
-      marcarGuardado(true);
-
-      // Restaurar saldo
-      const saldo = state.saldosPersonales.find(s => s.nombre_cuenta === gasto.cuenta);
-      if (saldo) {
-        const nuevoMonto = parseFloat(saldo.monto_actual) + parseFloat(gasto.monto);
-        actions.fpActualizarSaldo(saldo.id, nuevoMonto);
-      }
-    } catch (error) {
-      console.error('Error eliminando gasto:', error);
-      marcarGuardado(false, error);
-    }
-  },
-
-  fpNuevaSuscripcion: async (nombre, monto, dia_pago, categoria) => {
-    try {
-      const { data, error } = await supabase
-        .from('suscripciones_personales')
-        .insert([{ nombre, monto: parseFloat(monto), dia_pago: parseInt(dia_pago), categoria, activa: true }])
-        .select();
-
-      if (error) throw error;
-
-      state.suscripcionesPersonales = [...state.suscripcionesPersonales, data[0]];
-      setState({ fpModalAbiertoSuscripcion: false });
-      notify();
-      marcarGuardado(true);
-    } catch (error) {
-      console.error('Error guardando suscripción:', error);
-      marcarGuardado(false, error);
-    }
-  },
-
-  fpEliminarSuscripcion: async (id) => {
-    try {
-      const { error } = await supabase.from('suscripciones_personales').delete().eq('id', id);
-      if (error) throw error;
-
-      state.suscripcionesPersonales = state.suscripcionesPersonales.filter(s => s.id !== id);
-      notify();
-      marcarGuardado(true);
-    } catch (error) {
-      console.error('Error eliminando suscripción:', error);
-      marcarGuardado(false, error);
-    }
-  },
-
-  fpNuevaCuenta: async (nombre_cuenta, monto_actual) => {
-    try {
-      const { data, error } = await supabase
-        .from('saldos_personales')
-        .insert([{ nombre_cuenta, monto_actual: parseFloat(monto_actual), monto_inicial: parseFloat(monto_actual) }])
-        .select();
-
-      if (error) throw error;
-
-      state.saldosPersonales = [...state.saldosPersonales, data[0]];
-      setState({ fpModalAbiertoCuenta: false });
-      notify();
-      marcarGuardado(true);
-    } catch (error) {
-      console.error('Error creando cuenta:', error);
-      marcarGuardado(false, error);
-    }
-  },
-
-  fpActualizarSaldo: async (id, nuevoMonto) => {
-    try {
-      const { error } = await supabase
-        .from('saldos_personales')
-        .update({ monto_actual: parseFloat(nuevoMonto) })
-        .eq('id', id);
-
-      if (error) throw error;
-
-      state.saldosPersonales = state.saldosPersonales.map(s =>
-        s.id === id ? { ...s, monto_actual: parseFloat(nuevoMonto) } : s
-      );
-      notify();
-      marcarGuardado(true);
-    } catch (error) {
-      console.error('Error actualizando saldo:', error);
-      marcarGuardado(false, error);
-    }
-  },
-
-  fpAbrirModalGasto: () => setState({ fpModalAbiertoGasto: true }),
-  fpAbrirModalSuscripcion: () => setState({ fpModalAbiertoSuscripcion: true }),
-  fpAbrirModalCuenta: () => setState({ fpModalAbiertoCuenta: true }),
-  fpCerrarModal: () => setState({
-    fpModalAbiertoGasto: false,
-    fpModalAbiertoSuscripcion: false,
-    fpModalAbiertoCuenta: false
-  })
+  // Redeclara el saldo real de una cuenta HOY (ver saldos_cuentas / calcularFinanciamiento):
+  // desde este momento, esta cuenta arranca en `monto` y solo suma lo que se registre de aquí
+  // en adelante — lo anterior queda archivado (sigue viéndose en Historial, deja de sumar al
+  // saldo en vivo). Es "corregir la verdad de hoy", no editar un dato viejo.
+  actualizarSaldoCuenta: (fuente, monto) => {
+    const hoy = hoyStr();
+    const nueva = { fuente, monto: parseN(monto), fecha_corte: hoy, actualizado_en: new Date().toISOString() };
+    const existe = state.saldosCuentas.some(s => s.fuente === fuente);
+    state.saldosCuentas = existe ? state.saldosCuentas.map(s => s.fuente === fuente ? nueva : s) : state.saldosCuentas.concat([nueva]);
+    notify();
+    supabase.from('saldos_cuentas').upsert(nueva, { onConflict: 'fuente' }).then(({ error }) => marcarGuardado(!error, error));
+  }
 };

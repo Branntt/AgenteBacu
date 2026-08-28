@@ -2811,3 +2811,27 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
 .cuentas-cliente-monto.debe { color: var(--rojo); }
 .cuentas-cliente-pdf { font-size: 11px; padding: 4px 10px; flex: none; }
 .cuentas-cliente-vacio { font-size: 12px; opacity: .5; margin-top: 10px; }
+
+/* ---------- Simulador de presupuesto (pestaña Finanzas > Presupuesto) ---------- */
+.simulador-presupuesto { display: flex; flex-direction: column; gap: 18px; }
+.simulador-title { font-size: 16px; font-weight: 600; }
+.simulador-sub { font-size: 12px; opacity: 0.65; margin-top: -10px; }
+.simulador-section-title { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; opacity: 0.6; margin-bottom: 10px; }
+.ingreso-grande { display: flex; align-items: center; gap: 14px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; }
+.ingreso-grande input { background: none; border: none; color: var(--text); font-size: 14px; flex: 1; min-width: 0; }
+.ingreso-valor { font-family: 'IBM Plex Mono', monospace; font-weight: 600; color: var(--verde); white-space: nowrap; }
+.rubro-presupuesto { display: grid; grid-template-columns: 1fr 90px 100px; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.rubro-label { font-size: 13px; min-width: 0; overflow-wrap: break-word; }
+.rubro-input input { width: 100%; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; color: var(--text); font-size: 12px; }
+.rubro-valor { font-family: 'IBM Plex Mono', monospace; font-size: 12px; text-align: right; opacity: 0.75; white-space: nowrap; }
+.simulador-total { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px; }
+.simulador-resultado { border-radius: 8px; padding: 14px 16px; }
+.simulador-resultado.positivo { background: rgba(31,175,116,0.12); border: 1px solid var(--verde); }
+.simulador-resultado.negativo { background: rgba(217,54,46,0.12); border: 1px solid var(--rojo); }
+.resultado-titulo { font-weight: 600; margin-bottom: 4px; }
+.resultado-texto { font-size: 13px; opacity: 0.8; }
+.simulador-tips .tip { font-size: 12px; opacity: 0.75; line-height: 1.5; }
+
+@media (min-width: 600px) {
+  .rubro-presupuesto { grid-template-columns: 1fr 110px 120px; }
+}

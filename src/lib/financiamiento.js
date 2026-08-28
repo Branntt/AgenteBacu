@@ -17,14 +17,29 @@ export function esVencida(item, hoy) {
 // categoría). Las dos mueven el mismo bolsillo, así que las dos entran acá y se normalizan a
 // un solo signo por fuente. Antes cada pantalla sumaba solo su tabla y mostraba un saldo
 // distinto para la misma plata — de ahí que los números no cuadraran entre pestañas.
-export function calcularFinanciamiento(movimientos, deudas, cuentasCobro, hoy, transacciones) {
+//
+// saldosCuentas (tabla saldos_cuentas, ver migración) es el punto de partida REAL de cada
+// cuenta: en vez de sumar absolutamente todo lo registrado desde siempre (donde un solo dato
+// mal cargado hace mentir el número para siempre), cada fuente arranca en su `monto`
+// declarado y solo suma lo que pasó DESPUÉS de su `fecha_corte`. Lo de antes no se pierde —
+// sigue completo en Historial — pero deja de ensuciar el saldo en vivo. Si una fuente no
+// tiene fila en saldos_cuentas todavía, se comporta como antes (arranca en 0, cuenta todo).
+export function calcularFinanciamiento(movimientos, deudas, cuentasCobro, hoy, transacciones, saldosCuentas) {
+  const cortes = {};
   const porFuente = { bancolombia: 0, nequi: 0, efectivo: 0 };
-  const aplicar = (monto, fuente, esSalida) => {
+  (saldosCuentas || []).forEach(s => {
+    if (FUENTES.includes(s.fuente)) {
+      porFuente[s.fuente] = Number(s.monto) || 0;
+      cortes[s.fuente] = s.fecha_corte;
+    }
+  });
+  const aplicar = (monto, fuente, esSalida, fecha) => {
     const f = FUENTES.includes(fuente) ? fuente : 'bancolombia';
+    if (cortes[f] && fecha && fecha <= cortes[f]) return; // ya contado en el saldo declarado
     porFuente[f] += (esSalida ? -1 : 1) * (Number(monto) || 0);
   };
-  (movimientos || []).forEach(m => aplicar(m.monto, m.fuente, m.tipo === 'salida'));
-  (transacciones || []).forEach(t => aplicar(t.monto, t.fuente, t.tipo === 'gasto'));
+  (movimientos || []).forEach(m => aplicar(m.monto, m.fuente, m.tipo === 'salida', m.fecha));
+  (transacciones || []).forEach(t => aplicar(t.monto, t.fuente, t.tipo === 'gasto', t.fecha));
   const efectivo = porFuente.bancolombia + porFuente.nequi + porFuente.efectivo;
 
   // Lo que debes (direccion:'debo') SÍ sigue contando aunque se venza — que se pase la
