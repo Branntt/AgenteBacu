@@ -141,7 +141,8 @@ export const state = {
   authBusy: false,
   authError: null,
   authInfo: null,
-  dataReady: false
+  dataReady: false,
+  cargaError: null
 };
 
 const listeners = [];
@@ -221,26 +222,40 @@ export async function initAuth() {
     state.session = session;
     notify();
     if (session && !teniaSesion) cargarDatos();
-    if (!session) setState({ ideas: [], snaps: [], clientes: [], dataReady: false });
+    if (!session) setState({ ideas: [], snaps: [], clientes: [], dataReady: false, cargaError: null });
   });
 }
 
+// Si una sola consulta falla a nivel de RED (no un error normal de Supabase, que ya viene
+// como { data:null, error } — sino que el fetch() mismo revienta: sin internet, timeout,
+// CORS), Promise.all tira TODO lo demás a la basura y esta función nunca termina. Antes de
+// esto, un solo hipo de conexión dejaba la app pegada en "Sincronizando datos…" PARA SIEMPRE,
+// sin ningún aviso — el usuario no tenía forma de saber que algo se rompió, solo un spinner
+// eterno. Cada consulta se blinda por separado así una que falle no tumbe a las demás: la app
+// carga con lo que sí llegó y avisa claramente qué faltó, en vez de quedarse muda.
+function segura(promesa, nombre) {
+  return Promise.resolve(promesa).catch(error => ({ data: null, error: error || { message: 'fallo de red' }, _tabla: nombre }));
+}
+
 async function cargarDatos() {
-  const [ideasRes, snapsRes, clientesRes, cuentasRes, movimientosRes, deudasRes, pagosMensualesRes, transaccionesRes, equipoProduccionRes, metasPersonalesRes, metasMensualesRes, tareasRes, saldosCuentasRes] = await Promise.all([
-    supabase.from('ideas').select('*').order('id'),
-    supabase.from('snaps').select('*').order('fecha'),
-    supabase.from('clientes').select('*').order('id'),
-    supabase.from('cuentas_cobro').select('*').order('numero'),
-    supabase.from('movimientos_financiamiento').select('*').order('fecha'),
-    supabase.from('deudas').select('*').order('created_at'),
-    supabase.from('pagos_mensuales').select('*').order('dia_pago'),
-    supabase.from('transacciones').select('*').order('fecha', { ascending: false }),
-    supabase.from('equipo_produccion').select('*').order('created_at'),
-    supabase.from('metas_personales').select('*').order('created_at'),
-    supabase.from('metas_mensuales').select('*'),
-    supabase.from('tareas').select('*').order('created_at'),
-    supabase.from('saldos_cuentas').select('*')
-  ]);
+  const consultas = [
+    ['ideas', supabase.from('ideas').select('*').order('id')],
+    ['snaps', supabase.from('snaps').select('*').order('fecha')],
+    ['clientes', supabase.from('clientes').select('*').order('id')],
+    ['cuentas_cobro', supabase.from('cuentas_cobro').select('*').order('numero')],
+    ['movimientos_financiamiento', supabase.from('movimientos_financiamiento').select('*').order('fecha')],
+    ['deudas', supabase.from('deudas').select('*').order('created_at')],
+    ['pagos_mensuales', supabase.from('pagos_mensuales').select('*').order('dia_pago')],
+    ['transacciones', supabase.from('transacciones').select('*').order('fecha', { ascending: false })],
+    ['equipo_produccion', supabase.from('equipo_produccion').select('*').order('created_at')],
+    ['metas_personales', supabase.from('metas_personales').select('*').order('created_at')],
+    ['metas_mensuales', supabase.from('metas_mensuales').select('*')],
+    ['tareas', supabase.from('tareas').select('*').order('created_at')],
+    ['saldos_cuentas', supabase.from('saldos_cuentas').select('*')]
+  ];
+  const [ideasRes, snapsRes, clientesRes, cuentasRes, movimientosRes, deudasRes, pagosMensualesRes, transaccionesRes, equipoProduccionRes, metasPersonalesRes, metasMensualesRes, tareasRes, saldosCuentasRes] =
+    await Promise.all(consultas.map(([nombre, p]) => segura(p, nombre)));
+
   state.ideas = aplicarOpcionalesLocales('ideas', (ideasRes.data || []).map(fromDbIdea));
   state.snaps = snapsRes.data || [];
   state.clientes = aplicarOpcionalesLocales('clientes', clientesRes.data || []);
@@ -254,7 +269,14 @@ async function cargarDatos() {
   state.metasMensuales = metasMensualesRes.data || [];
   state.tareas = tareasRes.data || [];
   state.saldosCuentas = saldosCuentasRes.data || [];
+
+  // dataReady se pone en true SIEMPRE, haya fallado algo o no — es la diferencia entre "la
+  // pantalla de carga eterna" y una app usable con un aviso claro de qué no llegó.
+  const resultados = [ideasRes, snapsRes, clientesRes, cuentasRes, movimientosRes, deudasRes, pagosMensualesRes, transaccionesRes, equipoProduccionRes, metasPersonalesRes, metasMensualesRes, tareasRes, saldosCuentasRes];
+  const fallidas = resultados.filter(r => r && r.error).map(r => r._tabla).filter(Boolean);
   state.dataReady = true;
+  state.cargaError = fallidas.length ? `No cargó: ${fallidas.join(', ')}. Revisa tu conexión y recarga la página.` : null;
+
   recuperarPendientesUni();
   notify();
   suscribirRealtime();
@@ -706,6 +728,8 @@ export const actions = {
   setTema: v => { const ok = persistValue('sistemaEditorial.tema', v); setState({ tema: v }); marcarGuardado(ok); },
   setModoCalma: v => { const ok = persistValue('sistemaEditorial.modoCalma', v); setState({ modoCalma: v }); marcarGuardado(ok); },
   descartarAvisoGuardado: () => setState({ saveError: false }),
+  descartarAvisoCarga: () => setState({ cargaError: null }),
+  reintentarCarga: () => cargarDatos(),
 
   // --- Google Calendar (Configuraciones) ---
   setGoogleClientId: v => { persistValue('google.clientId', v); setState({ googleClientId: v }); },

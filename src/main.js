@@ -273,6 +273,13 @@ ${escapeHtml(String(e && e.stack ? e.stack : e))}</div>
   };
   root.innerHTML = `
     <div class="app-root" data-tema="${temaAttr}">
+      ${state.cargaError ? `
+        <div class="save-error-banner" role="alert">
+          <span>⚠️ ${escapeHtml(state.cargaError)}</span>
+          <button data-act="reintentar-carga" style="margin-right:6px;">Reintentar</button>
+          <button data-act="descartar-aviso-carga">✕</button>
+        </div>
+      ` : ''}
       ${state.saveError ? `
         <div class="save-error-banner" role="alert">
           <span>No se pudo guardar el último cambio.${state.saveErrorMotivo ? ` <b>${escapeHtml(String(state.saveErrorMotivo))}</b>` : ' Puede que el almacenamiento del navegador esté lleno o en modo privado.'}</span>
@@ -512,6 +519,8 @@ root.addEventListener('click', e => {
       break;
     }
     case 'descartar-aviso-guardado': actions.descartarAvisoGuardado(); break;
+    case 'descartar-aviso-carga': actions.descartarAvisoCarga(); break;
+    case 'reintentar-carga': actions.reintentarCarga(); break;
     case 'google-conectar': actions.googleConectar(); break;
     case 'google-desconectar': actions.googleDesconectar(); break;
     case 'google-sincronizar': actions.googleSincronizarAhora(); break;
