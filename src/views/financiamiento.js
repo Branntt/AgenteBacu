@@ -173,6 +173,40 @@ export function renderFinanciamiento(state) {
   // Pagos mensuales/suscripciones — solo referencia, no entra en patrimonio (igual que antes).
   const pagosMensualesTotal = pagosMensuales.reduce((sum, p) => sum + (Number(p.monto) || 0), 0);
 
+  // Recordatorios de pago próximo — director de finanzas activo, no solo un archivo pasivo:
+  // avisa ANTES de que algo se venza, no solo lo marca en rojo después (ver pagoCardHtml).
+  // Vive fuera de la pestaña "Fijos" a propósito, en 'Tu Situación Hoy', para que se vea sin
+  // importar en qué pestaña estés — es justo lo que un aviso urgente no debería depender de.
+  const hoyDia = Number(hoy.slice(8, 10));
+  const pagosVencidosSinPagar = [];
+  const pagosPorVencerPronto = [];
+  pagosMensuales.forEach(p => {
+    const pagadoMes = !!(p.ultimo_pago && p.ultimo_pago.slice(0, 7) === hoy.slice(0, 7));
+    if (pagadoMes || !p.dia_pago) return;
+    const dia = Number(p.dia_pago);
+    if (dia < hoyDia) pagosVencidosSinPagar.push(p);
+    else if (dia - hoyDia <= 3) pagosPorVencerPronto.push({ ...p, diasFaltan: dia - hoyDia });
+  });
+  const recordatorioPagosHtml = (pagosVencidosSinPagar.length || pagosPorVencerPronto.length) ? `
+    <div class="finanzas-seccion" style="margin-bottom:24px;">
+      ${card('var(--rojo)', `
+        <div style="font-weight:600;margin-bottom:10px;">🔔 Pagos que necesitan tu atención</div>
+        ${pagosVencidosSinPagar.map(p => `
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:6px 0;font-size:13px;">
+            <span>⚠️ <b>${escapeHtml(p.nombre || 'Sin nombre')}</b> <span style="opacity:0.6;">— venció el ${p.dia_pago}, sigue sin marcar pagado</span></span>
+            <b style="color:var(--rojo);white-space:nowrap;">${fmtMoney(p.monto)}</b>
+          </div>
+        `).join('')}
+        ${pagosPorVencerPronto.map(p => `
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:6px 0;font-size:13px;">
+            <span>🗓️ <b>${escapeHtml(p.nombre || 'Sin nombre')}</b> <span style="opacity:0.6;">— vence ${p.diasFaltan === 0 ? 'HOY' : p.diasFaltan === 1 ? 'mañana' : `en ${p.diasFaltan} días`}</span></span>
+            <b style="color:var(--azul);white-space:nowrap;">${fmtMoney(p.monto)}</b>
+          </div>
+        `).join('')}
+      `)}
+    </div>
+  ` : '';
+
   // Por pagar — quién te debe qué, en una sola línea bajo el resumen (no solo el total).
   const porPagarLista = facturasPendientes.map(cc => ({ nombre: cc.cliente_nombre || 'Sin nombre', monto: cc.total }))
     .concat(meDebenHtml.map(d => ({ nombre: d.persona || 'Sin nombre', monto: d.monto })));
@@ -242,10 +276,35 @@ export function renderFinanciamiento(state) {
     <div class="finanzas-seccion" style="margin-bottom:24px;">${renderTablaFinanzas(movimientos, 'entrada')}</div>
   `;
 
+  // Meta de ahorro: 'ahorro' en el presupuesto es lo que te propusiste guardar este mes; lo
+  // que de verdad guardaste es el neto real (ingresos - gastos registrados). Si el neto es
+  // negativo no hay nada que ahorrar todavía — se muestra $0 de progreso, no un número negativo
+  // restando de la meta, que sería confuso.
+  const metaAhorro = Number(presupuesto.ahorro) || 0;
+  const ahorradoReal = Math.max(0, resumenMes.neto);
+  const pctAhorro = metaAhorro > 0 ? Math.min(100, Math.round((ahorradoReal / metaAhorro) * 100)) : 0;
+  const cumplioMetaAhorro = metaAhorro > 0 && ahorradoReal >= metaAhorro;
+
   // Presupuesto vs. real: por cada rubro, lo que te propusiste gastar este mes contra lo que
   // ya llevas gastado — la barra se pone roja si te pasaste, y "Sin asignar" muestra qué falta
   // por presupuestar entre lo que ya gastaste en categorías sin rubro fijo.
   const vistaPresupuestoHtml = `
+    ${metaAhorro > 0 ? `
+    <div class="finanzas-seccion" style="margin-bottom:24px;">
+      ${card(cumplioMetaAhorro ? 'var(--verde)' : 'var(--azul)', `
+        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:10px;">
+          <div style="font-weight:600;">💰 Meta de ahorro — este mes</div>
+          <b style="white-space:nowrap;color:${cumplioMetaAhorro ? 'var(--verde)' : 'var(--azul)'};">${fmtMoney(ahorradoReal)} <span style="opacity:0.6;font-weight:normal;font-size:12px;">/ ${fmtMoney(metaAhorro)}</span></b>
+        </div>
+        <div style="height:10px;background:var(--panel);border-radius:5px;overflow:hidden;">
+          <div style="height:100%;width:${pctAhorro}%;background:${cumplioMetaAhorro ? 'var(--verde)' : 'var(--azul)'};border-radius:5px;transition:width 0.3s;"></div>
+        </div>
+        <div style="font-size:11px;opacity:0.7;margin-top:8px;">
+          ${cumplioMetaAhorro ? '🎉 ¡Ya cumpliste tu meta de ahorro de este mes!' : `Te faltan ${fmtMoney(metaAhorro - ahorradoReal)} para llegar a tu meta.`}
+        </div>
+      `)}
+    </div>
+    ` : ''}
     <div class="finanzas-seccion" style="margin-bottom:24px;">
       <div class="seccion-titulo">🎯 Presupuesto vs. Real — Este mes</div>
       ${card('var(--verde)', RUBROS_PRESUPUESTO.map(([rubro, label]) => {
@@ -531,6 +590,8 @@ export function renderFinanciamiento(state) {
           ${porPagarHtml}
         </div>
       </div>
+
+      ${recordatorioPagosHtml}
 
       <!-- SUBMENÚ: una pestaña a la vez, nada de scroll interminable -->
       <div class="inv-tabs">${tabsHtml}</div>
