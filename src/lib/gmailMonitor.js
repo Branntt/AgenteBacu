@@ -59,11 +59,21 @@ export function extraerMonto(texto) {
   return null;
 }
 
+// Detecta cuál de las 3 fuentes válidas de la tabla (constraint fuente in ('nequi',
+// 'bancolombia', 'efectivo')) corresponde, buscando el nombre del banco en el propio correo.
+// Heurística mínima a propósito — se afina cuando se conecte esto con correos reales.
+function detectarFuente(from, subject, body) {
+  const texto = `${from} ${subject} ${body}`.toLowerCase();
+  if (texto.includes('bancolombia')) return 'bancolombia';
+  if (texto.includes('nequi')) return 'nequi';
+  return 'efectivo';
+}
+
 /**
  * Procesa un correo y crea un gasto si lo detecta
  * Retorna {creado: boolean, gasto: object | null, razon: string}
  */
-export async function procesarCorreoGmail(mensaje, usuarioId) {
+export async function procesarCorreoGmail(mensaje) {
   try {
     const from = mensaje.from || '';
     const subject = mensaje.subject || '';
@@ -85,6 +95,7 @@ export async function procesarCorreoGmail(mensaje, usuarioId) {
     }
 
     const categoria = detectarCategoriaDeCorreo(from, subject, body);
+    const fuente = detectarFuente(from, subject, body);
 
     // Extrae descripción del asunto
     let descripcion = subject;
@@ -92,11 +103,12 @@ export async function procesarCorreoGmail(mensaje, usuarioId) {
       descripcion = descripcion.substring(0, 100);
     }
 
-    // Verifica si ya existe un gasto similar (mismo monto, misma fecha, misma categoría)
+    // Verifica si ya existe un gasto similar (mismo monto, misma fecha, misma categoría).
+    // La tabla transacciones no tiene columna usuario_id (supabase-migracion-transacciones.sql)
+    // — antes esto filtraba por una columna inexistente y la consulta fallaba siempre.
     const { data: existentes } = await supabase
       .from('transacciones')
       .select('id')
-      .eq('usuario_id', usuarioId)
       .eq('fecha', fecha)
       .eq('monto', monto)
       .eq('tipo', 'gasto')
@@ -111,13 +123,12 @@ export async function procesarCorreoGmail(mensaje, usuarioId) {
       .from('transacciones')
       .insert([
         {
-          usuario_id: usuarioId,
           fecha,
           tipo: 'gasto',
           descripcion,
           monto,
           categoria,
-          fuente: 'gmail_auto',
+          fuente,
           created_at: new Date().toISOString(),
         },
       ])
@@ -141,9 +152,14 @@ export async function procesarCorreoGmail(mensaje, usuarioId) {
 /**
  * Monitorea Gmail y procesa correos no leídos
  * Retorna array de resultados de procesamiento
+ *
+ * TODO (sin terminar): esto sigue siendo un placeholder — no busca ni trae correos todavía,
+ * solo devuelve un resultado vacío. Para conectarlo de verdad hace falta: traer los mensajes
+ * de Gmail (API o conector), llamar a procesarCorreoGmail(mensaje) por cada uno, y acumular
+ * los resultados acá. usuarioId ya no aplica (transacciones no tiene esa columna, ver
+ * procesarCorreoGmail arriba) — queda solo por si gmailTokens lo necesita para autenticar.
  */
 export async function monitorearGmail(usuarioId, gmailTokens) {
-  // Esta función será implementada cuando Gmail esté disponible
   // Por ahora retorna estructura de placeholder
   return {
     exitosos: 0,

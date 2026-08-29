@@ -2,6 +2,7 @@ import { escapeHtml, fmtNum } from '../lib/format.js';
 import { hoyStr } from '../lib/idea.js';
 import { calcularFinanciamiento } from '../lib/financiamiento.js';
 import { UNIVERSIDAD } from '../data/universidad.js';
+import { tieneContenido } from './guiones.js';
 
 function fmtMoney(n) {
   const v = Number(n) || 0;
@@ -10,8 +11,11 @@ function fmtMoney(n) {
 
 function renderContenidoPipeline(ideas) {
   const activas = ideas.filter(i => i.estado !== 'descartada');
-  const sinGuion = activas.filter(i => !i.guion || i.guion.trim() === '').length;
-  const conGuion = activas.filter(i => i.guion && i.guion.trim() !== '').length;
+  // idea.guion es un objeto ({items:[...]}), no un string — llamar .trim() sobre él tira
+  // TypeError y rompe toda la pantalla de Panorama. tieneContenido() (guiones.js) ya sabe
+  // leerlo bien, la reutilizamos acá en vez de duplicar/adivinar la lógica.
+  const sinGuion = activas.filter(i => !tieneContenido(i)).length;
+  const conGuion = activas.filter(i => tieneContenido(i)).length;
   const grabados = activas.filter(i => ['grabar', 'produccion', 'edicion', 'entrega', 'por_pagar', 'ya_pago', 'publicada'].includes(i.estado)).length;
 
   return `

@@ -149,7 +149,9 @@ export function renderCartaCompleta(item, state) {
   const hoy = hoyStr();
 
   const pendientes = [];
-  item.ideas.filter(i => i.estado !== 'ya_pago' && i.estado !== 'descartada').forEach(i =>
+  // 'publicada' es el alias viejo de 'ya_pago' (ver enColumnaIdea en views/guiones.js) — sin
+  // excluirlo también, una idea cerrada bajo el valor viejo quedaba "pendiente" para siempre.
+  item.ideas.filter(i => i.estado !== 'ya_pago' && i.estado !== 'publicada' && i.estado !== 'descartada').forEach(i =>
     pendientes.push({ icono: '💡', texto: i.titulo || 'Idea sin título', detalle: 'idea anotada' }));
   item.facturas.filter(f => !f.pagada).forEach(f =>
     pendientes.push({ icono: '💸', texto: fmtMoney(f.total), detalle: 'sin cobrar · ' + fmtFecha(f.fecha) }));

@@ -7,7 +7,20 @@ const MUTED = '#79807A';
 const MUTED_LT = '#9AA39B';
 const VERDE = '#3BA478';
 
-const ESTADO_LABEL = { prospecto: 'Prospecto', conversacion: 'En conversación', proyecto_edicion: 'Proyecto por editar', entregado: 'Entregado', por_pagar: 'Por pagar', ya_pagos: 'Ya pagos' };
+// Mismos 9 estados que COLUMNAS/ESTADO_COLORS en views/clientes.js — faltaban 3 acá
+// (grabacion, confirmar_entrega, descartado), así que el PDF exportado imprimía el código
+// crudo ("GRABACION", "CONFIRMAR_ENTREGA", "DESCARTADO") en vez de una etiqueta legible.
+const ESTADO_LABEL = {
+  prospecto: 'Prospecto',
+  conversacion: 'En conversación',
+  grabacion: 'Grabación',
+  proyecto_edicion: 'Proyecto por editar',
+  confirmar_entrega: 'Por confirmar entrega',
+  por_pagar: 'Por pagar',
+  ya_pagos: 'Ya pagos',
+  entregado: 'Ya pagos',
+  descartado: 'Descartada',
+};
 
 export function generarListadoClientesPDF(clientes) {
   const doc = new jsPDF({ unit: 'pt', format: 'letter' });
