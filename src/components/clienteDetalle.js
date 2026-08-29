@@ -2,7 +2,20 @@ import { escapeHtml } from '../lib/format.js';
 import { ATTRS_AUTOCOMPLETAR } from './datalistClientes.js';
 import { renderCuentasDeCliente } from './cuentasDeCliente.js';
 
-const ESTADO_LABELS = { prospecto: 'Prospecto', conversacion: 'En conversación para contratación', proyecto_edicion: 'Proyecto por editar', entregado: 'Entregado', por_pagar: 'Por pagar', ya_pagos: 'Ya pagos' };
+// Mismos 9 estados que COLUMNAS/ESTADO_COLORS en views/clientes.js — faltaban 3 acá
+// (grabacion, confirmar_entrega, descartado), así que un cliente en esos estados mostraba el
+// chip "Prospecto" por el fallback de abajo, aunque estuviera en grabación o ya descartado.
+const ESTADO_LABELS = {
+  prospecto: 'Prospecto',
+  conversacion: 'En conversación para contratación',
+  grabacion: 'Grabación',
+  proyecto_edicion: 'Proyecto por editar',
+  confirmar_entrega: 'Por confirmar entrega',
+  por_pagar: 'Por pagar',
+  ya_pagos: 'Ya pagos',
+  entregado: 'Ya pagos', // alias viejo de ya_pagos
+  descartado: 'Descartada',
+};
 
 export function renderClienteDetalle(state) {
   const c = (state.clientes || []).find(x => x.id === state.clienteSelId);

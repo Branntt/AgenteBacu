@@ -59,7 +59,7 @@ function cardGeneral(i, calma) {
   `;
 }
 
-function tieneContenido(idea) {
+export function tieneContenido(idea) {
   const g = idea.guion;
   if (!g) return false;
   if (g.items && g.items.length) return g.items.some(it => (it.principal || '').trim());
@@ -100,7 +100,11 @@ function renderGeneral(state, ideas) {
 }
 
 function renderPorTipo(ideas) {
-  const enDesarrollo = ideas.filter(i => i.estado === 'desarrollo');
+  // Antes filtraba solo estado==='desarrollo' — enColumnaIdea() (arriba) ya sabe que 'lista'
+  // es el alias viejo del mismo estado; una idea con ese valor viejo aparecía en el kanban de
+  // "Vista general" pero desaparecía de "Por tipo de guion", dejando su guion inalcanzable
+  // desde esta pantalla.
+  const enDesarrollo = ideas.filter(i => enColumnaIdea(i, 'desarrollo'));
   const columnasHtml = Object.keys(FAMILIAS_GUION).map(key => {
     const fam = FAMILIAS_GUION[key];
     const items = enDesarrollo.filter(i => familiaDeFormato(i.formato) === key);

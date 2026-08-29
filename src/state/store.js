@@ -65,7 +65,6 @@ export const state = {
   cuentaCobroDraft: null,
   nuevoContenidoAbierto: false,
   nuevaIdeaAbierta: false,
-  revisionIdeasModal: false,
   revisionIdeasPendientes: [],
   notificacionBacu: null,
   transacciones: [],
@@ -93,30 +92,6 @@ export const state = {
     ahorro: 200000,
     ingresosMensuales: 0
   }),
-  gastosVivirSolo: [
-    { id: 'g1', nombre: 'Arriendo (CRÍTICO)', emoji: '🏠', monto: 700000, dia_vencimiento: 1 },
-    { id: 'g2', nombre: 'Mercado/Comida (CRÍTICO)', emoji: '🍽️', monto: 450000, dia_vencimiento: 1 },
-    { id: 'g3', nombre: 'Transporte', emoji: '🚌', monto: 120000, dia_vencimiento: 1 },
-    { id: 'g4', nombre: 'Entretenimiento', emoji: '🎉', monto: 200000, dia_vencimiento: 1 },
-    { id: 'g5', nombre: 'Gasolina', emoji: '⛽', monto: 100000, dia_vencimiento: 5 },
-    { id: 'g6', nombre: 'Internet', emoji: '📡', monto: 80000, dia_vencimiento: 8 },
-    { id: 'g7', nombre: 'Seguros/Gastos médicos', emoji: '🏥', monto: 100000, dia_vencimiento: 10 },
-    { id: 'g8', nombre: 'Luz (CRÍTICO)', emoji: '💡', monto: 150000, dia_vencimiento: 12 },
-    { id: 'g9', nombre: 'Agua (CRÍTICO)', emoji: '💧', monto: 50000, dia_vencimiento: 12 },
-    { id: 'g10', nombre: 'Teléfono', emoji: '📱', monto: 50000, dia_vencimiento: 15 },
-    { id: 'g11', nombre: 'Ropa', emoji: '👕', monto: 150000, dia_vencimiento: 15 },
-    { id: 'g12', nombre: 'Mango (gato)', emoji: '🐱', monto: 140000, dia_vencimiento: 1 },
-    { id: 'g13', nombre: 'Gym', emoji: '💪', monto: 100000, dia_vencimiento: 1 },
-    { id: 'g14', nombre: 'CapCut', emoji: '✂️', monto: 29866, dia_vencimiento: 1 },
-    { id: 'g15', nombre: 'Claude (suscripción)', emoji: '🤖', monto: 99888, dia_vencimiento: 2 },
-    { id: 'g16', nombre: 'Lightroom', emoji: '🖼️', monto: 8515, dia_vencimiento: 6 },
-    { id: 'g17', nombre: 'Apple.com', emoji: '🍎', monto: 9022, dia_vencimiento: 15 },
-    { id: 'g18', nombre: 'Gmail', emoji: '📧', monto: 2015, dia_vencimiento: 16 },
-    { id: 'g19', nombre: 'Google Play', emoji: '🎮', monto: 8900, dia_vencimiento: 21 },
-    { id: 'g20', nombre: 'Manejo tarjeta', emoji: '💳', monto: 11000, dia_vencimiento: 11 },
-    { id: 'g21', nombre: 'Spotify (÷6)', emoji: '🎵', monto: 5000, dia_vencimiento: 12 },
-    { id: 'g22', nombre: 'Aseo Personal (Shampú 15k/2m + Jabón 45k/2m + Cuchillas 9k/2m + Desodorante 50k + Contorno 80k)', emoji: '🧴', monto: 199000, dia_vencimiento: 28 }
-  ],
   gastosRecurrentes: [
     { id: 'gr1', nombre: 'Mango (gato - comida + arena)', emoji: '🐱', monto: 140000, dia_vencimiento: 1 },
     { id: 'gr2', nombre: 'Gym', emoji: '💪', monto: 100000, dia_vencimiento: 1 },
@@ -1468,10 +1443,6 @@ export const actions = {
     }
   },
 
-  // Revisión de ideas por fecha
-  abrirRevisionIdeas: (ideas) => setState({ revisionIdeasModal: true, revisionIdeasPendientes: ideas }),
-  cerrarRevisionIdeas: () => setState({ revisionIdeasModal: false, revisionIdeasPendientes: [] }),
-
   cerrarNotificacionBacu: () => setState({ notificacionBacu: null }),
   // Marca el item como revisado, lo saca de la cola y muestra feedback breve
   _bacuAvanzarCola: (itemId, feedback) => {
@@ -1513,51 +1484,11 @@ export const actions = {
     }
     actions._bacuAvanzarCola(itemId, 'pospuesto');
   },
-  actualizarEstadoIdea: (ideaId, nuevoEstado) => {
-    const idea = state.ideas.find(i => i.id === ideaId);
-    if (!idea) return;
-
-    // Actualizar estado localmente
-    const updated = { ...idea, estado: nuevoEstado };
-    const idx = state.ideas.indexOf(idea);
-    state.ideas[idx] = updated;
-
-    // Guardar en Supabase
-    supabase.from('ideas').update({ estado: nuevoEstado }).eq('id', ideaId).then(() => notify());
-
-    // Marcar como revisada en sessionStorage
-    const revisadas = JSON.parse(sessionStorage.getItem('ideas_revisadas') || '[]');
-    if (!revisadas.includes(ideaId)) {
-      revisadas.push(ideaId);
-      sessionStorage.setItem('ideas_revisadas', JSON.stringify(revisadas));
-    }
-  },
   updPresupuesto: (campo, valor) => {
     state.presupuesto = { ...state.presupuesto, [campo]: parseN(valor) };
     const ok = persistValue('finanzas.presupuesto', state.presupuesto);
     notify();
     marcarGuardado(ok);
-  },
-
-  gastoNuevo: () => {
-    const id = 'g' + Date.now();
-    state.gastosVivirSolo = state.gastosVivirSolo.concat([
-      { id, nombre: 'Nuevo gasto', emoji: '💰', monto: 0, dia_vencimiento: 1 }
-    ]);
-    notify();
-  },
-
-  eliminarGasto: (id) => {
-    state.gastosVivirSolo = state.gastosVivirSolo.filter(g => g.id !== id);
-    notify();
-  },
-
-  updGasto: (id, campo, valor) => {
-    const gasto = state.gastosVivirSolo.find(g => g.id === id);
-    if (gasto) {
-      gasto[campo] = campo === 'monto' || campo === 'dia_vencimiento' ? parseN(valor) : valor;
-      notify();
-    }
   },
 
   // Transacciones (Daily income/expense tracking)

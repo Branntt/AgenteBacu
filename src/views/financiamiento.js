@@ -337,8 +337,12 @@ export function renderFinanciamiento(state) {
   // calcularFinanciamiento) en una sola línea de tiempo por mes — "la verdad y solo la verdad":
   // nada de lo registrado alguna vez desaparece, solo se archiva por mes para poder mirarlo
   // sin que ensucie el saldo de hoy (ver saldos_cuentas / fecha_corte).
-  const añoActual = hoy.slice(0, 4);
   const mesSeleccionado = state.historialMes || hoy.slice(0, 7);
+  // Antes esto era const añoActual = hoy.slice(0,4), fijo — los 12 botones de mes siempre
+  // eran del año en curso sin ninguna forma de navegar a otro. Ahora sale del mes
+  // seleccionado, así que las flechas de abajo (mismo action historial-mes, cambiando el
+  // año y dejando el mes) sí pueden moverlo a un año distinto.
+  const [añoMostrado, mesMostradoNum] = mesSeleccionado.split('-');
   const entradasUnificadas = transacciones.map(t => ({
     fecha: t.fecha, monto: Number(t.monto) || 0, esIngreso: t.tipo === 'ingreso',
     descripcion: t.descripcion || obtenerEmoji(t.categoria), fuente: t.fuente, origen: 'día a día',
@@ -348,12 +352,14 @@ export function renderFinanciamiento(state) {
   })));
   const mesesConDatos = new Set(entradasUnificadas.map(e => (e.fecha || '').slice(0, 7)));
   const mesesBotonesHtml = MESES.map((nombre, i) => {
-    const key = `${añoActual}-${String(i + 1).padStart(2, '0')}`;
+    const key = `${añoMostrado}-${String(i + 1).padStart(2, '0')}`;
     const tieneDatos = mesesConDatos.has(key);
     return `<button class="inv-tab ${mesSeleccionado === key ? 'active' : ''}" data-act="historial-mes" data-value="${key}" style="position:relative;">
       ${nombre.slice(0, 3)}${tieneDatos ? '<span style="position:absolute;top:4px;right:6px;width:5px;height:5px;border-radius:50%;background:var(--verde);"></span>' : ''}
     </button>`;
   }).join('');
+  const añoAnteriorKey = `${Number(añoMostrado) - 1}-${mesMostradoNum}`;
+  const añoSiguienteKey = `${Number(añoMostrado) + 1}-${mesMostradoNum}`;
 
   const entradasDelMes = entradasUnificadas.filter(e => (e.fecha || '').startsWith(mesSeleccionado))
     .sort((a, b) => b.fecha.localeCompare(a.fecha));
@@ -365,22 +371,30 @@ export function renderFinanciamiento(state) {
     .sort((a, b) => b.total - a.total);
   const [añoMes, mesNum] = mesSeleccionado.split('-');
   const nombreMesSeleccionado = `${MESES[Number(mesNum) - 1]} ${añoMes}`;
-  const resumenCardHist = (label, valor, color) => card(color, `
+  // Única definición — antes existía una copia idéntica más abajo (resumenCardHist), que
+  // solo se usaba acá arriba; unificadas en resumenCard, la que también usa vistaDiaHtml.
+  const resumenCard = (label, valor, color) => card(color, `
     <div style="opacity:0.7;font-size:11px;margin-bottom:4px;">${label}</div>
     <div style="font-size:19px;font-weight:bold;color:${color};overflow-wrap:break-word;">${fmtMoney(valor)}</div>
   `, 'padding:12px 14px;');
 
   const vistaHistorialHtml = `
     <div class="finanzas-seccion" style="margin-bottom:24px;">
-      <div class="seccion-titulo">📚 Historial ${añoActual}</div>
+      <div class="seccion-titulo" style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+        <span>📚 Historial ${añoMostrado}</span>
+        <span style="display:flex;gap:6px;">
+          <button class="btn-ghost" data-act="historial-mes" data-value="${añoAnteriorKey}" title="Año anterior" style="padding:4px 10px;min-height:0;">←</button>
+          <button class="btn-ghost" data-act="historial-mes" data-value="${añoSiguienteKey}" title="Año siguiente" style="padding:4px 10px;min-height:0;">→</button>
+        </span>
+      </div>
       <div class="inv-tabs" style="flex-wrap:wrap;">${mesesBotonesHtml}</div>
     </div>
     <div class="finanzas-seccion" style="margin-bottom:24px;">
       <div class="seccion-titulo" style="text-transform:capitalize;">${nombreMesSeleccionado}</div>
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;">
-        ${resumenCardHist('Entró', ingresosMes, 'var(--verde)')}
-        ${resumenCardHist('Salió', gastosDelMesHist, 'var(--rojo)')}
-        ${resumenCardHist('Neto', ingresosMes - gastosDelMesHist, (ingresosMes - gastosDelMesHist) >= 0 ? 'var(--verde)' : 'var(--rojo)')}
+        ${resumenCard('Entró', ingresosMes, 'var(--verde)')}
+        ${resumenCard('Salió', gastosDelMesHist, 'var(--rojo)')}
+        ${resumenCard('Neto', ingresosMes - gastosDelMesHist, (ingresosMes - gastosDelMesHist) >= 0 ? 'var(--verde)' : 'var(--rojo)')}
       </div>
       ${categoriasDelMesOrdenadas.length ? card('var(--rojo)', categoriasDelMesOrdenadas.map(c => {
         const pct = gastosDelMesHist > 0 ? Math.round((c.total / gastosDelMesHist) * 100) : 0;
@@ -459,11 +473,6 @@ export function renderFinanciamiento(state) {
     <button class="btn-primary" data-act="transaccion-agregar" style="width:100%;margin-top:10px;">Registrar</button>
     <div style="font-size:11px;opacity:0.55;margin-top:8px;">La categoría se detecta sola por lo que escribas.</div>
   `, 'margin-bottom:16px;');
-
-  const resumenCard = (label, valor, color) => card(color, `
-    <div style="opacity:0.7;font-size:11px;margin-bottom:4px;">${label}</div>
-    <div style="font-size:19px;font-weight:bold;color:${color};overflow-wrap:break-word;">${fmtMoney(valor)}</div>
-  `, 'padding:12px 14px;');
 
   const vistaDiaHtml = `
     ${sinMovimientos ? card('var(--azul)', `

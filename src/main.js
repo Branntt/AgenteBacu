@@ -25,7 +25,6 @@ import { renderPared } from './views/pared.js';
 import { renderConfiguraciones } from './views/configuraciones.js';
 import { renderNuevoContenido } from './components/nuevoContenido.js';
 import { renderPersonaje3DCreador, sincronizarPersonaje3D } from './components/personaje3d.js';
-import { renderRevisionIdeasModal } from './components/revisionIdeasModal.js';
 import { renderNotificacionBacu } from './components/notificacionBacu.js';
 import { renderClaseInfo } from './components/claseInfo.js';
 import { renderDatalistClientes, renderDatalistParaQuien } from './components/datalistClientes.js';
@@ -296,7 +295,6 @@ ${escapeHtml(String(e && e.stack ? e.stack : e))}</div>
       ${renderHistorialCuentas(state)}
       ${renderNuevoContenido(state)}
       ${renderPersonaje3DCreador(state)}
-      ${renderRevisionIdeasModal(state)}
       ${renderNotificacionBacu(state)}
       ${renderClaseInfo(state)}
       ${renderNuevaIdea(state)}
@@ -560,8 +558,6 @@ root.addEventListener('click', e => {
     case 'deuda-eliminar': actions.eliminarDeuda(id); break;
     case 'deuda-urgente-toggle': actions.toggleDeudaUrgente(id); break;
     case 'cc-eliminar': actions.eliminarCuentaCobro(id); break;
-    case 'gasto-nuevo': actions.gastoNuevo(); break;
-    case 'gasto-eliminar': actions.eliminarGasto(id); break;
     case 'transaccion-agregar': {
       const descripcion = document.querySelector('[id="desc-trans"]')?.value;
       const monto = document.querySelector('[id="monto-trans"]')?.value;
@@ -697,18 +693,6 @@ root.addEventListener('click', e => {
     case 'personaje3d-abrir': actions.personaje3dAbrir(); break;
     case 'personaje3d-cerrar': actions.personaje3dCerrar(); break;
     case 'personaje3d-reset': actions.personaje3dReset(); break;
-    case 'cerrar-revision-ideas': actions.cerrarRevisionIdeas(); break;
-    case 'actualizar-estado-idea': {
-      const { id, estado } = el.dataset;
-      actions.actualizarEstadoIdea(id, estado);
-      const pendientes = state.revisionIdeasPendientes.filter(i => i.id !== id);
-      if (pendientes.length > 0) {
-        actions.abrirRevisionIdeas(pendientes);
-      } else {
-        actions.cerrarRevisionIdeas();
-      }
-      break;
-    }
     case 'bacu-set-estado': actions.bacuSetEstado(id, el.dataset.estado, el.dataset.label); break;
     case 'bacu-posponer': actions.bacuPosponer(id); break;
     case 'cerrar-notificacion-bacu': actions.cerrarNotificacionBacu(); break;

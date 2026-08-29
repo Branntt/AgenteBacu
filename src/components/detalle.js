@@ -99,7 +99,11 @@ export function renderDetalle(state) {
     <button class="etapa-btn ${ei <= selIdea.etapa ? 'done' : ''}" data-act="etapa-set" data-id="${id}" data-idx="${ei}">${String(ei + 1).padStart(2, '0')} ${escapeHtml(label)}</button>
   `).join('');
 
-  const resultadosHtml = selIdea.estado === 'publicada' ? `
+  // 'ya_pago' es el estado terminal actual; 'publicada' es su alias viejo (ver
+  // enColumnaIdea en views/guiones.js) — el selector de estado de este mismo drawer ya no
+  // produce 'publicada', así que exigir solo ese valor dejaba esta sección inalcanzable
+  // para cualquier idea cerrada por la UI actual.
+  const resultadosHtml = (selIdea.estado === 'ya_pago' || selIdea.estado === 'publicada') ? `
     <div class="validation-box">
       <div class="section-title">Resultados — análisis y aprendizajes</div>
       <div class="resultados-grid">

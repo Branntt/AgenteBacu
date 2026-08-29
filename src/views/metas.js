@@ -98,11 +98,13 @@ function metaHtml(m) {
       <input type="text" class="meta-descripcion" data-change="meta-personal-descripcion" data-id="${mid}"
         value="${escapeHtml(m.descripcion || '')}" placeholder="ej: 8 horas de trabajo = comprar una luz">
 
-      <!-- Pasos: colapsables/contraíbles -->
+      <!-- La lista de pasos de abajo siempre se muestra completa, no hay estado de -->
+      <!-- colapsado/expandido en ningún lado — este botón solo agrega un paso más. -->
+      <!-- Antes decía "+ Ver pasos" pasados los 3 pasos, prometiendo un toggle que no existe. -->
       ${pasos.length > 0 ? `
         <div class="meta-pasos-toggle">
           <button class="meta-paso-agregar" data-act="meta-paso-agregar" data-id="${mid}">
-            + ${pasos.length > 3 ? 'Ver pasos' : 'paso'}
+            + Agregar paso
           </button>
         </div>
         <div class="meta-pasos">
