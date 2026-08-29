@@ -845,6 +845,8 @@ root.addEventListener('change', e => {
       case 'meta-personal-tipo': actions.updMetaPersonal(id, { tipo: value || null }); break;
       case 'meta-personal-fecha': actions.updMetaPersonal(id, { fecha: value || null }); break;
       case 'meta-personal-descripcion': actions.updMetaPersonal(id, { descripcion: value || null }); break;
+      case 'meta-personal-monto-objetivo': actions.updMetaPersonal(id, { monto_objetivo: value ? parseN(value) : null }); break;
+      case 'meta-personal-monto-ahorrado': actions.updMetaPersonal(id, { monto_ahorrado: parseN(value) }); break;
       // Centro de Carga — mismos 5 campos en metas_personales y equipo_produccion, ver
       // supabase-migracion-centro-carga.sql. Dos variantes porque cada tabla tiene su propia
       // acción de update (updMetaPersonal / updEquipo), no hay un dispatcher genérico por tabla.

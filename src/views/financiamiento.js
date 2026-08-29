@@ -3,7 +3,7 @@ import { calcularFinanciamiento, cuentasCobroPendientes, esVencida } from '../li
 import { renderTablaFinanzas } from '../components/tablaFinanzas.js';
 import { obtenerEmoji, agruparPorCategoria, calcularResumen, rubroPresupuestoDeCategoria } from '../lib/transacciones.js';
 import { renderSimuladorPresupuesto } from '../components/simuladorPresupuesto.js';
-import { hoyStr } from '../lib/idea.js';
+import { hoyStr, lunesDe, sumarDias } from '../lib/idea.js';
 import { MESES } from '../data/constants.js';
 
 // Rubros del presupuesto (ver state.presupuesto) en el orden en que se muestran — 'ahorro' no
@@ -294,10 +294,43 @@ export function renderFinanciamiento(state) {
   const pctAhorro = metaAhorro > 0 ? Math.min(100, Math.round((ahorradoReal / metaAhorro) * 100)) : 0;
   const cumplioMetaAhorro = metaAhorro > 0 && ahorradoReal >= metaAhorro;
 
+  // Presupuesto de ESTA semana — adaptativo: sale de disponibleReal (ya neto de fijos
+  // pendientes y deudas, ver arriba), le resta la porción de la meta de ahorro que le toca a
+  // esta semana (lo que falta del mes ÷ semanas que quedan en el mes, no 1/4 fijo — si ya
+  // ahorraste temprano, las semanas siguientes quedan más sueltas), y reparte lo que sobra
+  // entre los días que faltan de la semana (lunes a domingo, igual criterio que Calendario).
+  const inicioSemana = lunesDe(hoy);
+  const [añoHoyNum, mesHoyNum, diaHoyNum] = hoy.split('-').map(Number);
+  const diasEnElMes = new Date(añoHoyNum, mesHoyNum, 0).getDate();
+  const semanasRestantesEnMes = Math.max(1, (diasEnElMes - diaHoyNum + 1) / 7);
+  const ahorroPrevistoSemana = Math.max(0, metaAhorro - ahorradoReal) / semanasRestantesEnMes;
+  const presupuestoLibreSemana = disponibleReal - ahorroPrevistoSemana;
+  const diasTranscurridosSemana = Math.round((new Date(hoy) - new Date(inicioSemana)) / 86400000) + 1;
+  const diasRestantesSemana = 7 - diasTranscurridosSemana + 1;
+  const gastoEstaSemana = transacciones.filter(t => t.tipo === 'gasto' && t.fecha >= inicioSemana && t.fecha <= hoy).reduce((s, t) => s + (Number(t.monto) || 0), 0);
+  const restanteSemana = presupuestoLibreSemana - gastoEstaSemana;
+  const limiteDiarioPlano = presupuestoLibreSemana / 7;
+  const limiteDiarioRestante = diasRestantesSemana > 0 ? restanteSemana / diasRestantesSemana : restanteSemana;
+  const semaforoSemana = limiteDiarioRestante <= 0 ? '🔴' : limiteDiarioRestante < limiteDiarioPlano * 0.6 ? '🟡' : '🟢';
+  const colorSemaforo = semaforoSemana === '🔴' ? 'var(--rojo)' : semaforoSemana === '🟡' ? '#EFC94C' : 'var(--verde)';
+
   // Presupuesto vs. real: por cada rubro, lo que te propusiste gastar este mes contra lo que
   // ya llevas gastado — la barra se pone roja si te pasaste, y "Sin asignar" muestra qué falta
   // por presupuestar entre lo que ya gastaste en categorías sin rubro fijo.
   const vistaPresupuestoHtml = `
+    <div class="finanzas-seccion" style="margin-bottom:24px;">
+      ${card(colorSemaforo, `
+        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:10px;">
+          <div style="font-weight:600;">${semaforoSemana} Presupuesto de esta semana</div>
+          <b style="white-space:nowrap;color:${colorSemaforo};">${fmtMoney(restanteSemana)} <span style="opacity:0.6;font-weight:normal;font-size:12px;">libres</span></b>
+        </div>
+        <div style="font-size:24px;font-weight:bold;color:${colorSemaforo};margin-bottom:6px;">${fmtMoney(limiteDiarioRestante)}<span style="font-size:12px;font-weight:normal;opacity:0.6;"> / día, los ${diasRestantesSemana} días que quedan</span></div>
+        <div style="font-size:11px;opacity:0.65;line-height:1.5;">
+          Disponible real ${fmtMoney(disponibleReal)} − ahorro previsto de esta semana ${fmtMoney(ahorroPrevistoSemana)} = ${fmtMoney(presupuestoLibreSemana)} para toda la semana.
+          Ya gastaste ${fmtMoney(gastoEstaSemana)} desde el lunes.
+        </div>
+      `)}
+    </div>
     ${metaAhorro > 0 ? `
     <div class="finanzas-seccion" style="margin-bottom:24px;">
       ${card(cumplioMetaAhorro ? 'var(--verde)' : 'var(--azul)', `

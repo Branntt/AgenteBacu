@@ -1,4 +1,10 @@
 import { escapeHtml } from '../lib/format.js';
+import { hoyStr } from '../lib/idea.js';
+
+function fmtMoney(n) {
+  const v = Number(n) || 0;
+  return '$' + Math.abs(v).toLocaleString('es-CO');
+}
 
 // Emojis visuales para cada categoría — hacen las metas más reconocibles de un vistazo
 const EMOJI_CATEGORIA = {
@@ -64,6 +70,19 @@ function metaHtml(m) {
   const progreso = totalPasos > 0 ? Math.round((hechos / totalPasos) * 100) : 0;
   const mid = escapeHtml(m.id);
 
+  // Progreso en $ — independiente del de pasos de arriba (una meta puede tener las dos cosas,
+  // o ninguna). Solo se muestra si se cargó un monto_objetivo; sin eso, la meta se queda como
+  // el checklist de siempre.
+  const objetivo = Number(m.monto_objetivo) || 0;
+  const ahorrado = Number(m.monto_ahorrado) || 0;
+  const faltante = Math.max(0, objetivo - ahorrado);
+  const pctAhorro = objetivo > 0 ? Math.min(100, Math.round((ahorrado / objetivo) * 100)) : 0;
+  let recomendacionSemanal = null;
+  if (faltante > 0 && m.fecha) {
+    const diasFaltan = Math.round((new Date(m.fecha + 'T00:00:00') - new Date(hoyStr() + 'T00:00:00')) / 86400000);
+    if (diasFaltan > 0) recomendacionSemanal = faltante / Math.max(1, diasFaltan / 7);
+  }
+
   // Usar emoji de la categoría, o extraer del título si existe
   let emoji = EMOJI_CATEGORIA[m.categoria] || '🎯';
   const titleMatch = m.titulo?.match(/^([\p{Emoji}])\s/u);
@@ -97,6 +116,34 @@ function metaHtml(m) {
       <!-- Descripción de beneficio (campo de texto) -->
       <input type="text" class="meta-descripcion" data-change="meta-personal-descripcion" data-id="${mid}"
         value="${escapeHtml(m.descripcion || '')}" placeholder="ej: 8 horas de trabajo = comprar una luz">
+
+      <!-- Ahorro en $ hacia esta meta — opcional, independiente del progreso por pasos -->
+      <div style="display:flex;gap:8px;margin:10px 0;">
+        <label style="flex:1;font-size:10px;letter-spacing:0.5px;text-transform:uppercase;opacity:0.6;">
+          Objetivo $
+          <input type="text" inputmode="numeric" data-change="meta-personal-monto-objetivo" data-id="${mid}"
+            value="${objetivo ? fmtMoney(objetivo) : ''}" placeholder="ej: 4.000.000" style="display:block;width:100%;margin-top:3px;">
+        </label>
+        <label style="flex:1;font-size:10px;letter-spacing:0.5px;text-transform:uppercase;opacity:0.6;">
+          Ahorrado $
+          <input type="text" inputmode="numeric" data-change="meta-personal-monto-ahorrado" data-id="${mid}"
+            value="${ahorrado ? fmtMoney(ahorrado) : ''}" placeholder="0" style="display:block;width:100%;margin-top:3px;">
+        </label>
+      </div>
+      ${objetivo > 0 ? `
+        <div class="meta-progreso-container">
+          <div class="meta-barra-progreso">
+            <div class="meta-barra-fill" style="width:${pctAhorro}%;background:var(--verde);"></div>
+          </div>
+          <div class="meta-progreso-texto">${fmtMoney(ahorrado)} / ${fmtMoney(objetivo)} · ${pctAhorro}%</div>
+        </div>
+        ${faltante <= 0
+          ? `<div style="font-size:11px;color:var(--verde);margin-top:4px;">🎉 ¡Ya juntaste el objetivo!</div>`
+          : recomendacionSemanal
+            ? `<div style="font-size:11px;opacity:0.7;margin-top:4px;">Te faltan ${fmtMoney(faltante)} — necesitás ahorrar ~${fmtMoney(recomendacionSemanal)}/semana para llegar a tiempo (${escapeHtml(m.fecha)}).</div>`
+            : `<div style="font-size:11px;opacity:0.7;margin-top:4px;">Te faltan ${fmtMoney(faltante)}${m.fecha ? ' — esa fecha ya pasó o es hoy.' : ' — poné una fecha objetivo para calcular cuánto ahorrar por semana.'}</div>`
+        }
+      ` : ''}
 
       <!-- La lista de pasos de abajo siempre se muestra completa, no hay estado de -->
       <!-- colapsado/expandido en ningún lado — este botón solo agrega un paso más. -->
