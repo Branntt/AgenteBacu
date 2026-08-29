@@ -173,6 +173,15 @@ export function renderFinanciamiento(state) {
   // Pagos mensuales/suscripciones — solo referencia, no entra en patrimonio (igual que antes).
   const pagosMensualesTotal = pagosMensuales.reduce((sum, p) => sum + (Number(p.monto) || 0), 0);
 
+  // Comprometido = lo fijo que todavía falta salir este mes (arriendo, servicios,
+  // suscripciones — cualquier pago_mensual no marcado pagado este mes, tenga o no día fijado)
+  // + lo que debes a alguien (deudas 'debo'). "Debes" (arriba) ya resta esto último del
+  // patrimonio; acá se suma también lo fijo pendiente para responder "de lo que tengo en el
+  // bolsillo, ¿cuánto ya tiene dueño" — antes esa plata no se distinguía de la disponible.
+  const pagosMensualesPendientesDelMes = pagosMensuales.filter(p => !(p.ultimo_pago && p.ultimo_pago.slice(0, 7) === hoy.slice(0, 7)));
+  const comprometido = pagosMensualesPendientesDelMes.reduce((sum, p) => sum + (Number(p.monto) || 0), 0) + debes;
+  const disponibleReal = efectivo - comprometido;
+
   // Recordatorios de pago próximo — director de finanzas activo, no solo un archivo pasivo:
   // avisa ANTES de que algo se venza, no solo lo marca en rojo después (ver pagoCardHtml).
   // Vive fuera de la pestaña "Fijos" a propósito, en 'Tu Situación Hoy', para que se vea sin
@@ -566,6 +575,13 @@ export function renderFinanciamiento(state) {
                 <span style="opacity:0.7;">En bolsillo</span>
                 <span style="font-size:18px;font-weight:bold;white-space:nowrap;color:var(--verde);">${fmtMoney(efectivo)}</span>
               </div>
+            `, 'padding:12px 16px;')}
+            ${card(disponibleReal >= 0 ? 'var(--verde)' : 'var(--rojo)', `
+              <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;">
+                <span style="opacity:0.7;">Disponible real</span>
+                <span style="font-size:18px;font-weight:bold;white-space:nowrap;color:${disponibleReal >= 0 ? 'var(--verde)' : 'var(--rojo)'};">${fmtMoney(disponibleReal)}</span>
+              </div>
+              <div style="font-size:9px;opacity:0.55;margin-top:3px;text-align:right;">bolsillo menos comprometido (${fmtMoney(comprometido)}: fijos pendientes + lo que debes)</div>
             `, 'padding:12px 16px;')}
             ${card('var(--azul)', `
               <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;">
