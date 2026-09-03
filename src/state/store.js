@@ -113,6 +113,7 @@ export const state = {
 
   session: null,
   authReady: false,
+  authModo: 'login', // 'login' | 'recuperar' | 'nueva-password'
   authBusy: false,
   authError: null,
   authInfo: null,
@@ -185,18 +186,41 @@ function fechaALabel(fechaStr) {
 }
 
 // ---- auth ----
+// El link del correo de "olvidé mi contraseña" vuelve acá con #access_token=...&type=recovery
+// en el hash. Supabase deja sesión activa con ese token (hace falta para poder llamar
+// updateUser() más abajo), así que NO alcanza con mirar `session` para saber si es un login
+// normal o alguien recuperando contraseña — hay que fijarse en el propio hash, y hacerlo de
+// forma síncrona ANTES de leer getSession(): la promesa de getSession() ya puede resolver con
+// esa sesión de recuperación adentro, y para entonces el evento PASSWORD_RECOVERY de más abajo
+// puede haber disparado antes de que este addEventListener llegue a existir.
+function esLinkDeRecuperacion() {
+  return window.location.hash.includes('type=recovery');
+}
+
+function limpiarHashRecuperacion() {
+  if (window.location.hash) history.replaceState(null, '', window.location.pathname + window.location.search);
+}
+
 export async function initAuth() {
+  const esRecuperacion = esLinkDeRecuperacion();
   const { data } = await supabase.auth.getSession();
   state.session = data.session;
   state.authReady = true;
+  if (esRecuperacion && state.session) { state.authModo = 'nueva-password'; limpiarHashRecuperacion(); }
   notify();
-  if (state.session) cargarDatos();
+  if (state.session && state.authModo !== 'nueva-password') cargarDatos();
 
-  supabase.auth.onAuthStateChange((_event, session) => {
+  supabase.auth.onAuthStateChange((event, session) => {
+    if (event === 'PASSWORD_RECOVERY') {
+      state.session = session;
+      limpiarHashRecuperacion();
+      setState({ authModo: 'nueva-password', authError: null, authInfo: null });
+      return;
+    }
     const teniaSesion = !!state.session;
     state.session = session;
     notify();
-    if (session && !teniaSesion) cargarDatos();
+    if (session && !teniaSesion && state.authModo !== 'nueva-password') cargarDatos();
     if (!session) setState({ ideas: [], snaps: [], clientes: [], dataReady: false, cargaError: null });
   });
 }
@@ -742,10 +766,40 @@ export const actions = {
     persistValue('sistemaEditorial.ultimoEmail', email);
     setState({ authBusy: true, authError: null, authInfo: null });
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) setState({ authBusy: false, authError: 'No pudimos iniciar sesión. Revisá el email y la contraseña.' });
-    else setState({ authBusy: false, authError: null });
+    // Antes esto mostraba siempre el mismo mensaje ("revisá el email y la contraseña") sin
+    // importar la causa real — un límite de intentos o un problema de red de Supabase se veían
+    // idénticos a una contraseña mal escrita, y no había forma de distinguirlos desde afuera.
+    if (error) {
+      const motivo = /invalid login credentials/i.test(error.message || '')
+        ? 'No pudimos iniciar sesión. Revisá el email y la contraseña.'
+        : `No pudimos iniciar sesión: ${error.message || 'error desconocido'}.`;
+      setState({ authBusy: false, authError: motivo });
+    } else setState({ authBusy: false, authError: null });
   },
   logout: async () => { await supabase.auth.signOut(); },
+
+  authIrRecuperar: () => setState({ authModo: 'recuperar', authError: null, authInfo: null }),
+  authIrLogin: () => setState({ authModo: 'login', authError: null, authInfo: null }),
+
+  recuperarPassword: async (email) => {
+    persistValue('sistemaEditorial.ultimoEmail', email);
+    setState({ authBusy: true, authError: null, authInfo: null });
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin + window.location.pathname
+    });
+    if (error) setState({ authBusy: false, authError: `No pudimos enviar el correo: ${error.message || 'error desconocido'}.` });
+    else setState({ authBusy: false, authInfo: 'Listo — revisá tu correo (y la carpeta de spam) para el link de recuperación.' });
+  },
+
+  actualizarPassword: async (password) => {
+    setState({ authBusy: true, authError: null, authInfo: null });
+    const { error } = await supabase.auth.updateUser({ password });
+    if (error) { setState({ authBusy: false, authError: `No pudimos guardar la contraseña: ${error.message || 'error desconocido'}.` }); return; }
+    // La sesión de recuperación ya es una sesión válida — no hace falta desloguear y pedir que
+    // vuelva a entrar, seguimos derecho hacia adentro de la app como en un login normal.
+    setState({ authBusy: false, authModo: 'login' });
+    cargarDatos();
+  },
 
   nuevaIdea: () => {
     const nueva = { id: 'u' + Date.now(), marca: 'brant', colab: '', titulo: '', nota: '', gancho: '', objetivos: [], formato: 'Reel', estado: 'desarrollo', fecha: null, fechaRodaje: null, preguntas: [null, null, null, null], tiempo: '', grabacion: false, edicion: false, prioridad: 'Media', etapa: 0 };

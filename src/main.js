@@ -12,7 +12,7 @@ import { renderGuion } from './components/guion.js';
 import { renderRodajeRapido } from './components/rodajeRapido.js';
 import { renderCuentaCobro } from './components/cuentaCobro.js';
 import { renderHistorialCuentas } from './components/historialCuentas.js';
-import { renderLogin } from './views/login.js';
+import { renderLogin, renderNuevaPassword } from './views/login.js';
 import { renderPanorama } from './views/panorama.js';
 import { renderCalendario } from './views/calendario.js';
 import { renderClientes } from './views/clientes.js';
@@ -234,6 +234,16 @@ function render() {
 
   if (!state.authReady) {
     root.innerHTML = `<div class="app-root" data-tema="${temaAttr}"><div class="carga-pantalla">Cargando…</div></div>`;
+    return;
+  }
+
+  // Ojo con el orden: durante la recuperación de contraseña state.session YA está poblada
+  // (Supabase deja una sesión temporal con el token del correo), así que este chequeo tiene
+  // que ir ANTES del de !state.session o el link de recuperación mandaría derecho a la app
+  // de siempre sin pasar por la pantalla de "poné tu contraseña nueva".
+  if (state.authModo === 'nueva-password') {
+    root.innerHTML = `<div class="app-root" data-tema="${temaAttr}">${renderNuevaPassword(state)}</div>`;
+    restaurarFoco(foco);
     return;
   }
 
@@ -523,6 +533,8 @@ root.addEventListener('click', e => {
     case 'google-desconectar': actions.googleDesconectar(); break;
     case 'google-sincronizar': actions.googleSincronizarAhora(); break;
     case 'logout': actions.logout(); break;
+    case 'auth-ir-recuperar': actions.authIrRecuperar(); break;
+    case 'auth-ir-login': actions.authIrLogin(); break;
     case 'rodaje-rapido-abrir': actions.rodajeRapidoAbrir(fecha); break;
     case 'rodaje-rapido-cerrar': actions.rodajeRapidoCerrar(); break;
     case 'rodaje-rapido-guardar': actions.rodajeRapidoGuardar(); break;
@@ -766,12 +778,26 @@ root.addEventListener('drop', e => {
 });
 
 root.addEventListener('submit', e => {
-  const form = e.target.closest('[data-form="login"]');
-  if (!form) return;
-  e.preventDefault();
-  const email = form.querySelector('[name="email"]').value;
-  const password = form.querySelector('[name="password"]').value;
-  actions.login(email, password);
+  const loginForm = e.target.closest('[data-form="login"]');
+  if (loginForm) {
+    e.preventDefault();
+    const email = loginForm.querySelector('[name="email"]').value;
+    const password = loginForm.querySelector('[name="password"]').value;
+    actions.login(email, password);
+    return;
+  }
+  const recuperarForm = e.target.closest('[data-form="recuperar"]');
+  if (recuperarForm) {
+    e.preventDefault();
+    actions.recuperarPassword(recuperarForm.querySelector('[name="email"]').value);
+    return;
+  }
+  const nuevaPasswordForm = e.target.closest('[data-form="nueva-password"]');
+  if (nuevaPasswordForm) {
+    e.preventDefault();
+    actions.actualizarPassword(nuevaPasswordForm.querySelector('[name="password"]').value);
+    return;
+  }
 });
 
 root.addEventListener('change', e => {
