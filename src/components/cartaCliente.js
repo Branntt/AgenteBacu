@@ -251,7 +251,12 @@ function tierDeGlobal(g) {
 export function renderRedClientes(state) {
   const red = calcularRedClientes(state.clientes, state.cuentasCobro, state.ideas);
   if (!red.length) {
-    return '<main class="clientes"><div class="empty-note">Todavía no hay clientes guardados. Cada rodaje que cobres crea uno.</div></main>';
+    return `
+      <main class="clientes">
+        <div class="empty-note">Todavía no hay clientes guardados. Cada rodaje que cobres crea uno, o creá uno directo:</div>
+        <button class="btn-primary" data-act="cliente-nuevo" style="margin-top:12px;">+ Nuevo cliente</button>
+      </main>
+    `;
   }
 
   const abierta = state.cartaClienteId && red.find(r => r.cliente.id === state.cartaClienteId);
@@ -302,8 +307,11 @@ export function renderRedClientes(state) {
 
   return `
     <main class="clientes">
-      <div class="vista-sub" style="margin-bottom:10px;">
-        ${red.length} cliente${red.length === 1 ? '' : 's'} · ${fmtMoney(totalCobrado)} cobrado${totalPorCobrar > 0 ? ` · <b style="color:var(--rojo);">${fmtMoney(totalPorCobrar)} sin cobrar</b>` : ''}
+      <div class="banco-head" style="margin-bottom:10px;">
+        <div class="vista-sub" style="margin:0;">
+          ${red.length} cliente${red.length === 1 ? '' : 's'} · ${fmtMoney(totalCobrado)} cobrado${totalPorCobrar > 0 ? ` · <b style="color:var(--rojo);">${fmtMoney(totalPorCobrar)} sin cobrar</b>` : ''}
+        </div>
+        <button class="btn-primary" data-act="cliente-nuevo">+ Nuevo cliente</button>
       </div>
       ${chips}
       ${cuerpo}
