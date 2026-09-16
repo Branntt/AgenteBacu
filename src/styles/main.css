@@ -972,6 +972,22 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
   padding: 2px 4px;
   flex-shrink: 0;
 }
+.cal-cell-head { display: flex; align-items: center; justify-content: space-between; }
+/* Pista de "acá se agrega" — visible siempre (no solo al :hover) porque en celular no hay
+   hover; se intensifica al tocar/pasar el mouse para confirmar que ese día responde. */
+.cal-add-hint {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  color: var(--muted);
+  opacity: .4;
+}
+.cal-cell.agregable { cursor: pointer; }
+.cal-cell.agregable:hover { background: color-mix(in srgb, var(--verde) 6%, transparent); }
+.cal-cell.agregable:hover .cal-add-hint,
+.cal-cell.agregable:active .cal-add-hint { opacity: 1; color: var(--verde); }
+.cal-week-body.agregable { cursor: pointer; }
+.cal-week-body.agregable:hover,
+.cal-week-body.agregable:active { background: color-mix(in srgb, var(--verde) 6%, transparent); }
 .cal-daynum { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--muted); }
 .cal-daynum.out { color: var(--line); }
 .cal-daynum.today {
@@ -1073,6 +1089,7 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
   .cal-cell { min-width: 0; min-height: 52px; max-height: 96px; padding: 3px; gap: 3px; }
   .cal-daynum { font-size: 10px; }
   .cal-daynum.today { width: 18px; height: 18px; }
+  .cal-add-hint { font-size: 9px; }
 
   .cal-week { grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 3px; }
   .cal-week-col { min-width: 0; min-height: 90px; }
@@ -2679,6 +2696,12 @@ input::placeholder, textarea::placeholder { color: var(--muted); }
 }
 .carta-mini-deb {
   color: var(--rojo); font-size: 10px; flex: none; line-height: 1;
+}
+.carta-mini-estado-dot {
+  width: 8px; height: 8px; border-radius: 50%; flex: none;
+}
+.carta-mini-pend {
+  font-size: 10px; color: var(--muted); flex: none; white-space: nowrap;
 }
 .carta-mini-toggle {
   background: transparent; border: none; color: var(--muted); cursor: pointer;

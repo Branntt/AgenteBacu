@@ -13,7 +13,11 @@ export const state = {
   // 'finanzas' fue una pestaña aparte para el día a día; se fusionó dentro de
   // 'financiamiento' (una sola Finanzas). Quien la tenga guardada de antes aterriza ahí en
   // vez de caer al fallback de Panorama sin entender por qué.
-  view: (v => v === 'finanzas' ? 'financiamiento' : v)(loadValue('app.view', 'calendario')),
+  // 'inventario'/'pared' se sacaron del nav (2026-09-16, a pedido del usuario — "hacían
+  // ruido") pero sus vistas y datos siguen intactos (VIEWS en main.js no cambió); quien las
+  // tenga guardadas de una sesión vieja aterriza en Calendario en vez de en una pestaña que
+  // ya no tiene botón para volver a salir de ella.
+  view: (v => v === 'finanzas' ? 'financiamiento' : (v === 'inventario' || v === 'pared') ? 'calendario' : v)(loadValue('app.view', 'calendario')),
   // El mes visible se recuerda entre sesiones, pero si el guardado ya quedó en el pasado
   // (ej. entraste en julio y hoy es agosto) se salta solo al mes actual — antes el calendario
   // abría en un mes viejo y "los días no se veían actualizados". Un mes futuro sí se respeta.
@@ -26,6 +30,7 @@ export const state = {
   clienteSelId: null,
   cartaClienteId: null,
   redFiltroTier: 'todos',
+  redFiltroEstado: 'todos', // 'todos' | 'activos' | 'entregados' — para saber de un vistazo quién sigue en curso
   redAbiertos: {},
   menuAbierto: false,
   filtroGuiones: loadValue('ui.filtroGuiones', 'todas'),
@@ -1111,6 +1116,9 @@ export const actions = {
   // Filtro por tier en la Red (Todos / Leyenda / Oro / Plata / Bronce / Nuevo).
   // Persistir no vale la pena — cada apertura de la vista quiere ver todos por defecto.
   redFiltroTier: tier => setState({ redFiltroTier: tier || 'todos' }),
+  // Filtro por estado (Todos / Activos / Entregados) — combinable con el de tier, para
+  // responder "¿a quién le sigo trabajando?" sin tener que ir a la otra sub-vista.
+  redFiltroEstado: estado => setState({ redFiltroEstado: estado || 'todos' }),
   // Expandir/colapsar los sliders de una mini carta sin abrir la carta completa.
   // Se guarda como { [clienteId]: true }: acumulativo, cada uno se abre/cierra por su cuenta.
   redToggleAbierto: id => {

@@ -1,13 +1,15 @@
+// Inventario y Pared se sacaron del nav visible (2026-09-16, a pedido del usuario — hacían
+// ruido en su cabeza y quería un centro más simple). Sus datos, vistas y rutas siguen
+// intactas — VIEWS en main.js no cambió, esto es solo la lista de botones — así que si algún
+// día se necesitan de vuelta, es agregar la línea acá otra vez, no reconstruir nada.
 const NAV = [
   ['calendario', 'Calendario'],
   ['clientes', 'Clientes'],
   ['financiamiento', 'Finanzas'],
-  ['inventario', 'Inventario'],
   ['bienestar', 'Bienestar'],
   ['metas', 'Metas'],
   ['universidad', 'Universidad'],
-  ['panorama', 'Panorama'],
-  ['pared', 'Pared']
+  ['panorama', 'Panorama']
 ];
 
 export function renderHeader(state) {

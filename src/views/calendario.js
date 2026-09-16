@@ -153,10 +153,9 @@ function renderMes(state, ideas, clientes, tareas) {
     dias.push({ dnum, esMes, fs, esHoy, esPasado, entries });
   }
 
-  // El calendario es solo lectura: registra visualmente lo que ya se agendó desde cada
-  // pestaña, no se crea nada tocando una celda. Para que la cuadrícula no se deforme cuando
-  // un día acumula muchas entradas, se muestran como máximo MAX_VISIBLES y el resto se resume
-  // en un contador "+N más" (el detalle completo del día se ve en la vista Agenda).
+  // Para que la cuadrícula no se deforme cuando un día acumula muchas entradas, se muestran
+  // como máximo MAX_VISIBLES y el resto se resume en un contador "+N más" (el detalle completo
+  // del día se ve en la vista Agenda).
   const MAX_VISIBLES = 3;
   function entradasCelda(entries) {
     if (entries.length <= MAX_VISIBLES) return entries.join('');
@@ -169,13 +168,27 @@ function renderMes(state, ideas, clientes, tareas) {
   // 'pasado') muestran solo el número apagado — sus eventos ya cumplidos no se dibujan, para
   // que el mes mire hacia adelante y lo que viene destaque. El detalle de cualquier día sigue
   // en la vista Agenda.
+  //
+  // Tocar un día de hoy en adelante abre Rodaje rápido con esa fecha ya puesta (mismo drawer
+  // y acción que ya existía en rodajeRapido.js/store.js — antes no tenía ningún botón que lo
+  // abriera desde acá, así que no había forma de agregar nada desde el Calendario). Los
+  // .cal-entry de adentro tienen su propio data-act, así que closest() en main.js los resuelve
+  // primero — tocar una entrada existente sigue abriendo esa entrada, no el alta de un rodaje
+  // nuevo. Los días pasados no son agregables (no tiene sentido agendar un rodaje ya pasado).
   const dowHtml = DIAS_SEMANA.map(ds => `<div class="cal-dow">${ds}</div>`).join('');
-  const celdasHtml = dias.map(d => `
-    <div class="cal-cell${d.esPasado ? ' pasado' : ''}${d.esHoy ? ' hoy' : ''}">
-      <span class="cal-daynum ${d.esHoy ? 'today' : (!d.esMes ? 'out' : '')}">${d.esMes ? d.dnum : ''}</span>
+  const celdasHtml = dias.map(d => {
+    const agregable = d.esMes && !d.esPasado;
+    return `
+    <div class="cal-cell${d.esPasado ? ' pasado' : ''}${d.esHoy ? ' hoy' : ''}${agregable ? ' agregable' : ''}"
+      ${agregable ? `data-act="rodaje-rapido-abrir" data-fecha="${d.fs}" title="Agregar rodaje este día"` : ''}>
+      <div class="cal-cell-head">
+        <span class="cal-daynum ${d.esHoy ? 'today' : (!d.esMes ? 'out' : '')}">${d.esMes ? d.dnum : ''}</span>
+        ${agregable ? '<span class="cal-add-hint" aria-hidden="true">+</span>' : ''}
+      </div>
       ${d.esPasado ? '' : entradasCelda(d.entries)}
     </div>
-  `).join('');
+  `;
+  }).join('');
 
   return `<div class="cal-grid">${dowHtml}${celdasHtml}</div>`;
 }
@@ -190,17 +203,21 @@ function renderSemana(state, ideas, clientes, tareas) {
     dias.push({ fs, dnum, esHoy: fs === hoy, esPasado: fs < hoy, entries });
   }
 
-  const colsHtml = dias.map((d, i) => `
+  const colsHtml = dias.map((d, i) => {
+    const agregable = !d.esPasado;
+    return `
     <div class="cal-week-col${d.esPasado ? ' pasado' : ''}">
       <div class="cal-week-head ${d.esHoy ? 'today' : ''}">
         <span class="cal-dow">${DIAS_SEMANA[i]}</span>
         <span class="cal-daynum ${d.esHoy ? 'today' : ''}">${d.dnum}</span>
       </div>
-      <div class="cal-week-body">
-        ${d.entries.length ? d.entries.join('') : '<div class="col-empty">Sin nada agendado.</div>'}
+      <div class="cal-week-body${agregable ? ' agregable' : ''}"
+        ${agregable ? `data-act="rodaje-rapido-abrir" data-fecha="${d.fs}" title="Agregar rodaje este día"` : ''}>
+        ${d.entries.length ? d.entries.join('') : `<div class="col-empty">${agregable ? 'Sin nada agendado — tocá para agregar.' : 'Sin nada agendado.'}</div>`}
       </div>
     </div>
-  `).join('');
+  `;
+  }).join('');
 
   return `<div class="cal-week">${colsHtml}</div>`;
 }
