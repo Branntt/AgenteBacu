@@ -2,6 +2,11 @@
 
 App de gestión de contenido/producción para un estudio audiovisual (marcas: **Brant**, **Bacu Creative**, **Novena Crew**). Dueño/usuario principal: Brandon Cárdenas (Bacu Creative).
 
+**Reorganización "centro de mente" (2026-09-16)**: el usuario pidió simplificar la app a las 7 pestañas que de verdad usa (Calendario/Clientes/Finanzas/Bienestar/Metas/Universidad/Panorama) y sacar Inventario/Pared por ser "ruido" — sin borrar sus datos, ver "Inventario y Pared se sacaron del nav" en `header.js`. En la misma tanda, tres bugs/pedidos puntuales:
+- **Calendario no dejaba agregar nada**: `rodaje-rapido-abrir` existía completo (acción, drawer, guardado) pero sin ningún botón que lo abriera desde acá — quedó huérfano en algún momento (el comentario que decía "el calendario es solo lectura" ya no está). Ahora tocar cualquier día de hoy en adelante (Mes y Semana) abre Rodaje rápido con esa fecha puesta — ver comentario en `renderMes`/`renderSemana` en `calendario.js`.
+- **Clientes no mostraba activos vs entregados ni videos pendientes**: la sub-vista "Red" (default) solo mostraba ranking por tier, sin nada de en qué va cada trabajo. Se agregó un punto de color por estado + contador "🎬 N" de videos pendientes en cada mini-carta, y un filtro Todos/Activos/Entregados combinable con el de tier — ver `ESTADO_LABEL_CORTO`/`videosPendientes`/`chipsEstado` en `cartaCliente.js`. Ojo: esto duplica el vocabulario de 8 estados de `views/clientes.js` a propósito (los componentes no importan de las vistas) — si ese vocabulario cambia, actualizar los dos lados (ya hay un tercer y cuarto lugar con la misma duplicación: `clienteDetalle.js` y `pdfListadoClientes.js`).
+- **Finanzas "en tiempo real"**: no hizo falta construir nada nuevo — ya existía completo. `CHANNEL_MAP.financiamiento` en `store.js` suscribe en vivo las 6 tablas relevantes, y "📊 Tu Situación Hoy" (con Patrimonio Neto/En bolsillo/Disponible real/Te deben/Debes) ya está siempre visible arriba de cualquier pestaña interna de Finanzas desde el 2026-09 (ver más abajo, sección Financiamiento). Si en algún momento parece que no está "en tiempo real", revisar la suscripción de canales, no asumir que falta la función.
+
 - **Producción**: https://branntt.github.io/AgenteBacu/
 - **Repo**: https://github.com/Branntt/AgenteBacu (público, rama `main`)
 

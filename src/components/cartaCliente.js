@@ -8,6 +8,28 @@ function fmtMoney(n) {
   return (v < 0 ? '-' : '') + '$' + Math.abs(v).toLocaleString('es-CO');
 }
 
+// Mismo vocabulario de 8 estados que el kanban "Por estado" (ver ESTADO_COLORS/COLUMNAS en
+// views/clientes.js) — se repite acá en vez de importarlo porque los componentes no importan
+// de las vistas (clientes.js ya importa DE acá). 'entregado' es el nombre viejo de 'ya_pagos'.
+const ESTADO_LABEL_CORTO = {
+  prospecto: 'Prospecto', conversacion: 'En conversación', grabacion: 'Grabación',
+  proyecto_edicion: 'En edición', confirmar_entrega: 'Por confirmar',
+  por_pagar: 'Por pagar', ya_pagos: 'Entregado', entregado: 'Entregado', descartado: 'Descartada'
+};
+const ESTADO_DOT_COLOR = {
+  prospecto: 'var(--text)', conversacion: '#2E55E0', grabacion: '#1FB6CE',
+  proyecto_edicion: '#EFC94C', confirmar_entrega: '#E8641B', por_pagar: '#E0312E',
+  ya_pagos: 'var(--verde)', entregado: 'var(--verde)', descartado: 'var(--muted)'
+};
+function esClienteActivo(estado) {
+  return estado !== 'ya_pagos' && estado !== 'entregado' && estado !== 'descartado';
+}
+// Ideas/videos de este cliente que todavía no están cerrados — mismo criterio que "pendientes"
+// más abajo en renderCartaCompleta ('publicada' es el alias viejo de 'ya_pago').
+function videosPendientes(ideas) {
+  return (ideas || []).filter(i => i.estado !== 'ya_pago' && i.estado !== 'publicada' && i.estado !== 'descartada');
+}
+
 function fmtFecha(f) {
   if (!f) return '';
   const [a, m, d] = f.split('-');
@@ -86,16 +108,25 @@ function slidersBeneficios(attrs, cliente, color) {
 export function renderMiniCarta(item, expandido = false) {
   const { cliente, attrs } = item;
   const rango = rangoDeCliente(attrs.global);
+  const estadoLabel = ESTADO_LABEL_CORTO[cliente.estado] || 'Prospecto';
+  const estadoColor = ESTADO_DOT_COLOR[cliente.estado] || ESTADO_DOT_COLOR.prospecto;
+  const pendientes = videosPendientes(item.ideas).length;
   // Mini carta minimalista: por defecto se ve solo el número global + emoji del rango
   // + nombre. Al tocar el chevron se expanden los seis sliders. Al tocar el nombre se
   // abre la carta completa como siempre.
+  //
+  // El puntito de estado (mismo color que el kanban "Por estado") y el contador de videos
+  // pendientes son lo mínimo para saber "¿a este le sigo trabajando o ya cerré?" sin abrir
+  // nada — antes la Red solo mostraba el ranking, no en qué va cada trabajo.
   return `
     <div class="carta-mini carta-mini-min ${expandido ? 'carta-mini-abierta' : ''}"
          style="--carta-color:${rango.color};" data-cliente-id="${escapeHtml(cliente.id)}">
       <button class="carta-mini-header" data-act="carta-abrir" data-id="${escapeHtml(cliente.id)}"
               title="Abrir carta completa">
         <span class="carta-mini-glob">${attrs.global}</span>
+        <span class="carta-mini-estado-dot" style="background:${estadoColor};" title="${escapeHtml(estadoLabel)}"></span>
         <span class="carta-mini-nombre">${escapeHtml(cliente.nombre || 'Sin nombre')}</span>
+        ${pendientes > 0 ? `<span class="carta-mini-pend" title="${pendientes} video${pendientes === 1 ? '' : 's'} pendiente${pendientes === 1 ? '' : 's'} de entrega">🎬 ${pendientes}</span>` : ''}
         ${item.porCobrar > 0 ? `<span class="carta-mini-deb" title="Te debe ${fmtMoney(item.porCobrar)}">●</span>` : ''}
       </button>
       <button class="carta-mini-toggle" data-act="carta-mini-toggle" data-id="${escapeHtml(cliente.id)}"
@@ -265,14 +296,39 @@ export function renderRedClientes(state) {
   const totalCobrado = red.reduce((s, r) => s + r.cobrado, 0);
   const totalPorCobrar = red.reduce((s, r) => s + r.porCobrar, 0);
   const filtroTier = state.redFiltroTier || 'todos'; // 'todos' o clave de tier
+  const filtroEstado = state.redFiltroEstado || 'todos'; // 'todos' | 'activos' | 'entregados'
   const abiertos = state.redAbiertos || {}; // { [clienteId]: true }
 
-  // Filtrado por tier. 'todos' agrupa por tier (mejores arriba); un tier específico solo muestra ese.
-  const filtrada = filtroTier === 'todos' ? red : red.filter(r => tierDeGlobal(r.attrs.global) === filtroTier);
+  // Los dos filtros se combinan (AND): "activos" + un tier específico, por ejemplo.
+  const pasaEstado = r => filtroEstado === 'todos' ? true
+    : filtroEstado === 'activos' ? esClienteActivo(r.cliente.estado)
+    : !esClienteActivo(r.cliente.estado);
+  const porEstado = red.filter(pasaEstado);
+  const filtrada = filtroTier === 'todos' ? porEstado : porEstado.filter(r => tierDeGlobal(r.attrs.global) === filtroTier);
 
-  // Chips de filtro con el conteo real de cada tier.
-  const conteos = { todos: red.length };
-  for (const t of TIERS) conteos[t.clave] = red.filter(r => tierDeGlobal(r.attrs.global) === t.clave).length;
+  // Chips de filtro con el conteo real de cada tier (ya con el filtro de estado aplicado, para
+  // que los números de abajo cuadren con lo que se ve).
+  const conteos = { todos: porEstado.length };
+  for (const t of TIERS) conteos[t.clave] = porEstado.filter(r => tierDeGlobal(r.attrs.global) === t.clave).length;
+
+  const activosCount = red.filter(r => esClienteActivo(r.cliente.estado)).length;
+  const entregadosCount = red.length - activosCount;
+
+  // "¿A quién le sigo trabajando?" — el filtro que pedía el usuario, separado del de tier
+  // porque son dos preguntas distintas (rendimiento vs. en qué va el trabajo).
+  const chipsEstado = `
+    <div class="red-chips" role="tablist" aria-label="Filtrar por estado">
+      <button class="red-chip ${filtroEstado === 'todos' ? 'red-chip-on' : ''}" data-act="red-filtro-estado" data-estado="todos">
+        Todos <span class="red-chip-num">${red.length}</span>
+      </button>
+      <button class="red-chip ${filtroEstado === 'activos' ? 'red-chip-on' : ''}" data-act="red-filtro-estado" data-estado="activos">
+        🟢 Activos <span class="red-chip-num">${activosCount}</span>
+      </button>
+      <button class="red-chip ${filtroEstado === 'entregados' ? 'red-chip-on' : ''}" data-act="red-filtro-estado" data-estado="entregados">
+        ✓ Entregados <span class="red-chip-num">${entregadosCount}</span>
+      </button>
+    </div>
+  `;
 
   const chips = `
     <div class="red-chips" role="tablist" aria-label="Filtrar por rango">
@@ -313,6 +369,7 @@ export function renderRedClientes(state) {
         </div>
         <button class="btn-primary" data-act="cliente-nuevo">+ Nuevo cliente</button>
       </div>
+      ${chipsEstado}
       ${chips}
       ${cuerpo}
     </main>
