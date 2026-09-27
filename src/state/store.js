@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabaseClient.js';
 import { generarCuentaCobroPDF, OBSERVACIONES_DEFAULT } from '../lib/pdfInvoice.js';
 import { generarListadoClientesPDF } from '../lib/pdfListadoClientes.js';
 import * as googleCalendar from '../lib/googleCalendar.js';
+import * as googleSheets from '../lib/googleSheets.js';
 import { MESES, COLORES_TAREA, familiaDeFormato, METAS_EQUIPO_SEED } from '../data/constants.js';
 import { clientePorNombre } from '../components/datalistClientes.js';
 import { detectarCategoria } from '../lib/transacciones.js';
@@ -52,6 +53,13 @@ export const state = {
   googleUltimaSync: loadValue('google.ultimaSync', null),
   googleUltimoResumen: loadValue('google.ultimoResumen', null),
   googleError: null,
+  // Importar la Parrilla de Contenido desde Google Sheets (ver lib/googleSheets.js) — mismo
+  // token/conexión de arriba, un ID de hoja aparte porque es un documento distinto al
+  // calendario de Google.
+  googleSheetId: loadValue('google.sheetId', ''),
+  googleImportando: false,
+  googleUltimoImport: loadValue('google.ultimoImport', null),
+  googleImportError: null,
   // Prototipo de personaje 3D (Inventario > Personal, beta) — avatarGlbUrl es una blob: URL
   // del último avatar exportado desde Avaturn (ver dataUrlABlobUrl en personaje3d.js); null =
   // todavía no se creó ninguno. A propósito NO se carga de localStorage (no es UI_PERSIST):
@@ -764,6 +772,21 @@ export const actions = {
       });
     } catch (e) {
       setState({ googleSincronizando: false, googleError: e.message || 'Error sincronizando con Google Calendar.' });
+    }
+  },
+
+  // --- Importar Parrilla de Contenido desde Google Sheets (misma conexión de arriba) ---
+  setGoogleSheetId: v => { persistValue('google.sheetId', v); setState({ googleSheetId: v }); },
+  googleImportarAhora: async () => {
+    if (!state.googleConectado) { setState({ googleImportError: 'Conectate con Google primero (arriba).' }); return; }
+    if (!state.googleSheetId) { setState({ googleImportError: 'Pegá el ID de tu Google Sheet.' }); return; }
+    setState({ googleImportando: true, googleImportError: null });
+    try {
+      const resumen = await googleSheets.importarParrilla(state.googleSheetId, { state, actions, supabase, toDbIdea, marcarGuardado });
+      persistValue('google.ultimoImport', { ...resumen, cuando: new Date().toISOString() });
+      setState({ googleImportando: false, googleUltimoImport: loadValue('google.ultimoImport', null) });
+    } catch (e) {
+      setState({ googleImportando: false, googleImportError: e.message || 'Error importando desde Google Sheets.' });
     }
   },
 

@@ -14,11 +14,11 @@ function seccionGoogleCalendar(state) {
   const resumen = state.googleUltimoResumen;
   return `
     <div class="finanzas-seccion" style="margin-bottom:24px;max-width:420px;">
-      <div class="seccion-titulo">Google Calendar</div>
+      <div class="seccion-titulo">Google (Calendar + Sheets)</div>
       <p style="font-size:12px;opacity:0.75;line-height:1.5;margin:0 0 12px;">
-        Crea un calendario aparte llamado "S.A.O BACU" en tu cuenta de Google y lo llena con lo que ya ves acá:
-        rodajes, grabaciones de clientes y entregas con fecha. Es de un solo sentido — lo que edites en Google
-        no vuelve a la app, cada sincronización lo vuelve a dejar igual a lo que hay acá.
+        Una sola conexión con tu cuenta de Google sirve para dos cosas: sincronizar tu Calendario de Google
+        con lo que ya ves acá (rodajes, grabaciones, entregas con fecha), e importar tu Parrilla de Contenido
+        de Google Sheets hacia Clientes/Calendario — ver abajo. Conectás una vez, quedan las dos.
       </p>
 
       <label style="font-size:11px;opacity:0.7;display:block;margin-bottom:6px;">Client ID de Google (OAuth)</label>
@@ -34,21 +34,67 @@ function seccionGoogleCalendar(state) {
         Se crea una vez en <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener" style="color:var(--verde);">Google Cloud Console</a> →
         "Crear credenciales" → "ID de cliente de OAuth" → tipo "Aplicación web" → agregando este sitio en
         "Orígenes autorizados de JavaScript". Se pega acá una sola vez, queda guardado en este dispositivo.
+        Si ya estabas conectado desde antes de que existiera la importación de Sheets, tenés que
+        "Desconectar" y volver a "Conectar" una vez — el permiso viejo no incluye leer Sheets.
       </p>
 
       ${state.googleError ? `<div style="color:var(--rojo);font-size:12px;margin-bottom:12px;">${escapeHtml(state.googleError)}</div>` : ''}
 
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
         ${state.googleConectado
-          ? `<button class="btn-ghost" data-act="google-sincronizar" ${state.googleSincronizando ? 'disabled' : ''}>${state.googleSincronizando ? 'Sincronizando…' : 'Sincronizar ahora'}</button>
+          ? `<button class="btn-ghost" data-act="google-sincronizar" ${state.googleSincronizando ? 'disabled' : ''}>${state.googleSincronizando ? 'Sincronizando…' : 'Sincronizar calendario ahora'}</button>
              <button class="btn-text-muted" data-act="google-desconectar">Desconectar</button>`
-          : `<button class="btn-primary" data-act="google-conectar" ${state.googleSincronizando || !state.googleClientId ? 'disabled' : ''}>${state.googleSincronizando ? 'Conectando…' : 'Conectar con Google Calendar'}</button>`
+          : `<button class="btn-primary" data-act="google-conectar" ${state.googleSincronizando || !state.googleClientId ? 'disabled' : ''}>${state.googleSincronizando ? 'Conectando…' : 'Conectar con Google'}</button>`
         }
       </div>
 
       ${ultimaSync ? `
         <p style="font-size:11px;opacity:0.6;margin:12px 0 0;">
-          Última sincronización: ${ultimaSync}${resumen ? ` — ${resumen.sincronizados} evento(s), ${resumen.borrados} eliminado(s)` : ''}
+          Última sincronización de calendario: ${ultimaSync}${resumen ? ` — ${resumen.sincronizados} evento(s), ${resumen.borrados} eliminado(s)` : ''}
+        </p>
+      ` : ''}
+    </div>
+    ${state.googleConectado ? seccionGoogleSheets(state) : ''}
+  `;
+}
+
+function seccionGoogleSheets(state) {
+  const ultimo = state.googleUltimoImport;
+  const ultimoFecha = ultimo ? fmtFechaHora(ultimo.cuando) : null;
+  return `
+    <div class="finanzas-seccion" style="margin-bottom:24px;max-width:420px;">
+      <div class="seccion-titulo">Importar Parrilla de Contenido (Google Sheets)</div>
+      <p style="font-size:12px;opacity:0.75;line-height:1.5;margin:0 0 12px;">
+        Trae lo planeado en la pestaña "Parrilla de Contenido" de tu Google Sheet hacia Clientes/Calendario.
+        Solo agrega o actualiza — nunca borra nada acá, aunque borres una fila del Sheet. El estado de una
+        idea que ya progresaste adentro de la app tampoco se toca. Es manual a propósito: lo corrés vos
+        cuando quieras traer lo nuevo, no pasa solo.
+      </p>
+
+      <label style="font-size:11px;opacity:0.7;display:block;margin-bottom:6px;">ID de la hoja de Google Sheets</label>
+      <input
+        type="text"
+        data-change="google-sheet-id"
+        value="${escapeHtml(state.googleSheetId || '')}"
+        placeholder="El código largo en la URL de tu Sheet"
+        style="width:100%;margin-bottom:6px;"
+      >
+      <p style="font-size:11px;opacity:0.6;line-height:1.5;margin:0 0 14px;">
+        Es la parte entre <code>/d/</code> y <code>/edit</code> en la URL de tu hoja:
+        docs.google.com/spreadsheets/d/<b>ESTE-PEDAZO</b>/edit. La hoja debe tener una pestaña llamada
+        exactamente "Parrilla de Contenido", con las mismas columnas de la plantilla.
+      </p>
+
+      ${state.googleImportError ? `<div style="color:var(--rojo);font-size:12px;margin-bottom:12px;">${escapeHtml(state.googleImportError)}</div>` : ''}
+
+      <button class="btn-primary" data-act="google-importar" ${state.googleImportando || !state.googleSheetId ? 'disabled' : ''}>
+        ${state.googleImportando ? 'Importando…' : 'Importar ahora'}
+      </button>
+
+      ${ultimoFecha ? `
+        <p style="font-size:11px;opacity:0.6;margin:12px 0 0;">
+          Última importación: ${ultimoFecha} — ${ultimo.creadas} idea(s) nueva(s), ${ultimo.actualizadas} actualizada(s),
+          ${ultimo.clientesCreados} cliente(s) nuevo(s)${ultimo.saltadas ? `, ${ultimo.saltadas} fila(s) sin título saltada(s)` : ''}.
         </p>
       ` : ''}
     </div>
