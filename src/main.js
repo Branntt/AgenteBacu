@@ -533,6 +533,7 @@ root.addEventListener('click', e => {
     case 'google-conectar': actions.googleConectar(); break;
     case 'google-desconectar': actions.googleDesconectar(); break;
     case 'google-sincronizar': actions.googleSincronizarAhora(); break;
+    case 'google-importar': actions.googleImportarAhora(); break;
     case 'logout': actions.logout(); break;
     case 'auth-ir-recuperar': actions.authIrRecuperar(); break;
     case 'auth-ir-login': actions.authIrLogin(); break;
@@ -847,6 +848,7 @@ root.addEventListener('change', e => {
       case 'tema': actions.setTema(value); break;
       case 'calma': actions.setModoCalma(value); break;
       case 'google-client-id': actions.setGoogleClientId(value); break;
+      case 'google-sheet-id': actions.setGoogleSheetId(value); break;
       case 'guion-campo': actions.setGuionCampo(id, campo, value); break;
       case 'guion-item-campo': actions.updGuionItem(id, Number(idx), campo, value); break;
       case 'rodaje-rapido-campo': actions.rodajeRapidoSetCampo(campo, campo === 'precio' ? parseN(value) : value); break;

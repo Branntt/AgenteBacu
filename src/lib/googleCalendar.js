@@ -1,8 +1,9 @@
 // Sincronización unidireccional S.A.O BACU → Google Calendar.
 //
-// Todo corre en el navegador (esta app no tiene backend propio, solo Supabase). Usa Google
-// Identity Services (GIS) para pedir un access token, y la API REST de Calendar directo por
-// fetch — sin SDK de Google, para no meter otra dependencia pesada.
+// Todo corre en el navegador (esta app no tiene backend propio, solo Supabase). El OAuth
+// (Google Identity Services) vive en googleAuth.js, compartido con googleSheets.js — ver ese
+// archivo para el porqué. Acá solo queda la API REST de Calendar directo por fetch — sin SDK
+// de Google, para no meter otra dependencia pesada.
 //
 // Diseño:
 // - Un solo calendario secundario dedicado "S.A.O BACU" en la cuenta de Google del usuario
@@ -23,79 +24,19 @@
 
 import { MARCAS, HORARIO_CLASES } from '../data/constants.js';
 import { persistValue, loadValue } from './storage.js';
+import { estaConectado, conectar, reconectarSilencioso, desconectar, getAccessToken } from './googleAuth.js';
+
+// Re-exportadas tal cual: store.js las llama como googleCalendar.conectar(...) etc. desde
+// antes de que existiera googleAuth.js — reexportarlas acá evita tocar esos call sites.
+export { estaConectado, conectar, reconectarSilencioso, desconectar };
 
 const DIAS_RRULE = ['MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU']; // índice 0 = ISO día 1 (lunes)
 
-// calendar.events (solo eventos) no alcanza: obtenerOCrearCalendario() también gestiona el
-// propio recurso "calendario" (GET/POST /calendars), que requiere el scope calendar completo
-// — sin esto, Google responde 403 "insufficient authentication scopes" en cuanto intenta
-// crear o leer el calendario "S.A.O BACU", aunque el token se haya obtenido bien.
-const SCOPE = 'https://www.googleapis.com/auth/calendar';
 const CAL_SUMMARY = 'S.A.O BACU';
 const API = 'https://www.googleapis.com/calendar/v3';
 
-let gisPromise = null;
-let tokenClient = null;
-let accessToken = null;
-let tokenExpiry = 0;
-
-function cargarGis() {
-  if (window.google?.accounts?.oauth2) return Promise.resolve();
-  if (gisPromise) return gisPromise;
-  gisPromise = new Promise((resolve, reject) => {
-    const script = document.createElement('script');
-    script.src = 'https://accounts.google.com/gsi/client';
-    script.async = true;
-    script.defer = true;
-    script.onload = () => resolve();
-    script.onerror = () => reject(new Error('No se pudo cargar Google Identity Services (¿sin conexión?).'));
-    document.head.appendChild(script);
-  });
-  return gisPromise;
-}
-
-function pedirToken(clientId, { prompt }) {
-  return new Promise((resolve, reject) => {
-    if (!tokenClient) {
-      tokenClient = google.accounts.oauth2.initTokenClient({ client_id: clientId, scope: SCOPE, callback: () => {} });
-    }
-    tokenClient.callback = (resp) => {
-      if (resp.error) { reject(new Error(resp.error)); return; }
-      accessToken = resp.access_token;
-      tokenExpiry = Date.now() + (Number(resp.expires_in) || 3600) * 1000;
-      resolve(resp);
-    };
-    tokenClient.requestAccessToken({ prompt });
-  });
-}
-
-export function estaConectado() {
-  return !!accessToken && Date.now() < tokenExpiry;
-}
-
-// Primera conexión: siempre pide consentimiento explícito (popup de Google).
-export async function conectar(clientId) {
-  await cargarGis();
-  await pedirToken(clientId, { prompt: 'consent' });
-}
-
-// Intenta renovar el token sin popup — solo funciona si el navegador ya tiene sesión de
-// Google y consentimiento previo. Si falla, hay que llamar a conectar() de nuevo (con popup).
-export async function reconectarSilencioso(clientId) {
-  await cargarGis();
-  await pedirToken(clientId, { prompt: '' });
-}
-
-export function desconectar() {
-  if (accessToken && window.google?.accounts?.oauth2) {
-    google.accounts.oauth2.revoke(accessToken, () => {});
-  }
-  accessToken = null;
-  tokenExpiry = 0;
-}
-
 function headers(json) {
-  const h = { Authorization: `Bearer ${accessToken}` };
+  const h = { Authorization: `Bearer ${getAccessToken()}` };
   if (json) h['Content-Type'] = 'application/json';
   return h;
 }
