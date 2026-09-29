@@ -746,13 +746,19 @@ export const actions = {
   // --- Google Calendar (Configuraciones) ---
   setGoogleClientId: v => { persistValue('google.clientId', v); setState({ googleClientId: v }); },
 
+  // Conectar SOLO establece la sesión con Google — no toca el Calendario ni ninguna otra
+  // cosa por su cuenta. Antes esto llamaba a googleSincronizarAhora() automáticamente apenas
+  // conectaba, así que alguien que solo quería importar Sheets terminaba, sin pedirlo, con un
+  // calendario nuevo creándose/actualizándose en su cuenta real de Google — el usuario fue
+  // explícito: no quiere que esto se enlace con Google Calendar. Sincronizar calendario e
+  // importar Sheets son ahora dos botones separados, cada uno se dispara solo si la persona lo
+  // toca — conectar no decide por ella cuál de las dos cosas quiere.
   googleConectar: async () => {
     if (!state.googleClientId) { setState({ googleError: 'Pegá primero tu Client ID de Google.' }); return; }
     setState({ googleError: null, googleSincronizando: true });
     try {
       await googleCalendar.conectar(state.googleClientId);
       setState({ googleConectado: true, googleSincronizando: false });
-      await actions.googleSincronizarAhora();
     } catch (e) {
       setState({ googleConectado: false, googleSincronizando: false, googleError: e.message || 'No se pudo conectar con Google Calendar.' });
     }
