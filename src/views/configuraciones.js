@@ -16,9 +16,11 @@ function seccionGoogleCalendar(state) {
     <div class="finanzas-seccion" style="margin-bottom:24px;max-width:420px;">
       <div class="seccion-titulo">Google (Calendar + Sheets)</div>
       <p style="font-size:12px;opacity:0.75;line-height:1.5;margin:0 0 12px;">
-        Una sola conexión con tu cuenta de Google sirve para dos cosas: sincronizar tu Calendario de Google
-        con lo que ya ves acá (rodajes, grabaciones, entregas con fecha), e importar tu Parrilla de Contenido
-        de Google Sheets hacia Clientes/Calendario — ver abajo. Conectás una vez, quedan las dos.
+        Una sola conexión con tu cuenta de Google habilita dos botones separados, cada uno con su
+        propio botón — conectar por sí solo no dispara ninguno de los dos: <b>"Sincronizar calendario ahora"</b>
+        (empuja rodajes/grabaciones/entregas hacia un calendario de Google) e <b>"Importar ahora"</b> (trae tu
+        Parrilla de Contenido de Google Sheets hacia Clientes/Calendario — ver abajo). Si solo querés usar uno
+        de los dos, simplemente no toques el botón del otro — nada pasa solo.
       </p>
 
       <label style="font-size:11px;opacity:0.7;display:block;margin-bottom:6px;">Client ID de Google (OAuth)</label>
