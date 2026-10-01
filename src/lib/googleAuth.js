@@ -32,9 +32,23 @@ function cargarGis() {
   });
   return gisPromise;
 }
+// Se dispara apenas se carga este módulo (con el resto de la app), no recién cuando alguien
+// toca "Conectar" — si ese script se pide DESPUÉS del clic, el navegador (sobre todo en
+// celular) deja de considerar la ventana emergente de Google como resultado directo de un
+// toque del usuario y la bloquea en silencio: el botón queda en "Conectando…" para siempre,
+// sin ningún aviso ("se quedó cargando", reportado por el usuario). Precargarlo así de
+// entrada hace que, para cuando alguien realmente toca el botón, el script ya esté listo y el
+// pedido de ventana emergente pase pegado al toque, como espera el navegador.
+cargarGis().catch(() => {}); // sin conexión al cargar la app: no pasa nada todavía, cargarGis() se reintenta sola cuando conectar() la vuelva a llamar
 
 function pedirToken(clientId, { prompt }) {
-  return new Promise((resolve, reject) => {
+  const CON_TIEMPO_LIMITE = (promesa, ms, mensajeAlVencer) => {
+    let vencido;
+    const limite = new Promise((_, reject) => { vencido = setTimeout(() => reject(new Error(mensajeAlVencer)), ms); });
+    return Promise.race([promesa, limite]).finally(() => clearTimeout(vencido));
+  };
+
+  const promesa = new Promise((resolve, reject) => {
     if (!tokenClient) {
       tokenClient = google.accounts.oauth2.initTokenClient({ client_id: clientId, scope: SCOPES, callback: () => {} });
     }
@@ -46,6 +60,12 @@ function pedirToken(clientId, { prompt }) {
     };
     tokenClient.requestAccessToken({ prompt });
   });
+
+  // Sin esto, una ventana de Google bloqueada por el navegador (o simplemente ignorada) deja
+  // el pedido colgado para siempre — ni resuelve ni falla, porque el callback de Google nunca
+  // llega a dispararse. Con el límite de tiempo, en vez de "cargando" eterno, a los 25s se
+  // muestra un error concreto y accionable.
+  return CON_TIEMPO_LIMITE(promesa, 25000, 'Google no respondió a tiempo — revisá que tu navegador no haya bloqueado la ventana emergente (buscá un ícono de "ventana bloqueada" en la barra de direcciones) e intentá de nuevo.');
 }
 
 export function estaConectado() {
