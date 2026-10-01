@@ -58,7 +58,19 @@ function serialAFechaISO(v) {
 
 async function leerFilas(sheetId) {
   const url = `${SHEETS_API}/${encodeURIComponent(sheetId)}/values/${encodeURIComponent(RANGO)}?valueRenderOption=UNFORMATTED_VALUE`;
-  const r = await fetch(url, { headers: { Authorization: `Bearer ${getAccessToken()}` } });
+  // Límite de tiempo explícito: sin esto, una red lenta o colgada deja "Importando…" para
+  // siempre sin ningún aviso — mismo motivo que el límite de tiempo en googleAuth.js.
+  const controlador = new AbortController();
+  const vencido = setTimeout(() => controlador.abort(), 20000);
+  let r;
+  try {
+    r = await fetch(url, { headers: { Authorization: `Bearer ${getAccessToken()}` }, signal: controlador.signal });
+  } catch (e) {
+    if (e.name === 'AbortError') throw new Error('Google Sheets no respondió a tiempo. Revisá tu conexión e intentá de nuevo.');
+    throw e;
+  } finally {
+    clearTimeout(vencido);
+  }
   if (!r.ok) {
     let detalle = '';
     try { detalle = (await r.json()).error?.message || ''; } catch (e) {}
